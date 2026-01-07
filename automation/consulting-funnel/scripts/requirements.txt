@@ -1,0 +1,15 @@
+# Python dependencies for consulting-funnel automation
+
+# Document generation
+python-docx>=1.1.0
+
+# AI/LLM integration
+openai>=1.0.0
+
+# Data processing
+pandas>=2.0.0
+
+# Configuration
+python-dotenv>=1.0.0
+
+# Utilities

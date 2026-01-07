@@ -1,0 +1,61 @@
+# 60-Day Operating Dashboard
+
+This file would contain the actual Excel workbook implementing the dashboard specified in `dashboard-spec.md`.
+
+## File: 60d_operating_dashboard.xlsx
+
+**Note**: This is a placeholder file reference. The actual Excel dashboard file should be created with the following structure:
+
+### Dashboard Components:
+
+1. **Executive Summary** - Key metrics at a glance
+2. **Activity Funnel** - Job search conversion funnel
+3. **Activity Trends** - Weekly activity charts
+4. **Response Metrics** - Response rate gauges
+5. **Quality Metrics** - Job scores and quality indicators
+6. **Consulting Pipeline** - Opportunity stages and values
+7. **Time Investment** - Time allocation breakdown
+8. **Goal Achievement** - Weekly goal tracking
+9. **System Health** - Automation and data quality status
+10. **Next Actions** - Priorities and upcoming items
+
+### Setup Instructions:
+
+1. Create a new Excel workbook
+2. Link to System of Record workbook as data source
+3. Create named ranges for key data
+4. Build pivot tables for aggregations
+5. Create charts for each dashboard section
+6. Add conditional formatting for visual indicators
+7. Set up refresh buttons and controls
+8. Format for professional dashboard appearance
+9. Test all data connections and formulas
+10. Save as `60d_operating_dashboard.xlsx`
+
+### Required Features:
+
+- **Data Connections**: Link to System of Record file
+- **Pivot Tables**: For dynamic data aggregation
+- **Charts**: Various chart types as specified
+- **Conditional Formatting**: Color coding and indicators
+- **Slicers**: For interactive filtering
+- **Formulas**: KPI calculations and metrics
+- **Refresh Controls**: Buttons to update data
+- **Print Layout**: Optimized for single-page printing
+
+### Layout:
+
+- Single-sheet dashboard (or tabbed sections)
+- Professional color scheme
+- Clear section headers
+- Compact but readable
+- Mobile-friendly (if using Excel Online)
+
+### Data Refresh:
+
+- Auto-refresh on open
+- Manual refresh button
+- Last refresh timestamp displayed
+- Error handling for broken connections
+
+This dashboard provides the visual interface for monitoring progress throughout the 60-day execution plan.

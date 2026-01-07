@@ -1,0 +1,136 @@
+{
+  "name": "Outreach Flow",
+  "version": "1.0",
+  "description": "Generate and manage professional outreach messages",
+  "trigger": {
+    "type": "manual",
+    "context": "contact_record"
+  },
+  "steps": [
+    {
+      "id": "gather_context",
+      "type": "user_input",
+      "prompt": "Provide outreach context",
+      "fields": [
+        {
+          "name": "recipient_name",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "recipient_role",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "recipient_company",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "connection_points",
+          "type": "multiline_text",
+          "required": true,
+          "prompt": "List shared interests, connections, or relevant context"
+        },
+        {
+          "name": "message_type",
+          "type": "choice",
+          "options": ["cold_outreach", "networking", "follow_up", "referral_request"],
+          "required": true
+        },
+        {
+          "name": "purpose",
+          "type": "multiline_text",
+          "required": true,
+          "prompt": "What are you reaching out about?"
+        }
+      ]
+    },
+    {
+      "id": "generate_message",
+      "type": "ai_prompt",
+      "prompt_file": "prompts/outreach/outreach_prompt_v1.md",
+      "parameters": {
+        "recipient_name": "{{gather_context.recipient_name}}",
+        "recipient_role": "{{gather_context.recipient_role}}",
+        "company": "{{gather_context.recipient_company}}",
+        "connection_points": "{{gather_context.connection_points}}",
+        "message_type": "{{gather_context.message_type}}",
+        "purpose": "{{gather_context.purpose}}"
+      }
+    },
+    {
+      "id": "review_message",
+      "type": "user_approval",
+      "prompt": "Review outreach message",
+      "data": {
+        "subject": "{{generate_message.subject}}",
+        "body": "{{generate_message.body}}"
+      },
+      "options": ["send", "edit", "regenerate", "cancel"]
+    },
+    {
+      "id": "handle_edit",
+      "type": "conditional",
+      "condition": "{{review_message.choice == 'edit'}}",
+      "true_action": {
+        "type": "user_input",
+        "prompt": "Edit the message",
+        "fields": [
+          {
+            "name": "subject",
+            "type": "text",
+            "default": "{{generate_message.subject}}"
+          },
+          {
+            "name": "body",
+            "type": "multiline_text",
+            "default": "{{generate_message.body}}"
+          }
+        ]
+      }
+    },
+    {
+      "id": "handle_regenerate",
+      "type": "conditional",
+      "condition": "{{review_message.choice == 'regenerate'}}",
+      "true_action": {
+        "type": "goto_step",
+        "step_id": "generate_message"
+      }
+    },
+    {
+      "id": "log_outreach",
+      "type": "excel_action",
+      "condition": "{{review_message.choice == 'send' || review_message.choice == 'edit'}}",
+      "action": "append_row",
+      "file": "excel-templates/system-of-record-template.xlsx",
+      "sheet": "Outreach",
+      "data": {
+        "recipient_name": "{{gather_context.recipient_name}}",
+        "recipient_company": "{{gather_context.recipient_company}}",
+        "message_type": "{{gather_context.message_type}}",
+        "subject": "{{review_message.choice == 'edit' ? handle_edit.subject : generate_message.subject}}",
+        "sent_date": "{{now()}}",
+        "status": "sent"
+      }
+    },
+    {
+      "id": "notify_success",
+      "type": "notification",
+      "condition": "{{review_message.choice == 'send' || review_message.choice == 'edit'}}",
+      "channel": "teams",
+      "message": "Outreach logged successfully. Remember to actually send the message!"
+    }
+  ],
+  "error_handling": {
+    "on_error": "log_and_notify",
+    "rollback": false
+  },
+  "audit": {
+    "log_execution": true,
+    "log_to_excel": true,
+    "sheet": "Audit_Log"
+  }
+}
