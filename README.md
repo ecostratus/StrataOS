@@ -2,7 +2,7 @@
 
 A comprehensive, auditable system for executing a 60-day career development plan integrating job search, networking, and consulting opportunities through Microsoft 365, Copilot Studio, and Python automation.
 
-## 🎯 Overview
+## Overview
 
 This repository provides a structured framework designed to be:
 
@@ -11,7 +11,7 @@ This repository provides a structured framework designed to be:
 - **Manually Overridable**: Human approval gates at critical decision points
 - **Production-Ready**: Compatible with Microsoft 365, Copilot Studio, and lightweight Python scripting
 
-## 📁 Repository Structure
+## Repository Structure
 
 ```
 .
@@ -68,7 +68,7 @@ This repository provides a structured framework designed to be:
     └── outreach_flow_tests.py     # Outreach flow tests
 ```
 
-## 🚀 Quick Start
+## Quick Start
 
 ### 1. Review Core Documentation
 Start by understanding the system:
@@ -115,45 +115,45 @@ pip install -r automation/outreach/scripts/requirements.txt
 python automation/job-discovery/scripts/job_scraper_v1.py
 ```
 
-## 💡 Key Features
+## Key Features
 
-### 🔍 Job Discovery
+### Job Discovery
 - Automated job scraping from multiple sources
 - Intelligent scoring based on role fit, company, compensation, location, and growth
 - Excel integration for tracking
 - Configurable filters and rate limiting
 
-### 📄 Resume Tailoring
+### Resume Tailoring
 - AI-powered resume customization for specific jobs
 - Maintains truthfulness and authenticity
 - ATS-optimized output
 - Keyword integration and relevance scoring
 
-### 📧 Outreach Management
+### Outreach Management
 - Personalized message generation
 - Platform-specific optimization (LinkedIn, email)
 - Connection point identification
 - Response tracking
 
-### 💼 Consulting Funnel
+### Consulting Funnel
 - Professional proposal generation
 - Scope definition and pricing guidance
 - Multiple engagement types (discovery, implementation, retainer, training)
 - Terms and conditions templates
 
-### 🎤 Interview Preparation
+### Interview Preparation
 - Company research automation
 - Anticipated question generation
 - STAR story development
 - Questions to ask preparation
 
-### 📊 Weekly Review & Governance
+### Weekly Review & Governance
 - Automated metrics reporting
 - Goal tracking and achievement analysis
 - Strategy adjustment recommendations
 - Audit log review
 
-## 📚 Documentation
+## Documentation
 
 ### Essential Reading
 1. **[Master Brief](docs/master-brief.md)** - Start here to understand the overall approach
@@ -178,7 +178,7 @@ Each automation module includes detailed specifications:
 - `automation/consulting-funnel/prompt-spec.md`
 - `automation/interview-prep/prompt-spec.md`
 
-## 🔒 Security & Privacy
+## Security & Privacy
 
 - **No credentials in code**: Use environment variables
 - **API key management**: Sample config provided, never commit actual keys
@@ -186,7 +186,7 @@ Each automation module includes detailed specifications:
 - **Audit trail**: All actions logged for compliance
 - **Privacy-first**: Design respects data privacy regulations
 
-## 🧪 Testing
+## Testing
 
 Run the test suite to validate functionality:
 
@@ -203,7 +203,7 @@ pytest --cov=automation tests/
 
 See [tests/README.md](tests/README.md) for comprehensive testing documentation.
 
-## 🛠️ Technology Stack
+## Technology Stack
 
 - **Python 3.8+**: Automation scripts
 - **Microsoft Excel**: System of record and dashboards
@@ -212,14 +212,14 @@ See [tests/README.md](tests/README.md) for comprehensive testing documentation.
 - **OpenAI API**: AI-powered content generation
 - **pytest**: Testing framework
 
-## 📋 Requirements
+## Requirements
 
 - Python 3.8 or higher
 - Microsoft Excel (Office 365 or Desktop)
 - API keys for external services (OpenAI, job boards, etc.)
 - (Optional) Microsoft 365 account for Copilot Studio integration
 
-## 🤝 Contributing
+## Contributing
 
 This is a personal operating system, but the structure can be adapted for your use:
 
@@ -229,15 +229,15 @@ This is a personal operating system, but the structure can be adapted for your u
 4. Adapt prompts and workflows
 5. Share improvements back if desired
 
-## 📝 Changelog
+## Changelog
 
 See [changelog.md](changelog.md) for version history and updates.
 
-## 📄 License
+## License
 
 See [LICENSE](LICENSE) file for details.
 
-## 🆘 Support
+## Support
 
 For questions or issues:
 1. Check the documentation in `docs/`
@@ -245,7 +245,7 @@ For questions or issues:
 3. Consult the testing guide
 4. Check configuration examples
 
-## 🎯 Success Metrics
+## Success Metrics
 
 Track these KPIs to measure system effectiveness:
 - Application response rate (target: 20-30%)
