@@ -1,0 +1,139 @@
+{
+  "name": "Consulting Flow",
+  "version": "1.0",
+  "description": "Develop and track consulting opportunities and proposals",
+  "trigger": {
+    "type": "manual",
+    "context": "opportunity"
+  },
+  "steps": [
+    {
+      "id": "gather_opportunity",
+      "type": "user_input",
+      "prompt": "Provide consulting opportunity details",
+      "fields": [
+        {
+          "name": "client_name",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "client_industry",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "client_size",
+          "type": "choice",
+          "options": ["small", "medium", "large", "enterprise"],
+          "required": true
+        },
+        {
+          "name": "opportunity_description",
+          "type": "multiline_text",
+          "required": true,
+          "prompt": "Describe the consulting opportunity and problem to solve"
+        },
+        {
+          "name": "engagement_type",
+          "type": "choice",
+          "options": ["discovery", "implementation", "retainer", "training"],
+          "required": true
+        },
+        {
+          "name": "budget_range",
+          "type": "text",
+          "required": false,
+          "prompt": "Budget range if known"
+        },
+        {
+          "name": "timeline",
+          "type": "text",
+          "required": false,
+          "prompt": "Desired timeline"
+        }
+      ]
+    },
+    {
+      "id": "generate_proposal",
+      "type": "ai_prompt",
+      "prompt_file": "prompts/consulting/consulting_offer_prompt_v1.md",
+      "parameters": {
+        "client_name": "{{gather_opportunity.client_name}}",
+        "client_industry": "{{gather_opportunity.client_industry}}",
+        "client_size": "{{gather_opportunity.client_size}}",
+        "opportunity": "{{gather_opportunity.opportunity_description}}",
+        "engagement_type": "{{gather_opportunity.engagement_type}}",
+        "budget": "{{gather_opportunity.budget_range}}",
+        "timeline": "{{gather_opportunity.timeline}}"
+      }
+    },
+    {
+      "id": "review_proposal",
+      "type": "user_approval",
+      "prompt": "Review consulting proposal outline",
+      "data": "{{generate_proposal.output}}",
+      "options": ["develop_full", "edit", "regenerate", "cancel"]
+    },
+    {
+      "id": "handle_edit",
+      "type": "conditional",
+      "condition": "{{review_proposal.choice == 'edit'}}",
+      "true_action": {
+        "type": "user_input",
+        "prompt": "Edit the proposal outline",
+        "field": "edited_proposal",
+        "default": "{{generate_proposal.output}}"
+      }
+    },
+    {
+      "id": "handle_regenerate",
+      "type": "conditional",
+      "condition": "{{review_proposal.choice == 'regenerate'}}",
+      "true_action": {
+        "type": "goto_step",
+        "step_id": "generate_proposal"
+      }
+    },
+    {
+      "id": "save_proposal",
+      "type": "file_action",
+      "condition": "{{review_proposal.choice == 'develop_full' || review_proposal.choice == 'edit'}}",
+      "action": "write",
+      "file_path": "consulting/proposals/{{gather_opportunity.client_name}}_{{now('YYYYMMDD')}}.md",
+      "content": "{{review_proposal.choice == 'edit' ? handle_edit.edited_proposal : generate_proposal.output}}"
+    },
+    {
+      "id": "log_opportunity",
+      "type": "excel_action",
+      "action": "append_row",
+      "file": "excel-templates/system-of-record-template.xlsx",
+      "sheet": "Consulting",
+      "data": {
+        "client_name": "{{gather_opportunity.client_name}}",
+        "industry": "{{gather_opportunity.client_industry}}",
+        "engagement_type": "{{gather_opportunity.engagement_type}}",
+        "status": "proposal_drafted",
+        "proposal_path": "{{save_proposal.file_path}}",
+        "created_date": "{{now()}}",
+        "budget_range": "{{gather_opportunity.budget_range}}",
+        "timeline": "{{gather_opportunity.timeline}}"
+      }
+    },
+    {
+      "id": "notify_success",
+      "type": "notification",
+      "channel": "teams",
+      "message": "Consulting proposal outline created for {{gather_opportunity.client_name}}"
+    }
+  ],
+  "error_handling": {
+    "on_error": "log_and_notify",
+    "rollback": false
+  },
+  "audit": {
+    "log_execution": true,
+    "log_to_excel": true,
+    "sheet": "Audit_Log"
+  }
+}

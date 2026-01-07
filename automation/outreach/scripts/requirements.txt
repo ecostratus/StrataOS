@@ -1,0 +1,12 @@
+# Python dependencies for outreach automation
+
+# AI/LLM integration
+openai>=1.0.0
+
+# Data processing
+pandas>=2.0.0
+
+# Configuration
+python-dotenv>=1.0.0
+
+# Utilities

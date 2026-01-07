@@ -1,0 +1,51 @@
+# System of Record Template
+
+This file would contain the actual Excel workbook implementing the schema defined in `system-of-record-schema.md`.
+
+## File: system-of-record-template.xlsx
+
+**Note**: This is a placeholder file reference. The actual Excel file should be created with the following sheets and structure:
+
+### Sheets to Create:
+1. **Jobs** - With columns as defined in schema
+2. **Applications** - With columns as defined in schema  
+3. **Outreach** - With columns as defined in schema
+4. **Consulting** - With columns as defined in schema
+5. **Interviews** - With columns as defined in schema
+6. **Contacts** - With columns as defined in schema
+7. **Weekly_Goals** - With columns as defined in schema
+8. **Audit_Log** - With columns as defined in schema
+9. **Dashboard** - With summary metrics and charts
+
+### Setup Instructions:
+
+1. Create a new Excel workbook
+2. Create each sheet listed above
+3. Add column headers according to the schema
+4. Set up data validation for status fields and dropdowns
+5. Apply conditional formatting for visual indicators
+6. Create formulas for calculated fields
+7. Build dashboard with pivot tables and charts
+8. Format for professional appearance
+9. Save as `system-of-record-template.xlsx`
+
+### Required Features:
+
+- **Data Validation**: Dropdowns for status, priority, type fields
+- **Conditional Formatting**: Color coding for priorities and statuses
+- **Formulas**: Calculated fields like response times, achievement rates
+- **Dashboard**: Charts showing trends, funnels, and KPIs
+- **Protection**: Lock formula cells, allow data entry cells
+- **Named Ranges**: For easy reference in formulas
+- **Tables**: Convert data ranges to Excel tables for filtering
+
+### Initial Data:
+
+Start with empty rows but include:
+- Column headers
+- Sample formulas
+- Data validation rules
+- Conditional formatting rules
+- Dashboard charts ready to populate
+
+This template will be used as the starting point for the system of record and should be copied/renamed for actual use.

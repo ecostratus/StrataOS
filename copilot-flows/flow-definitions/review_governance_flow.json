@@ -1,0 +1,156 @@
+{
+  "name": "Review & Governance Flow",
+  "version": "1.0",
+  "description": "Weekly review and governance activities",
+  "trigger": {
+    "type": "scheduled",
+    "schedule": {
+      "frequency": "weekly",
+      "day": "Friday",
+      "time": "16:00"
+    }
+  },
+  "steps": [
+    {
+      "id": "generate_metrics",
+      "type": "script",
+      "script_path": "automation/reporting/weekly_metrics.py",
+      "parameters": {
+        "excel_file": "excel-templates/system-of-record-template.xlsx",
+        "week_ending": "{{now()}}"
+      }
+    },
+    {
+      "id": "present_metrics",
+      "type": "user_display",
+      "prompt": "Weekly Metrics Summary",
+      "data": {
+        "jobs_discovered": "{{generate_metrics.jobs_discovered}}",
+        "applications_submitted": "{{generate_metrics.applications_submitted}}",
+        "outreach_sent": "{{generate_metrics.outreach_sent}}",
+        "interviews_scheduled": "{{generate_metrics.interviews_scheduled}}",
+        "proposals_sent": "{{generate_metrics.proposals_sent}}",
+        "response_rates": "{{generate_metrics.response_rates}}"
+      }
+    },
+    {
+      "id": "review_audit_log",
+      "type": "excel_action",
+      "action": "read_range",
+      "file": "excel-templates/system-of-record-template.xlsx",
+      "sheet": "Audit_Log",
+      "filter": {
+        "date_range": "last_7_days"
+      }
+    },
+    {
+      "id": "flag_issues",
+      "type": "script",
+      "script_path": "automation/reporting/audit_review.py",
+      "parameters": {
+        "audit_data": "{{review_audit_log.data}}"
+      }
+    },
+    {
+      "id": "present_issues",
+      "type": "user_display",
+      "condition": "{{flag_issues.issues_found > 0}}",
+      "prompt": "Issues requiring attention",
+      "data": "{{flag_issues.issues}}"
+    },
+    {
+      "id": "strategy_adjustments",
+      "type": "user_input",
+      "prompt": "What strategy adjustments do you want to make?",
+      "fields": [
+        {
+          "name": "job_search_adjustments",
+          "type": "multiline_text",
+          "required": false
+        },
+        {
+          "name": "outreach_adjustments",
+          "type": "multiline_text",
+          "required": false
+        },
+        {
+          "name": "consulting_adjustments",
+          "type": "multiline_text",
+          "required": false
+        },
+        {
+          "name": "process_improvements",
+          "type": "multiline_text",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "document_changes",
+      "type": "file_action",
+      "condition": "{{strategy_adjustments.job_search_adjustments != '' || strategy_adjustments.outreach_adjustments != '' || strategy_adjustments.consulting_adjustments != '' || strategy_adjustments.process_improvements != ''}}",
+      "action": "append",
+      "file_path": "docs/weekly-reviews.md",
+      "content": "## Week of {{now('YYYY-MM-DD')}}\n\n### Metrics\n{{present_metrics.data}}\n\n### Strategy Adjustments\n{{strategy_adjustments}}\n\n---\n\n"
+    },
+    {
+      "id": "set_weekly_goals",
+      "type": "user_input",
+      "prompt": "Set goals for next week",
+      "fields": [
+        {
+          "name": "applications_target",
+          "type": "number",
+          "required": true,
+          "default": 5
+        },
+        {
+          "name": "outreach_target",
+          "type": "number",
+          "required": true,
+          "default": 10
+        },
+        {
+          "name": "networking_target",
+          "type": "number",
+          "required": true,
+          "default": 3
+        },
+        {
+          "name": "other_goals",
+          "type": "multiline_text",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "log_weekly_goals",
+      "type": "excel_action",
+      "action": "append_row",
+      "file": "excel-templates/system-of-record-template.xlsx",
+      "sheet": "Weekly_Goals",
+      "data": {
+        "week_of": "{{now()}}",
+        "applications_target": "{{set_weekly_goals.applications_target}}",
+        "outreach_target": "{{set_weekly_goals.outreach_target}}",
+        "networking_target": "{{set_weekly_goals.networking_target}}",
+        "other_goals": "{{set_weekly_goals.other_goals}}"
+      }
+    },
+    {
+      "id": "notify_completion",
+      "type": "notification",
+      "channel": "teams",
+      "message": "Weekly review completed. Goals set for next week."
+    }
+  ],
+  "error_handling": {
+    "on_error": "log_and_notify",
+    "rollback": false
+  },
+  "audit": {
+    "log_execution": true,
+    "log_to_excel": true,
+    "sheet": "Audit_Log"
+  }
+}

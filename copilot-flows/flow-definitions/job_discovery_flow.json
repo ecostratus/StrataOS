@@ -1,0 +1,78 @@
+{
+  "name": "Job Discovery Flow",
+  "version": "1.0",
+  "description": "Automated job discovery and scoring workflow",
+  "trigger": {
+    "type": "manual",
+    "schedule": {
+      "frequency": "daily",
+      "time": "08:00"
+    }
+  },
+  "steps": [
+    {
+      "id": "prompt_criteria",
+      "type": "user_input",
+      "prompt": "Define your job search criteria",
+      "fields": [
+        {
+          "name": "keywords",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "location",
+          "type": "text",
+          "required": false
+        },
+        {
+          "name": "remote_preference",
+          "type": "choice",
+          "options": ["remote", "hybrid", "onsite", "any"]
+        }
+      ]
+    },
+    {
+      "id": "execute_scraper",
+      "type": "script",
+      "script_path": "automation/job-discovery/scripts/job_scraper_v1.py",
+      "parameters": {
+        "keywords": "{{prompt_criteria.keywords}}",
+        "location": "{{prompt_criteria.location}}",
+        "remote": "{{prompt_criteria.remote_preference}}"
+      }
+    },
+    {
+      "id": "score_jobs",
+      "type": "script",
+      "script_path": "automation/job-discovery/scripts/score_jobs.py",
+      "parameters": {
+        "input_file": "{{execute_scraper.output_file}}"
+      }
+    },
+    {
+      "id": "update_excel",
+      "type": "excel_action",
+      "action": "append_rows",
+      "file": "excel-templates/system-of-record-template.xlsx",
+      "sheet": "Jobs",
+      "data": "{{score_jobs.output}}"
+    },
+    {
+      "id": "notify_high_priority",
+      "type": "notification",
+      "condition": "{{score_jobs.high_priority_count > 0}}",
+      "channel": "teams",
+      "message": "Found {{score_jobs.high_priority_count}} high-priority job opportunities"
+    }
+  ],
+  "error_handling": {
+    "on_error": "log_and_notify",
+    "rollback": true
+  },
+  "audit": {
+    "log_execution": true,
+    "log_to_excel": true,
+    "sheet": "Audit_Log"
+  }
+}

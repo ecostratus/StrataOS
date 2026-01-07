@@ -1,0 +1,97 @@
+{
+  "name": "Resume Tailoring Flow",
+  "version": "1.0",
+  "description": "AI-assisted resume customization for specific job opportunities",
+  "trigger": {
+    "type": "manual",
+    "context": "job_record"
+  },
+  "steps": [
+    {
+      "id": "load_job",
+      "type": "excel_action",
+      "action": "read_row",
+      "file": "excel-templates/system-of-record-template.xlsx",
+      "sheet": "Jobs",
+      "filter": {
+        "job_id": "{{trigger.job_id}}"
+      }
+    },
+    {
+      "id": "load_master_resume",
+      "type": "file_action",
+      "action": "read",
+      "file_path": "resumes/master_resume.docx"
+    },
+    {
+      "id": "generate_tailored_resume",
+      "type": "ai_prompt",
+      "prompt_file": "prompts/resume/resume_tailor_prompt_v1.md",
+      "parameters": {
+        "master_resume": "{{load_master_resume.content}}",
+        "job_description": "{{load_job.description}}",
+        "company": "{{load_job.company}}",
+        "role": "{{load_job.title}}"
+      }
+    },
+    {
+      "id": "review_resume",
+      "type": "user_approval",
+      "prompt": "Review tailored resume",
+      "data": "{{generate_tailored_resume.output}}",
+      "options": ["approve", "edit", "regenerate", "cancel"]
+    },
+    {
+      "id": "handle_edit",
+      "type": "conditional",
+      "condition": "{{review_resume.choice == 'edit'}}",
+      "true_action": {
+        "type": "user_input",
+        "prompt": "Edit the resume",
+        "field": "edited_resume",
+        "default": "{{generate_tailored_resume.output}}"
+      }
+    },
+    {
+      "id": "handle_regenerate",
+      "type": "conditional",
+      "condition": "{{review_resume.choice == 'regenerate'}}",
+      "true_action": {
+        "type": "goto_step",
+        "step_id": "generate_tailored_resume"
+      }
+    },
+    {
+      "id": "save_resume",
+      "type": "file_action",
+      "condition": "{{review_resume.choice == 'approve' || review_resume.choice == 'edit'}}",
+      "action": "write",
+      "file_path": "resumes/tailored/{{load_job.company}}_{{load_job.job_id}}.docx",
+      "content": "{{review_resume.choice == 'edit' ? handle_edit.edited_resume : generate_tailored_resume.output}}"
+    },
+    {
+      "id": "update_job_record",
+      "type": "excel_action",
+      "action": "update_row",
+      "file": "excel-templates/system-of-record-template.xlsx",
+      "sheet": "Jobs",
+      "filter": {
+        "job_id": "{{trigger.job_id}}"
+      },
+      "data": {
+        "resume_tailored": true,
+        "resume_path": "{{save_resume.file_path}}",
+        "tailored_date": "{{now()}}"
+      }
+    }
+  ],
+  "error_handling": {
+    "on_error": "log_and_notify",
+    "rollback": false
+  },
+  "audit": {
+    "log_execution": true,
+    "log_to_excel": true,
+    "sheet": "Audit_Log"
+  }
+}
