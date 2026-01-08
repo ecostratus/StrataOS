@@ -4,6 +4,8 @@
 
 This document defines the specification for the 60-Day Operating Dashboard that provides visual insights and metrics for the personal operating system.
 
+This dashboard integrates with the **Canonical 10-Sheet System of Record (SoR)** schema.
+
 ## Dashboard Purpose
 
 Provide at-a-glance visibility into:
@@ -38,31 +40,35 @@ Provide at-a-glance visibility into:
 
 ### Section 2: Activity Funnel
 
-**Job Search Funnel**
+**Role Search Funnel**
 ```
-Jobs Discovered (500) ───→ High Priority (50) ───→ Applied (25) ───→ 
+Roles Identified (500) ───→ High FitScore (50) ───→ Applied (25) ───→ 
 Response (10) ───→ Interview (5) ───→ Offer (1)
 ```
 
 With conversion rates at each stage:
-- Discovery to Priority: X%
-- Priority to Applied: Y%
+- Identification to High FitScore: X%
+- High FitScore to Applied: Y%
 - Applied to Response: Z%
 - Response to Interview: A%
 - Interview to Offer: B%
 
 **Visual**: Funnel chart showing drop-off at each stage
 
+**Data Source**: Roles sheet (Status field), StatusHistory sheet (status transitions)
+
 ### Section 3: Activity Trends
 
 **Weekly Activity Chart**
 - Line chart showing weekly trends for:
-  - Jobs discovered
-  - Applications submitted
-  - Outreach sent
-  - Interviews conducted
+  - Roles identified (Roles sheet, Status = "Identified")
+  - Applications submitted (Roles sheet, Status = "Applied")
+  - Outreach sent (Outreach sheet, SentDate)
+  - Interviews conducted (Interviews sheet, CompletedDate)
 
 **Time Period**: Last 8 weeks
+
+**Data Sources**: Roles sheet, Outreach sheet, Interviews sheet, StatusHistory sheet
 
 ### Section 4: Response Metrics
 
@@ -76,31 +82,37 @@ With conversion rates at each stage:
 
 ### Section 5: Quality Metrics
 
-**Job Scores Distribution**
-- Histogram showing distribution of job scores
-- Average score: X.X
-- Median score: X.X
-- Number of exceptional matches (9-10)
-- Number of strong matches (7-8.9)
+**Role FitScore Distribution**
+- Histogram showing distribution of role fit scores
+- Average FitScore: X.X
+- Median FitScore: X.X
+- Number of exceptional matches (90-100)
+- Number of strong matches (70-89)
+
+**Data Source**: Roles sheet (FitScore field)
 
 **Application Quality**
-- Average days to apply (from discovery)
-- Resume tailoring rate: X%
-- Cover letter inclusion rate: Y%
+- Average days to apply (from identification to Applied status)
+- Status transition time analysis
+
+**Data Sources**: Roles sheet, StatusHistory sheet
 
 ### Section 6: Consulting Pipeline
 
 **Opportunity Stages**
-| Stage | Count | Value | Win Rate |
-|-------|-------|-------|----------|
-| Lead | X | $XX,XXX | N/A |
-| Qualified | X | $XX,XXX | N/A |
-| Proposal | X | $XX,XXX | XX% |
-| Negotiation | X | $XX,XXX | XX% |
-| Won | X | $XX,XXX | 100% |
-| Lost | X | $XX,XXX | 0% |
+| Stage | Count | Value | Status |
+|-------|-------|-------|--------|
+| Discovery | X | $XX,XXX | Open |
+| Proposal | X | $XX,XXX | Open/In Progress |
+| Implementation | X | $XX,XXX | In Progress |
+| Retainer | X | $XX,XXX | In Progress |
+| Training | X | $XX,XXX | Open/In Progress |
+| Closed Won | X | $XX,XXX | 100% |
+| Closed Lost | X | $XX,XXX | 0% |
 
 **Visual**: Pipeline chart with stages and values
+
+**Data Source**: Consulting sheet (Type, Status, ValueEstimate fields)
 
 ### Section 7: Time Investment
 
@@ -119,33 +131,52 @@ With conversion rates at each stage:
 
 ### Section 8: Goal Achievement
 
-**Weekly Goals Tracker**
-| Week Of | Apps Target | Apps Actual | Outreach Target | Outreach Actual | Achievement % |
-|---------|-------------|-------------|-----------------|-----------------|---------------|
-| Week 1 | X | Y | A | B | XX% |
-| Week 2 | X | Y | A | B | XX% |
-| ... | ... | ... | ... | ... | ... |
+**Weekly KPI Tracker**
+
+Metrics are calculated from the Metrics sheet, which stores computed KPIs:
+- Applications submitted (from Roles sheet status transitions)
+- Outreach messages sent (from Outreach sheet)
+- Interviews scheduled (from Interviews sheet)
+- Offers received (from Roles sheet, Status = "Closed" with positive outcome)
+
+**Metrics Display**
+| Week Of | Metric Name | Target | Actual | Achievement % |
+|---------|-------------|--------|--------|---------------|
+| Week 1 | Applications | X | Y | XX% |
+| Week 1 | Outreach | A | B | XX% |
+| Week 2 | Applications | X | Y | XX% |
+| Week 2 | Outreach | A | B | XX% |
 
 **Overall Achievement Rate**: XX%
 
 **Visual**: Line chart showing weekly achievement percentage
 
+**Data Source**: Metrics sheet (computed KPIs populated by automation)
+
 ### Section 9: System Health
 
 **Automation Status**
-- Job scraper: ✓ Working / ⚠ Issues / ✗ Down
-- Resume tailoring: ✓ Working / ⚠ Issues / ✗ Down
-- Outreach generation: ✓ Working / ⚠ Issues / ✗ Down
-- Score calculation: ✓ Working / ⚠ Issues / ✗ Down
+- Role discovery flow: ✓ Working / ⚠ Issues / ✗ Down
+- Resume tailoring flow: ✓ Working / ⚠ Issues / ✗ Down
+- Outreach generation flow: ✓ Working / ⚠ Issues / ✗ Down
+- FitScore calculation: ✓ Working / ⚠ Issues / ✗ Down
+
+**Data Source**: FlowErrors sheet (check for unresolved errors)
 
 **Data Quality**
 - Missing data rate: X%
-- Audit log completeness: XX%
+- StatusHistory completeness: XX%
+- ChangeLog entries: X changes this week
 - Data freshness: Updated X hours ago
 
+**Data Sources**: StatusHistory sheet, ChangeLog sheet, FlowErrors sheet
+
+**Active Flow Errors**
+Count of unresolved errors from FlowErrors sheet where Resolved = "No"
+
 **Alerts**
-- [Active alert 1 if any]
-- [Active alert 2 if any]
+- [Active alert 1 if any - from FlowErrors]
+- [Active alert 2 if any - from FlowErrors]
 
 ### Section 10: Next Actions
 
@@ -167,14 +198,21 @@ With conversion rates at each stage:
 
 ## Data Sources
 
-All dashboard metrics pull from the System of Record workbook:
-- **Jobs sheet**: Job discovery and scoring data
-- **Applications sheet**: Application tracking
-- **Outreach sheet**: Networking activities
-- **Consulting sheet**: Consulting pipeline
-- **Interviews sheet**: Interview schedule
-- **Weekly_Goals sheet**: Goal tracking
-- **Audit_Log sheet**: System health
+All dashboard metrics pull from the **Canonical 10-Sheet System of Record** workbook:
+
+### Core Entity Sheets
+- **Roles sheet**: Target roles, applications status (FitScore, Status, CompanyID, LastUpdated)
+- **Companies sheet**: Company information for roles and consulting
+- **Contacts sheet**: Professional network contacts
+- **Outreach sheet**: Outreach tracking (Channel, MessageType, ResponseType)
+- **Interviews sheet**: Interview stages and outcomes
+- **Consulting sheet**: Consulting pipeline (Type, Status, ValueEstimate)
+
+### Computed and Audit Sheets
+- **Metrics sheet**: Computed KPIs and summary metrics (populated by automation)
+- **StatusHistory sheet**: Status change audit trail for all entities
+- **FlowErrors sheet**: Automation and Copilot flow error tracking
+- **ChangeLog sheet**: Structural changes to the SoR schema
 
 ## Refresh Frequency
 

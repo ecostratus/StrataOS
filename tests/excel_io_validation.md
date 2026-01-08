@@ -4,14 +4,33 @@
 
 This document outlines validation procedures for Excel file I/O operations in the personal operating system.
 
+**Schema Version**: Canonical 10-Sheet System of Record (SoR) v1.0
+
 ## Purpose
 
 Ensure that:
 1. Data is read correctly from Excel files
 2. Data is written correctly to Excel files
-3. Data integrity is maintained
+3. Data integrity is maintained across the **10 canonical sheets**
 4. No data corruption occurs
 5. File format is preserved
+6. Foreign key relationships are validated
+7. Audit trails (StatusHistory, FlowErrors, ChangeLog) function correctly
+
+## Canonical 10-Sheet Schema
+
+The System of Record consists of exactly **10 sheets**:
+
+1. **Roles** — Tracks all target roles under consideration
+2. **Companies** — Tracks companies associated with roles, outreach, or consulting
+3. **Contacts** — Tracks people associated with companies, outreach, or referrals
+4. **Outreach** — Tracks all outbound messages and follow-ups
+5. **Interviews** — Tracks interview stages and preparation
+6. **Consulting** — Tracks consulting opportunities and engagements
+7. **Metrics** — Stores computed KPIs and summary metrics
+8. **StatusHistory** — Tracks every status change across all entities
+9. **FlowErrors** — Captures automation and Copilot Studio flow errors
+10. **ChangeLog** — Tracks structural changes to the SoR
 
 ## Tools Required
 
@@ -21,14 +40,106 @@ Ensure that:
 
 ## Validation Procedures
 
+### 0. Schema Compliance Validation
+
+#### Test: Verify 10 Canonical Sheets Exist
+**Objective**: Ensure workbook contains exactly the 10 canonical sheets
+
+**Steps**:
+1. Open System of Record workbook
+2. List all sheet names
+3. Verify exactly 10 sheets exist
+4. Verify sheet names match canonical schema
+
+**Expected**: 
+- Exactly 10 sheets
+- Sheet names: `Roles`, `Companies`, `Contacts`, `Outreach`, `Interviews`, `Consulting`, `Metrics`, `StatusHistory`, `FlowErrors`, `ChangeLog`
+
+**Python Example**:
+```python
+from openpyxl import load_workbook
+
+wb = load_workbook('system-of-record.xlsx')
+sheet_names = wb.sheetnames
+
+expected_sheets = [
+    'Roles', 'Companies', 'Contacts', 'Outreach', 
+    'Interviews', 'Consulting', 'Metrics', 
+    'StatusHistory', 'FlowErrors', 'ChangeLog'
+]
+
+assert len(sheet_names) == 10, f"Expected 10 sheets, found {len(sheet_names)}"
+assert set(sheet_names) == set(expected_sheets), f"Sheet names mismatch"
+```
+
+#### Test: Verify Excel Table Names
+**Objective**: Ensure each sheet has an Excel Table with matching name
+
+**Steps**:
+1. For each sheet, verify Excel Table exists
+2. Verify Table name matches sheet name
+
+**Expected**: Each sheet has a table named exactly after the sheet
+
+**Python Example**:
+```python
+for sheet_name in expected_sheets:
+    ws = wb[sheet_name]
+    tables = ws.tables
+    assert len(tables) == 1, f"Sheet {sheet_name} should have exactly 1 table"
+    table_name = list(tables.keys())[0]
+    assert table_name == sheet_name, f"Table name {table_name} should match sheet {sheet_name}"
+```
+
+#### Test: Verify Required Columns - Roles Sheet
+**Objective**: Ensure Roles sheet has all required columns
+
+**Required Columns**: `RoleID`, `Title`, `Seniority`, `Function`, `Source`, `FitScore`, `Status`, `CompanyID`, `LastUpdated`
+
+**Steps**:
+1. Open Roles sheet
+2. Read header row
+3. Verify all required columns present
+
+**Expected**: All required columns exist
+
+#### Test: Verify Required Columns - Companies Sheet
+**Objective**: Ensure Companies sheet has all required columns
+
+**Required Columns**: `CompanyID`, `Name`, `Industry`, `Location`, `Size`, `Website`, `Notes`
+
+#### Test: Verify Required Columns - Contacts Sheet
+**Required Columns**: `ContactID`, `Name`, `Role`, `CompanyID`, `Email`, `LinkedIn`, `RelationshipStrength`, `Notes`
+
+#### Test: Verify Required Columns - Outreach Sheet
+**Required Columns**: `OutreachID`, `ContactID`, `CompanyID`, `RoleID`, `Channel`, `MessageType`, `SentDate`, `ResponseDate`, `ResponseType`, `NextActionDate`, `Notes`
+
+#### Test: Verify Required Columns - Interviews Sheet
+**Required Columns**: `InterviewID`, `RoleID`, `CompanyID`, `Stage`, `ScheduledDate`, `CompletedDate`, `Outcome`, `Notes`
+
+#### Test: Verify Required Columns - Consulting Sheet
+**Required Columns**: `ConsultingID`, `CompanyID`, `Type`, `Status`, `ValueEstimate`, `NextActionDate`, `Notes`
+
+#### Test: Verify Required Columns - Metrics Sheet
+**Required Columns**: `MetricName`, `MetricValue`, `LastUpdated`
+
+#### Test: Verify Required Columns - StatusHistory Sheet
+**Required Columns**: `HistoryID`, `EntityType`, `EntityID`, `OldStatus`, `NewStatus`, `ChangedBy`, `ChangedAt`
+
+#### Test: Verify Required Columns - FlowErrors Sheet
+**Required Columns**: `ErrorID`, `FlowName`, `Timestamp`, `ErrorMessage`, `Payload`, `Resolved`
+
+#### Test: Verify Required Columns - ChangeLog Sheet
+**Required Columns**: `ChangeID`, `SheetName`, `FieldName`, `OldValue`, `NewValue`, `ChangedBy`, `ChangedAt`
+
 ### 1. Read Operations Validation
 
 #### Test: Read Single Cell
 **Objective**: Verify reading a single cell value
 
 **Steps**:
-1. Open test Excel file with known data
-2. Read specific cell (e.g., A1)
+1. Open test Excel file with known data from Roles sheet
+2. Read specific cell (e.g., A2 for first RoleID)
 3. Verify value matches expected
 
 **Expected**: Exact match of cell value
@@ -37,10 +148,10 @@ Ensure that:
 ```python
 from openpyxl import load_workbook
 
-wb = load_workbook('test.xlsx')
-ws = wb.active
-value = ws['A1'].value
-assert value == 'Expected Value'
+wb = load_workbook('system-of-record.xlsx')
+ws = wb['Roles']
+value = ws['A2'].value  # First RoleID
+assert value is not None, "RoleID should not be empty"
 ```
 
 #### Test: Read Range
@@ -65,14 +176,15 @@ assert value == 'Expected Value'
 **Expected**: Correct dimensions and values
 
 #### Test: Read Multiple Sheets
-**Objective**: Verify reading from different sheets
+**Objective**: Verify reading from different canonical sheets
 
 **Steps**:
-1. Open workbook with multiple sheets
-2. Read from each sheet
+1. Open workbook with all 10 canonical sheets
+2. Read from Roles, Companies, Contacts sheets
 3. Verify correct sheet accessed
+4. Verify data structure matches schema
 
-**Expected**: Data from correct sheets
+**Expected**: Data from correct sheets with proper structure
 
 ### 2. Write Operations Validation
 
@@ -150,26 +262,34 @@ assert wb.active['A1'].value == 'New Value'
 
 **Expected**: Strings preserved exactly
 
-#### Test: Numeric Values
-**Objective**: Verify number handling
+#### Test: FitScore Range Validation
+**Objective**: Verify FitScore values are in valid range
 
-**Test Values**:
-- Integer: 42
-- Float: 3.14159
-- Negative: -100
-- Zero: 0
-- Large number: 1000000000
-- Scientific notation: 1.23e10
+**Test Values**: Numbers 0-100
 
-**Expected**: Numbers preserved with precision
+**Steps**:
+1. Read all FitScore values from Roles sheet
+2. Verify all values are between 0 and 100
+3. Flag any out-of-range values
+
+**Expected**: All FitScores in valid range (0-100)
 
 #### Test: Date Values
-**Objective**: Verify date handling
+**Objective**: Verify date handling across sheets
 
 **Test Values**:
 - Date: 2024-01-15
 - DateTime: 2024-01-15 14:30:00
-- Time: 14:30:00
+
+**Sheets with Date Fields**:
+- Roles: LastUpdated
+- Outreach: SentDate, ResponseDate, NextActionDate
+- Interviews: ScheduledDate, CompletedDate
+- Consulting: NextActionDate
+- Metrics: LastUpdated
+- StatusHistory: ChangedAt
+- FlowErrors: Timestamp
+- ChangeLog: ChangedAt
 
 **Expected**: Dates/times preserved correctly
 
@@ -329,7 +449,108 @@ assert wb.active['A1'].value == 'New Value'
 
 **Expected**: Memory doesn't grow indefinitely
 
-### 7. Concurrent Access Validation
+### 7. Foreign Key Validation
+
+#### Test: Validate Roles.CompanyID FK
+**Objective**: Verify foreign key references are valid
+
+**Steps**:
+1. Read all CompanyID values from Roles sheet
+2. Read all CompanyID values from Companies sheet
+3. Verify all Roles.CompanyID exist in Companies.CompanyID
+4. Flag any orphaned references
+
+**Expected**: All FK references are valid
+
+**Python Example**:
+```python
+wb = load_workbook('system-of-record.xlsx')
+roles_ws = wb['Roles']
+companies_ws = wb['Companies']
+
+# Get valid CompanyIDs
+valid_company_ids = set()
+for row in companies_ws.iter_rows(min_row=2, values_only=True):
+    if row[0]:  # CompanyID is first column
+        valid_company_ids.add(row[0])
+
+# Check Roles.CompanyID references
+for row in roles_ws.iter_rows(min_row=2, values_only=True):
+    company_id = row[7]  # CompanyID is 8th column
+    if company_id and company_id not in valid_company_ids:
+        print(f"Invalid FK: RoleID {row[0]} references non-existent CompanyID {company_id}")
+```
+
+#### Test: Validate Contacts.CompanyID FK
+**Objective**: Verify Contacts.CompanyID references exist in Companies
+
+**Steps**: Similar to above, validate Contacts.CompanyID against Companies.CompanyID
+
+#### Test: Validate Outreach Foreign Keys
+**Objective**: Verify Outreach sheet FKs are valid
+
+**Foreign Keys to Validate**:
+- Outreach.ContactID → Contacts.ContactID
+- Outreach.CompanyID → Companies.CompanyID
+- Outreach.RoleID → Roles.RoleID
+
+**Expected**: All FK references are valid
+
+#### Test: Validate Interviews Foreign Keys
+**Foreign Keys**:
+- Interviews.RoleID → Roles.RoleID
+- Interviews.CompanyID → Companies.CompanyID
+
+#### Test: Validate Consulting.CompanyID FK
+**Foreign Key**:
+- Consulting.CompanyID → Companies.CompanyID
+
+### 8. Audit Sheet Validation
+
+#### Test: StatusHistory Logging
+**Objective**: Verify StatusHistory captures status changes
+
+**Steps**:
+1. Record initial status of a Role
+2. Change status (e.g., from "Identified" to "Applied")
+3. Verify StatusHistory has new entry with:
+   - EntityType = "Role"
+   - EntityID = RoleID
+   - OldStatus = "Identified"
+   - NewStatus = "Applied"
+   - ChangedAt timestamp
+
+**Expected**: Status change logged correctly
+
+#### Test: FlowErrors Logging
+**Objective**: Verify FlowErrors captures automation errors
+
+**Steps**:
+1. Simulate flow error (or check existing errors)
+2. Verify FlowErrors sheet has entry with:
+   - ErrorID (unique)
+   - FlowName
+   - Timestamp
+   - ErrorMessage
+   - Resolved status
+
+**Expected**: Errors logged with all required fields
+
+#### Test: ChangeLog Logging
+**Objective**: Verify ChangeLog captures schema changes
+
+**Steps**:
+1. Make a schema change (e.g., add validation rule)
+2. Verify ChangeLog has entry with:
+   - ChangeID (unique)
+   - SheetName
+   - FieldName
+   - OldValue, NewValue
+   - ChangedAt timestamp
+
+**Expected**: Schema changes logged
+
+### 9. Data Type Validation
 
 #### Test: Multiple Readers
 **Objective**: Verify multiple processes can read
@@ -351,50 +572,143 @@ assert wb.active['A1'].value == 'New Value'
 
 **Expected**: Second write fails or waits
 
-### 8. Integration Tests
+### 12. Integration Tests
 
-#### Test: Job Discovery Integration
-**Objective**: Verify job scraper can write to Excel
+#### Test: Role Discovery Integration
+**Objective**: Verify role discovery automation can write to Roles sheet
 
 **Steps**:
-1. Run job scraper script
-2. Verify jobs written to Jobs sheet
-3. Verify all required fields populated
+1. Run role discovery automation script
+2. Verify new roles written to Roles sheet
+3. Verify all required fields populated:
+   - RoleID (unique)
+   - Title
+   - Status = "Identified"
+   - FitScore (if calculated)
+   - CompanyID (FK valid)
+   - LastUpdated
 4. Verify data types correct
+5. Verify StatusHistory has entry for new role
 
-**Expected**: Data written correctly
+**Expected**: Roles written correctly with valid data
 
-#### Test: Application Tracking Integration
-**Objective**: Verify application logging works
+#### Test: Status Change Integration
+**Objective**: Verify status updates trigger StatusHistory logging
 
 **Steps**:
-1. Log test application
-2. Verify written to Applications sheet
-3. Verify all fields correct
-4. Verify foreign key (job_id) valid
+1. Change a Role status from "Identified" to "Applied"
+2. Verify Roles sheet updated
+3. Verify StatusHistory sheet has new entry:
+   - EntityType = "Role"
+   - EntityID matches RoleID
+   - OldStatus = "Identified"
+   - NewStatus = "Applied"
+   - ChangedAt has current timestamp
+4. Verify foreign key integrity maintained
 
-**Expected**: Application logged correctly
+**Expected**: Status change logged in StatusHistory
 
-#### Test: Dashboard Integration
-**Objective**: Verify dashboard reads data correctly
+#### Test: Outreach Tracking Integration
+**Objective**: Verify outreach logging works
+
+**Steps**:
+1. Log test outreach message
+2. Verify written to Outreach sheet
+3. Verify all fields correct:
+   - OutreachID (unique)
+   - ContactID (FK valid)
+   - CompanyID (FK valid)
+   - RoleID (FK valid if applicable)
+   - Channel (valid dropdown value)
+   - MessageType (valid dropdown value)
+   - SentDate
+4. Verify foreign keys reference existing records
+
+**Expected**: Outreach logged correctly with valid FKs
+
+#### Test: Interview Scheduling Integration
+**Objective**: Verify interview scheduling works
+
+**Steps**:
+1. Schedule test interview
+2. Verify written to Interviews sheet
+3. Verify all fields correct:
+   - InterviewID (unique)
+   - RoleID (FK valid)
+   - CompanyID (FK valid)
+   - Stage (valid dropdown value)
+   - ScheduledDate
+4. Verify FKs reference existing Roles and Companies
+
+**Expected**: Interview scheduled with valid data
+
+#### Test: Flow Error Logging Integration
+**Objective**: Verify FlowErrors captures automation errors
+
+**Steps**:
+1. Trigger automation error (or simulate)
+2. Verify error logged to FlowErrors sheet
+3. Verify all required fields populated:
+   - ErrorID (unique)
+   - FlowName
+   - Timestamp
+   - ErrorMessage
+   - Resolved = "No"
+4. Verify error can be marked as resolved
+
+**Expected**: Errors logged and resolvable
+
+#### Test: Metrics Calculation Integration
+**Objective**: Verify Metrics sheet populated by automation
 
 **Steps**:
 1. Populate source sheets with test data
-2. Open dashboard
-3. Verify metrics calculated correctly
-4. Verify charts display correctly
+2. Run metrics calculation automation
+3. Verify Metrics sheet updated with:
+   - Computed KPIs (e.g., TotalRolesIdentified)
+   - Weekly activity counts
+   - Conversion rates
+4. Verify LastUpdated timestamp
 
-**Expected**: Dashboard reflects data accurately
+**Expected**: Metrics calculated and stored correctly
+
+#### Test: Dashboard Data Integration
+**Objective**: Verify dashboard reads canonical sheets correctly
+
+**Steps**:
+1. Populate all 10 canonical sheets with test data
+2. Open dashboard workbook
+3. Verify dashboard pulls data from:
+   - Roles sheet (for role funnel, FitScore distribution)
+   - Companies sheet (for company analysis)
+   - Outreach sheet (for outreach metrics)
+   - Interviews sheet (for interview tracking)
+   - Consulting sheet (for pipeline value)
+   - Metrics sheet (for KPIs)
+   - StatusHistory sheet (for trend analysis)
+   - FlowErrors sheet (for system health)
+4. Verify metrics calculated correctly
+5. Verify charts display correctly
+6. Verify no references to legacy sheets
+
+**Expected**: Dashboard reflects canonical schema data accurately
 
 ## Validation Checklist
 
-Use this checklist for comprehensive validation:
+Use this checklist for comprehensive validation of the **Canonical 10-Sheet SoR**:
+
+### Schema Compliance
+- [ ] Exactly 10 sheets exist (no more, no fewer)
+- [ ] Sheet names match canonical schema
+- [ ] Each sheet has Excel Table with matching name
+- [ ] All required columns present in each sheet
+- [ ] No legacy sheets (Jobs, Applications, Weekly_Goals, Audit_Log, Dashboard)
 
 ### Read Operations
 - [ ] Single cell read works
 - [ ] Range read works
 - [ ] Full sheet read works
-- [ ] Multi-sheet read works
+- [ ] Multi-sheet read works (all 10 canonical sheets)
 - [ ] Empty cells handled
 - [ ] All data types read correctly
 
@@ -412,6 +726,33 @@ Use this checklist for comprehensive validation:
 - [ ] Data types preserved
 - [ ] Formulas handled correctly
 - [ ] Null values handled
+- [ ] FitScore values in range (0-100)
+
+### Foreign Key Validation
+- [ ] Roles.CompanyID → Companies.CompanyID
+- [ ] Contacts.CompanyID → Companies.CompanyID
+- [ ] Outreach.ContactID → Contacts.ContactID
+- [ ] Outreach.CompanyID → Companies.CompanyID
+- [ ] Outreach.RoleID → Roles.RoleID
+- [ ] Interviews.RoleID → Roles.RoleID
+- [ ] Interviews.CompanyID → Companies.CompanyID
+- [ ] Consulting.CompanyID → Companies.CompanyID
+
+### Dropdown Validation
+- [ ] Roles.Status dropdown works
+- [ ] Contacts.RelationshipStrength dropdown works
+- [ ] Outreach dropdowns (Channel, MessageType, ResponseType) work
+- [ ] Interviews dropdowns (Stage, Outcome) work
+- [ ] Consulting dropdowns (Type, Status) work
+- [ ] StatusHistory.EntityType dropdown works
+- [ ] FlowErrors.Resolved dropdown works
+
+### Audit Sheet Functionality
+- [ ] StatusHistory logs status changes
+- [ ] FlowErrors logs automation errors
+- [ ] ChangeLog logs schema changes
+- [ ] Audit sheets populated automatically
+- [ ] Audit data integrity maintained
 
 ### Format Preservation
 - [ ] Cell formatting preserved
@@ -419,13 +760,15 @@ Use this checklist for comprehensive validation:
 - [ ] Row heights preserved
 - [ ] Merged cells preserved
 - [ ] Sheet structure intact
+- [ ] Conditional formatting works
 
 ### Error Handling
 - [ ] File not found handled
-- [ ] Invalid sheet handled
+- [ ] Invalid sheet name handled
 - [ ] Read-only file handled
 - [ ] Corrupted file handled
 - [ ] Invalid references handled
+- [ ] Invalid FK references detected
 
 ### Performance
 - [ ] Large files handled efficiently
@@ -434,10 +777,14 @@ Use this checklist for comprehensive validation:
 - [ ] Operations complete in reasonable time
 
 ### Integration
-- [ ] Scripts can read/write
-- [ ] Data flows between sheets
+- [ ] Automation scripts can read/write
+- [ ] Data flows between canonical sheets
 - [ ] Foreign keys maintained
-- [ ] Dashboard displays correctly
+- [ ] Dashboard reads canonical sheets correctly
+- [ ] No references to legacy sheets in automation
+- [ ] Metrics sheet populated by automation
+- [ ] StatusHistory populated on status changes
+- [ ] FlowErrors populated on automation errors
 
 ## Automated Testing
 
@@ -447,55 +794,135 @@ import pytest
 from openpyxl import load_workbook, Workbook
 
 class TestExcelIO:
-    """Test Excel I/O operations."""
+    """Test Excel I/O operations for Canonical 10-Sheet SoR."""
     
-    def test_read_cell(self, tmp_path):
-        """Test reading single cell."""
+    def test_canonical_sheets_exist(self, tmp_path):
+        """Test that all 10 canonical sheets exist."""
+        # Load the System of Record workbook
+        wb = load_workbook('system-of-record.xlsx')
+        sheet_names = wb.sheetnames
+        
+        expected_sheets = [
+            'Roles', 'Companies', 'Contacts', 'Outreach',
+            'Interviews', 'Consulting', 'Metrics',
+            'StatusHistory', 'FlowErrors', 'ChangeLog'
+        ]
+        
+        assert len(sheet_names) == 10, f"Expected 10 sheets, found {len(sheet_names)}"
+        assert set(sheet_names) == set(expected_sheets), f"Sheet names mismatch"
+    
+    def test_roles_sheet_columns(self):
+        """Test Roles sheet has required columns."""
+        wb = load_workbook('system-of-record.xlsx')
+        ws = wb['Roles']
+        
+        headers = [cell.value for cell in ws[1]]
+        required_columns = [
+            'RoleID', 'Title', 'Seniority', 'Function', 
+            'Source', 'FitScore', 'Status', 'CompanyID', 'LastUpdated'
+        ]
+        
+        for col in required_columns:
+            assert col in headers, f"Missing required column: {col}"
+    
+    def test_companies_sheet_columns(self):
+        """Test Companies sheet has required columns."""
+        wb = load_workbook('system-of-record.xlsx')
+        ws = wb['Companies']
+        
+        headers = [cell.value for cell in ws[1]]
+        required_columns = [
+            'CompanyID', 'Name', 'Industry', 'Location', 
+            'Size', 'Website', 'Notes'
+        ]
+        
+        for col in required_columns:
+            assert col in headers, f"Missing required column: {col}"
+    
+    def test_foreign_key_validity_roles_company(self):
+        """Test Roles.CompanyID references valid Companies.CompanyID."""
+        wb = load_workbook('system-of-record.xlsx')
+        roles_ws = wb['Roles']
+        companies_ws = wb['Companies']
+        
+        # Get valid CompanyIDs
+        valid_company_ids = set()
+        for row in companies_ws.iter_rows(min_row=2, values_only=True):
+            if row[0]:  # CompanyID is first column
+                valid_company_ids.add(row[0])
+        
+        # Check Roles.CompanyID references
+        invalid_fks = []
+        for row in roles_ws.iter_rows(min_row=2, values_only=True):
+            role_id = row[0]
+            company_id = row[7]  # CompanyID is 8th column
+            if company_id and company_id not in valid_company_ids:
+                invalid_fks.append((role_id, company_id))
+        
+        assert len(invalid_fks) == 0, f"Invalid FK references: {invalid_fks}"
+    
+    def test_fitScore_range(self):
+        """Test FitScore values are in valid range (0-100)."""
+        wb = load_workbook('system-of-record.xlsx')
+        ws = wb['Roles']
+        
+        invalid_scores = []
+        for row in ws.iter_rows(min_row=2, values_only=True):
+            role_id = row[0]
+            fit_score = row[5]  # FitScore is 6th column
+            if fit_score is not None:
+                if not (0 <= fit_score <= 100):
+                    invalid_scores.append((role_id, fit_score))
+        
+        assert len(invalid_scores) == 0, f"Invalid FitScores: {invalid_scores}"
+    
+    def test_status_history_logging(self, tmp_path):
+        """Test StatusHistory captures status changes."""
         # Create test file
         wb = Workbook()
-        ws = wb.active
-        ws['A1'] = 'Test Value'
-        file_path = tmp_path / "test.xlsx"
+        
+        # Create Roles sheet
+        roles_ws = wb.create_sheet('Roles')
+        roles_ws.append(['RoleID', 'Status'])
+        roles_ws.append(['ROLE001', 'Identified'])
+        
+        # Create StatusHistory sheet
+        history_ws = wb.create_sheet('StatusHistory')
+        history_ws.append(['HistoryID', 'EntityType', 'EntityID', 'OldStatus', 'NewStatus', 'ChangedBy', 'ChangedAt'])
+        
+        file_path = tmp_path / "test_status.xlsx"
         wb.save(file_path)
         
-        # Test read
+        # Simulate status change
         wb = load_workbook(file_path)
-        assert wb.active['A1'].value == 'Test Value'
-    
-    def test_write_cell(self, tmp_path):
-        """Test writing single cell."""
-        # Create test file
-        wb = Workbook()
-        file_path = tmp_path / "test.xlsx"
-        wb.save(file_path)
+        roles_ws = wb['Roles']
+        history_ws = wb['StatusHistory']
         
-        # Test write
-        wb = load_workbook(file_path)
-        wb.active['A1'] = 'New Value'
+        # Change status
+        roles_ws['B2'] = 'Applied'
+        
+        # Log to StatusHistory
+        history_ws.append(['HIST001', 'Role', 'ROLE001', 'Identified', 'Applied', 'Automation', '2024-01-15 10:00:00'])
+        
         wb.save(file_path)
         
         # Verify
         wb = load_workbook(file_path)
-        assert wb.active['A1'].value == 'New Value'
+        history_ws = wb['StatusHistory']
+        assert history_ws['B2'].value == 'Role'
+        assert history_ws['C2'].value == 'ROLE001'
+        assert history_ws['D2'].value == 'Identified'
+        assert history_ws['E2'].value == 'Applied'
     
-    def test_append_row(self, tmp_path):
-        """Test appending row."""
-        wb = Workbook()
-        ws = wb.active
-        ws.append(['Row', '1'])
-        file_path = tmp_path / "test.xlsx"
-        wb.save(file_path)
+    def test_no_legacy_sheets(self):
+        """Test that no legacy sheets exist in workbook."""
+        wb = load_workbook('system-of-record.xlsx')
+        sheet_names = wb.sheetnames
         
-        # Append
-        wb = load_workbook(file_path)
-        ws = wb.active
-        ws.append(['Row', '2'])
-        wb.save(file_path)
+        legacy_sheets = ['Jobs', 'Applications', 'Weekly_Goals', 'Audit_Log', 'Dashboard']
         
-        # Verify
-        wb = load_workbook(file_path)
-        assert wb.active.max_row == 2
-        assert wb.active['A2'].value == 'Row'
+        for legacy in legacy_sheets:
+            assert legacy not in sheet_names, f"Legacy sheet '{legacy}' should not exist"
 ```
 
 ## Manual Validation Steps
