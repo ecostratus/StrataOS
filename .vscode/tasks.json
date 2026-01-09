@@ -116,6 +116,13 @@
       "command": "python3",
       "args": ["automation/resume-tailoring/scripts/resume_tailor_v1.py"],
       "problemMatcher": []
+    },
+    {
+      "label": "Run job discovery v1",
+      "type": "shell",
+      "command": "python3",
+      "args": ["automation/job-discovery/scripts/job_discovery_v1.py"],
+      "problemMatcher": []
     }
   ]
 }
