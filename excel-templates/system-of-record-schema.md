@@ -6,6 +6,18 @@
 
 ---
 
+# **Schema Change Governance**
+
+Any change to this schema requires:
+1. Updating the Excel template (system-of-record-template.xlsx)
+2. Updating the dashboard specifications
+3. Updating the Excel I/O tests
+4. Updating automation specifications
+5. Updating documentation
+6. Updating the schema hash via scripts/compute_schema_hash.py
+
+---
+
 # **Overview**
 The System of Record (SoR) is the central data backbone for all workflows, automation, Copilot Studio flows, dashboards, and governance processes.  
 It consists of **10 sheets**, each implemented as an Excel Table, with strict naming, validation, and audit rules.
