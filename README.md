@@ -203,6 +203,25 @@ pytest --cov=automation tests/
 
 See [tests/README.md](tests/README.md) for comprehensive testing documentation.
 
+### VS Code Test Tasks
+- Install dev tooling: run the task “Install dev requirements” (installs `pytest`).
+- Run all tests: use “Run all tests” or “Run Python tests”. These tasks use `python3` and surface failures in the Problems panel via a shared matcher.
+
+Add a new targeted test task by reusing the shared matcher and short tracebacks:
+
+```json
+{
+    "label": "Run module X tests",
+    "type": "shell",
+    "command": "python3",
+    "args": ["-m", "pytest", "tests/module_x_tests.py", "-q", "--tb=short"],
+    "group": "test",
+    "problemMatcher": ["$pytest-short"]
+}
+```
+
+The matcher `"$pytest-short"` is defined once in [.vscode/tasks.json](.vscode/tasks.json) and can be referenced by any future test task.
+
 ## Technology Stack
 
 - **Python 3.8+**: Automation scripts

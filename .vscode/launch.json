@@ -1,0 +1,100 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Python: Run Tests (pytest)",
+      "type": "python",
+      "request": "launch",
+      "module": "pytest",
+      "args": ["-q"],
+      "cwd": "${workspaceFolder}",
+      "envFile": "${workspaceFolder}/.env",
+      "justMyCode": false,
+      "console": "integratedTerminal",
+      "purpose": ["debug-test"]
+    },
+    {
+      "name": "Python: Job Discovery Tests",
+      "type": "python",
+      "request": "launch",
+      "module": "pytest",
+      "args": ["tests/job_discovery_tests.py", "-q"],
+      "cwd": "${workspaceFolder}",
+      "envFile": "${workspaceFolder}/.env",
+      "justMyCode": false,
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Python: Outreach Flow Tests",
+      "type": "python",
+      "request": "launch",
+      "module": "pytest",
+      "args": ["tests/outreach_flow_tests.py", "-q"],
+      "cwd": "${workspaceFolder}",
+      "envFile": "${workspaceFolder}/.env",
+      "justMyCode": false,
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Python: Resume Tailoring Tests",
+      "type": "python",
+      "request": "launch",
+      "module": "pytest",
+      "args": ["tests/resume_tailoring_tests.py", "-q"],
+      "cwd": "${workspaceFolder}",
+      "envFile": "${workspaceFolder}/.env",
+      "justMyCode": false,
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Python: Consulting Offer Script",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/automation/consulting-funnel/scripts/consulting_offer_v1.py",
+      "cwd": "${workspaceFolder}",
+      "envFile": "${workspaceFolder}/.env",
+      "justMyCode": true,
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Python: Interview Prep Script",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/automation/interview-prep/scripts/interview_prep_v1.py",
+      "cwd": "${workspaceFolder}",
+      "envFile": "${workspaceFolder}/.env",
+      "justMyCode": true,
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Python: Job Scraper Script",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/automation/job-discovery/scripts/job_scraper_v1.py",
+      "cwd": "${workspaceFolder}",
+      "envFile": "${workspaceFolder}/.env",
+      "justMyCode": true,
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Python: Outreach Generator Script",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/automation/outreach/scripts/outreach_generator_v1.py",
+      "cwd": "${workspaceFolder}",
+      "envFile": "${workspaceFolder}/.env",
+      "justMyCode": true,
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Python: Resume Tailor Script",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/automation/resume-tailoring/scripts/resume_tailor_v1.py",
+      "cwd": "${workspaceFolder}",
+      "envFile": "${workspaceFolder}/.env",
+      "justMyCode": true,
+      "console": "integratedTerminal"
+    }
+  ]
+}

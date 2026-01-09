@@ -1,0 +1,21 @@
+{
+  "editor.inlineSuggest.enabled": true,
+  "files.exclude": {
+    "**/.DS_Store": true,
+    "**/__pycache__": true,
+    "**/.pytest_cache": true
+  },
+  "search.exclude": {
+    "**/__pycache__": true,
+    "**/.pytest_cache": true
+  },
+  "files.watcherExclude": {
+    "**/__pycache__": true,
+    "**/.pytest_cache": true
+  },
+  "markdown.preview.breaks": true,
+  "markdown.preview.fontSize": 14,
+  "python.testing.pytestEnabled": true,
+  "python.testing.unittestEnabled": false,
+  "python.analysis.typeCheckingMode": "basic"
+}

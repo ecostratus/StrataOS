@@ -1,0 +1,9 @@
+{
+  "name": "personal-operating-system-60d",
+  "folders": [
+    { "path": "." }
+  ],
+  "settings": {
+    "editor.inlineSuggest.enabled": true
+  }
+}

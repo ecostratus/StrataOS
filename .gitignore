@@ -1,0 +1,19 @@
+# Ignore environment and local artifacts
+.env
+.env.local
+.env.*
+
+# Python caches
+__pycache__/
+*.pyc
+*.pyo
+
+# Test/pytest
+.pytest_cache/
+
+# macOS
+.DS_Store
+
+# Backups and outputs
+backups/
+output/

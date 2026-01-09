@@ -1,0 +1,121 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Create venv (.venv)",
+      "type": "shell",
+      "command": "python3",
+      "args": ["-m", "venv", ".venv"],
+      "problemMatcher": []
+    },
+    {
+      "label": "Install dev requirements (venv)",
+      "type": "shell",
+      "command": "${workspaceFolder}/.venv/bin/python",
+      "args": ["-m", "pip", "install", "-r", "dev-requirements.txt"],
+      "problemMatcher": []
+    },
+    {
+      "label": "Setup & Run Tests",
+      "type": "shell",
+      "command": "echo",
+      "args": ["Setup & Run Tests"],
+      "dependsOn": ["Create venv (.venv)", "Install dev requirements (venv)", "Run all tests"],
+      "dependsOrder": "sequence",
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "Run all tests",
+      "type": "shell",
+      "command": "${workspaceFolder}/.venv/bin/python",
+      "args": ["-m", "pytest", "-q", "--tb=short"],
+      "group": "test",
+      "problemMatcher": [
+        {
+          "name": "pytest-short",
+          "owner": "pytest",
+          "fileLocation": ["relative", "${workspaceFolder}"],
+          "pattern": [
+            {
+              "regexp": "^(.*\\.py):(\\d+):\\s+in\\s+.*$",
+              "file": 1,
+              "line": 2
+            },
+            {
+              "regexp": "^\\s*E\\s+(.*)$",
+              "message": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Run Python tests",
+      "type": "shell",
+      "command": "${workspaceFolder}/.venv/bin/python",
+      "args": ["-m", "pytest", "-q", "--tb=short"],
+      "group": { "kind": "test", "isDefault": true },
+      "problemMatcher": ["$pytest-short"]
+    },
+    {
+      "label": "Run job discovery tests",
+      "type": "shell",
+      "command": "${workspaceFolder}/.venv/bin/python",
+      "args": ["-m", "pytest", "tests/job_discovery_tests.py", "-q", "--tb=short"],
+      "group": "test",
+      "problemMatcher": ["$pytest-short"]
+    },
+    {
+      "label": "Run outreach flow tests",
+      "type": "shell",
+      "command": "${workspaceFolder}/.venv/bin/python",
+      "args": ["-m", "pytest", "tests/outreach_flow_tests.py", "-q", "--tb=short"],
+      "group": "test",
+      "problemMatcher": ["$pytest-short"]
+    },
+    {
+      "label": "Run resume tailoring tests",
+      "type": "shell",
+      "command": "${workspaceFolder}/.venv/bin/python",
+      "args": ["-m", "pytest", "tests/resume_tailoring_tests.py", "-q", "--tb=short"],
+      "group": "test",
+      "problemMatcher": ["$pytest-short"]
+    },
+    {
+      "label": "Run consulting offer script",
+      "type": "shell",
+      "command": "python3",
+      "args": ["automation/consulting-funnel/scripts/consulting_offer_v1.py"],
+      "problemMatcher": []
+    },
+    {
+      "label": "Run interview prep script",
+      "type": "shell",
+      "command": "python3",
+      "args": ["automation/interview-prep/scripts/interview_prep_v1.py"],
+      "problemMatcher": []
+    },
+    {
+      "label": "Run job scraper script",
+      "type": "shell",
+      "command": "python3",
+      "args": ["automation/job-discovery/scripts/job_scraper_v1.py"],
+      "problemMatcher": []
+    },
+    {
+      "label": "Run outreach generator script",
+      "type": "shell",
+      "command": "python3",
+      "args": ["automation/outreach/scripts/outreach_generator_v1.py"],
+      "problemMatcher": []
+    },
+    {
+      "label": "Run resume tailor script",
+      "type": "shell",
+      "command": "python3",
+      "args": ["automation/resume-tailoring/scripts/resume_tailor_v1.py"],
+      "problemMatcher": []
+    }
+  ]
+}

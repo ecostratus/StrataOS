@@ -1,0 +1,10 @@
+{
+  "recommendations": [
+    "GitHub.copilot",
+    "GitHub.copilot-chat",
+    "ms-python.python",
+    "ms-toolsai.jupyter",
+    "ms-azuretools.vscode-azure-github-copilot"
+  ],
+  "unwantedRecommendations": []
+}
