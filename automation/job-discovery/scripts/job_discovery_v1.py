@@ -1,8 +1,8 @@
 """
 Job Discovery Orchestrator v1
 
-Loads configuration, applies simple filtering, and exports discovered jobs.
-This is a starter pipeline you can extend to call real scrapers per scraper-spec.
+Loads configuration, calls per-source fetchers, applies filtering, and exports
+discovered jobs. Designed to be extended to real scrapers per scraper-spec.
 """
 
 from __future__ import annotations
@@ -11,6 +11,11 @@ import csv
 import os
 import sys
 from datetime import datetime
+try:  # Python 3.11+
+    from datetime import UTC  # type: ignore
+except Exception:  # Python <3.11
+    from datetime import timezone as _tz  # type: ignore
+    UTC = _tz.utc  # type: ignore
 from typing import Dict, List
 
 # Ensure repo root on path to import config and filters
@@ -20,45 +25,38 @@ if _ROOT not in sys.path:
 
 from config.config_loader import config  # type: ignore
 
-# Add scripts dir to path to import filters.py despite hyphen in folder name
+# Add scripts dir to path to import modules despite hyphen in folder name
 _SCRIPTS_DIR = os.path.join(_ROOT, "automation", "job-discovery", "scripts")
 if _SCRIPTS_DIR not in sys.path:
     sys.path.insert(0, _SCRIPTS_DIR)
 
 from filters import normalize_terms, matches_filters  # type: ignore
+import sources  # type: ignore
 
 
-def fetch_sample_jobs() -> List[Dict[str, str]]:
-    """Placeholder job fetcher. Replace with real scraping per scraper-spec.md.
-
-    Each job dict should include: title, location, company, source, url, posted_date.
+def discover_jobs() -> List[Dict[str, str]]:
+    """Collect jobs from enabled sources. Each job has keys:
+    title, location, company, source, url, posted_date (YYYY-MM-DD).
     """
-    return [
-        {
-            "title": "Senior Software Engineer - Remote",
-            "location": "Remote",
-            "company": "Acme Corp",
-            "source": "sample",
-            "url": "https://example.com/jobs/1",
-            "posted_date": datetime.utcnow().strftime("%Y-%m-%d"),
-        },
-        {
-            "title": "Volunteer Developer Internship",
-            "location": "San Francisco, CA",
-            "company": "Helping Hands",
-            "source": "sample",
-            "url": "https://example.com/jobs/2",
-            "posted_date": datetime.utcnow().strftime("%Y-%m-%d"),
-        },
-        {
-            "title": "Data Analyst",
-            "location": "New York, NY",
-            "company": "DataWorks",
-            "source": "sample",
-            "url": "https://example.com/jobs/3",
-            "posted_date": datetime.utcnow().strftime("%Y-%m-%d"),
-        },
-    ]
+    jobs: List[Dict[str, str]] = []
+    if config.get_bool("LINKEDIN_ENABLED", False):
+        jobs.extend(sources.fetch_linkedin_jobs())
+    if config.get_bool("INDEED_ENABLED", True):
+        jobs.extend(sources.fetch_indeed_jobs())
+    if not jobs:
+        # Fallback minimal placeholder (kept for bootstrapping)
+        today = datetime.now(UTC).strftime("%Y-%m-%d")
+        jobs = [
+            {
+                "title": "Senior Software Engineer - Remote",
+                "location": "Remote",
+                "company": "Acme Corp",
+                "source": "sample",
+                "url": "https://example.com/jobs/1",
+                "posted_date": today,
+            }
+        ]
+    return jobs
 
 
 def ensure_dir(path: str) -> None:
@@ -67,7 +65,7 @@ def ensure_dir(path: str) -> None:
 
 def export_to_csv(rows: List[Dict[str, str]], out_dir: str) -> str:
     ensure_dir(out_dir)
-    ts = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+    ts = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
     path = os.path.join(out_dir, f"jobs_discovered_{ts}.csv")
     fieldnames = [
         "title",
@@ -104,7 +102,7 @@ def main() -> None:
     )
 
     # Fetch and filter
-    jobs = fetch_sample_jobs()
+    jobs = discover_jobs()
     matched: List[Dict[str, str]] = []
     for job in jobs:
         if matches_filters(job.get("title", ""), job.get("location", ""), keywords, locations, exclude):
