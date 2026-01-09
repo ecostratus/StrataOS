@@ -45,9 +45,9 @@ def get_metrics() -> Metrics:
     return _METRICS
 
 
-def _http_get_json(url: str, params: Optional[Dict[str, Any]] = None, timeout: int = 10) -> Any:
+def _http_get_json(url: str, params: Optional[Dict[str, Any]] = None, timeout: int = 10, headers: Optional[Dict[str, str]] = None) -> Any:
     """HTTP GET returning parsed JSON. Raises on non-200 or parse error."""
-    res = requests.get(url, params=params or {}, timeout=timeout)
+    res = requests.get(url, params=params or {}, timeout=timeout, headers=headers or {})
     res.raise_for_status()
     return res.json()
 
@@ -77,6 +77,7 @@ def fetch_linkedin_jobs() -> List[Dict[str, str]]:
     """
     today = datetime.now(UTC).strftime("%Y-%m-%d")
     url = config.get("LINKEDIN_API_URL", "")
+    token = config.get("LINKEDIN_API_TOKEN", config.get("LINKEDIN_API_KEY", "")) or ""
     rpm = int(config.get_int("SCRAPER_RPM", 30))
     timeout = int(config.get_int("SCRAPER_TIMEOUT", 10))
     max_retries = int(config.get_int("SCRAPER_MAX_RETRIES", 3))
@@ -104,7 +105,8 @@ def fetch_linkedin_jobs() -> List[Dict[str, str]]:
 
     def _fetch() -> List[Dict[str, Any]]:
         limiter.acquire()
-        data = _http_get_json(url, timeout=timeout)
+        headers = {"Authorization": f"Bearer {token}"} if token else {}
+        data = _http_get_json(url, timeout=timeout, headers=headers)
         if not isinstance(data, list):
             raise ValueError("LinkedIn API returned non-list")
         return data
@@ -152,6 +154,7 @@ def fetch_indeed_jobs() -> List[Dict[str, str]]:
     """
     today = datetime.now(UTC).strftime("%Y-%m-%d")
     url = config.get("INDEED_API_URL", "")
+    token = config.get("INDEED_API_TOKEN", config.get("INDEED_PUBLISHER_KEY", "")) or ""
     rpm = int(config.get_int("SCRAPER_RPM", 30))
     timeout = int(config.get_int("SCRAPER_TIMEOUT", 10))
     max_retries = int(config.get_int("SCRAPER_MAX_RETRIES", 3))
@@ -178,7 +181,8 @@ def fetch_indeed_jobs() -> List[Dict[str, str]]:
 
     def _fetch() -> List[Dict[str, Any]]:
         limiter.acquire()
-        data = _http_get_json(url, timeout=timeout)
+        headers = {"Authorization": f"Bearer {token}"} if token else {}
+        data = _http_get_json(url, timeout=timeout, headers=headers)
         if not isinstance(data, list):
             raise ValueError("Indeed API returned non-list")
         return data

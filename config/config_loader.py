@@ -38,6 +38,9 @@ class Config:
             "SMTP_FROM_EMAIL": "outreach.platforms.email.from_email",
 
             "LINKEDIN_API_KEY": "job_discovery.sources.linkedin.api_key",
+            "LOG_TO_FILE": "system.log_to_file",
+            "LINKEDIN_API_URL": "job_discovery.sources.linkedin.api_url",
+            "LINKEDIN_API_TOKEN": "job_discovery.sources.linkedin.api_key",
 
             "RESUME_MASTER_RESUME_PATH": "resume.master_resume_path",
             "RESUME_TAILORED_RESUME_DIRECTORY": "resume.tailored_resume_directory",
@@ -82,6 +85,15 @@ class Config:
             "RESUME_BACKUP_ON_TAILOR": "resume.backup_on_tailor",
             # Excel
             "EXCEL_AUTO_BACKUP": "excel.auto_backup",
+            "INDEED_API_URL": "job_discovery.sources.indeed.api_url",
+            "INDEED_PUBLISHER_KEY": "job_discovery.sources.indeed.publisher_key",
+            "INDEED_API_TOKEN": "job_discovery.sources.indeed.publisher_key",
+            "SCRAPER_RPM": "job_discovery.rate_limits.requests_per_minute",
+            "SCRAPER_TIMEOUT": "job_discovery.rate_limits.timeout_seconds",
+            "SCRAPER_MAX_RETRIES": "job_discovery.rate_limits.max_retries",
+            "SCRAPER_BACKOFF_BASE": "job_discovery.rate_limits.backoff_base",
+            "SCRAPER_BACKOFF_MAX": "job_discovery.rate_limits.backoff_max",
+            "SCRAPER_JITTER_MS": "job_discovery.rate_limits.jitter_ms",
         }
 
     def initialize(self, env_path: str = ".env", json_path: str = "config/env.sample.json") -> None:

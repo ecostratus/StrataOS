@@ -35,6 +35,7 @@ if _SCRIPTS_DIR not in sys.path:
 
 from filters import normalize_terms, matches_filters  # type: ignore
 import sources  # type: ignore
+from logging_utils import set_jsonl_sink  # type: ignore
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
@@ -175,6 +176,12 @@ def main(argv: List[str] | None = None) -> None:
     if hasattr(sources, "reset_metrics"):
         sources.reset_metrics()
 
+    # Prepare optional JSONL logging sink
+    # Single timestamp used across artifacts for determinism in tests
+    run_ts = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
+    if config.get_bool("LOG_TO_FILE", False):
+        set_jsonl_sink(os.path.join(out_dir, f"run-{run_ts}.jsonl"))
+
     # Fetch and filter
     jobs = discover_jobs()
     matched: List[Dict[str, str]] = []
@@ -184,7 +191,7 @@ def main(argv: List[str] | None = None) -> None:
 
     print(f"Found {len(jobs)} jobs; {len(matched)} matched filters")
     # Single timestamp for CSV + summary for determinism
-    ts = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
+    ts = run_ts
     out_csv = export_to_csv_with_ts(matched, out_dir, ts)
 
     # Build summary artifact
