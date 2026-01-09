@@ -16,7 +16,9 @@ try:  # Python 3.11+
 except Exception:  # Python <3.11
     from datetime import timezone as _tz  # type: ignore
     UTC = _tz.utc  # type: ignore
-from typing import Dict, List
+from typing import Dict, List, Callable, Any
+import argparse
+import logging
 
 # Ensure repo root on path to import config and filters
 _ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
@@ -32,6 +34,42 @@ if _SCRIPTS_DIR not in sys.path:
 
 from filters import normalize_terms, matches_filters  # type: ignore
 import sources  # type: ignore
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
+
+REQUIRED_KEYS = {"title", "location", "company", "source", "url", "posted_date"}
+
+
+def _validate_job(job: Dict[str, Any]) -> bool:
+    if not isinstance(job, dict):
+        return False
+    if not REQUIRED_KEYS.issubset(job.keys()):
+        return False
+    # ensure string-like values
+    for k in REQUIRED_KEYS:
+        v = job.get(k)
+        if v is None:
+            return False
+        # Allow non-string values but coerce later; for now require str-like
+        if not isinstance(v, (str, int, float)):
+            return False
+    return True
+
+
+def _safe_fetch(name: str, func: Callable[[], List[Dict[str, Any]]]) -> List[Dict[str, Any]]:
+    try:
+        res = func()
+        if not isinstance(res, list):
+            logger.error("source '%s' returned non-list result", name)
+            return []
+        valid = [j for j in res if _validate_job(j)]
+        invalid = len(res) - len(valid)
+        if invalid:
+            logger.warning("source '%s' returned %d invalid jobs", name, invalid)
+        return valid
+    except Exception:
+        logger.error("source '%s' failed", name, exc_info=True)
+        return []
 
 
 def discover_jobs() -> List[Dict[str, str]]:
@@ -40,9 +78,9 @@ def discover_jobs() -> List[Dict[str, str]]:
     """
     jobs: List[Dict[str, str]] = []
     if config.get_bool("LINKEDIN_ENABLED", False):
-        jobs.extend(sources.fetch_linkedin_jobs())
+        jobs.extend(_safe_fetch("linkedin", sources.fetch_linkedin_jobs))
     if config.get_bool("INDEED_ENABLED", True):
-        jobs.extend(sources.fetch_indeed_jobs())
+        jobs.extend(_safe_fetch("indeed", sources.fetch_indeed_jobs))
     if not jobs:
         # Fallback minimal placeholder (kept for bootstrapping)
         today = datetime.now(UTC).strftime("%Y-%m-%d")
@@ -83,12 +121,16 @@ def export_to_csv(rows: List[Dict[str, str]], out_dir: str) -> str:
     return path
 
 
-def main() -> None:
+def main(argv: List[str] | None = None) -> None:
+    parser = argparse.ArgumentParser(description="Job discovery orchestrator")
+    parser.add_argument("--out-dir", dest="out_dir", default=None, help="Override output directory")
+    args = parser.parse_args(argv)
+
     config.initialize()
 
     environment = config.get("SYSTEM_ENVIRONMENT", "development")
     log_level = config.get("SYSTEM_LOG_LEVEL", "INFO")
-    out_dir = config.get("SYSTEM_OUTPUT_DIRECTORY", "output")
+    out_dir = args.out_dir or config.get("SYSTEM_OUTPUT_DIRECTORY", "output")
 
     # Filters from config
     keywords = normalize_terms(config.get_list("JOB_FILTER_KEYWORDS", ["software engineer", "developer"]) or [])

@@ -124,5 +124,16 @@
       "args": ["automation/job-discovery/scripts/job_discovery_v1.py"],
       "problemMatcher": []
     }
+    {
+      "label": "Run job discovery v1 (out-dir)",
+      "type": "shell",
+      "command": "python3",
+      "args": [
+        "automation/job-discovery/scripts/job_discovery_v1.py",
+        "--out-dir",
+        "${workspaceFolder}/output"
+      ],
+      "problemMatcher": []
+    }
   ]
 }
