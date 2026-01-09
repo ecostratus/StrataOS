@@ -25,10 +25,24 @@ if _ROOT not in sys.path:
 
 from config.config_loader import config  # type: ignore
 from .scrape_utils import RateLimiter, with_retry  # type: ignore
+from .metrics import Metrics  # type: ignore
+from .logging_utils import structured_log  # type: ignore
 import logging
 import requests
 
 logger = logging.getLogger(__name__)
+
+# Module-level metrics to keep orchestrator simple
+_METRICS = Metrics()
+
+
+def reset_metrics() -> None:
+    global _METRICS
+    _METRICS = Metrics()
+
+
+def get_metrics() -> Metrics:
+    return _METRICS
 
 
 def _http_get_json(url: str, params: Optional[Dict[str, Any]] = None, timeout: int = 10) -> Any:
@@ -83,7 +97,10 @@ def fetch_linkedin_jobs() -> List[Dict[str, str]]:
             }
         ]
 
-    limiter = RateLimiter(rpm=rpm)
+    limiter = RateLimiter(
+        rpm=rpm,
+        on_sleep=lambda seconds: setattr(_METRICS, "rate_limit_sleeps", _METRICS.rate_limit_sleeps + 1),
+    )
 
     def _fetch() -> List[Dict[str, Any]]:
         limiter.acquire()
@@ -98,25 +115,31 @@ def fetch_linkedin_jobs() -> List[Dict[str, str]]:
         backoff_base=backoff_base,
         backoff_max=backoff_max,
         jitter_ms=jitter_ms,
-        on_error=lambda attempt, e: logger.error("linkedin attempt %d failed: %s", attempt, e),
+        on_error=lambda attempt, e: structured_log(logger, "error", "scraper_error", source="linkedin", attempt=attempt, message=str(e)),
+        on_retry=lambda attempt, delay, e: setattr(_METRICS, "retries_attempted", _METRICS.retries_attempted + 1),
     )
     if result is None:
-        logger.error("linkedin scraper gave up after retries; returning empty list")
+        structured_log(logger, "error", "scraper_give_up", source="linkedin")
+        _METRICS.scraper_failures += 1
         return []
 
+    _METRICS.inc_jobs("linkedin", len(result))
     jobs: List[Dict[str, str]] = []
     for item in result:
         # Map to required fields; use defaults when missing
-        jobs.append(
-            {
-                "title": str(item.get("title", "")),
-                "location": str(item.get("location", "")),
-                "company": str(item.get("company", "")),
-                "source": "linkedin",
-                "url": str(item.get("url", "")),
-                "posted_date": _normalize_date(item.get("posted_date", today), today),
-            }
-        )
+        mapped = {
+            "title": str(item.get("title", "")),
+            "location": str(item.get("location", "")),
+            "company": str(item.get("company", "")),
+            "source": "linkedin",
+            "url": str(item.get("url", "")),
+            "posted_date": _normalize_date(item.get("posted_date", today), today),
+        }
+        # Track malformed if critical fields missing
+        if not all(mapped.get(k) for k in ("title", "location", "company", "url", "posted_date")):
+            _METRICS.inc_malformed("linkedin", 1)
+            structured_log(logger, "warning", "malformed_entry", source="linkedin")
+        jobs.append(mapped)
     return jobs
 
 
@@ -148,7 +171,10 @@ def fetch_indeed_jobs() -> List[Dict[str, str]]:
             }
         ]
 
-    limiter = RateLimiter(rpm=rpm)
+    limiter = RateLimiter(
+        rpm=rpm,
+        on_sleep=lambda seconds: setattr(_METRICS, "rate_limit_sleeps", _METRICS.rate_limit_sleeps + 1),
+    )
 
     def _fetch() -> List[Dict[str, Any]]:
         limiter.acquire()
@@ -163,22 +189,27 @@ def fetch_indeed_jobs() -> List[Dict[str, str]]:
         backoff_base=backoff_base,
         backoff_max=backoff_max,
         jitter_ms=jitter_ms,
-        on_error=lambda attempt, e: logger.error("indeed attempt %d failed: %s", attempt, e),
+        on_error=lambda attempt, e: structured_log(logger, "error", "scraper_error", source="indeed", attempt=attempt, message=str(e)),
+        on_retry=lambda attempt, delay, e: setattr(_METRICS, "retries_attempted", _METRICS.retries_attempted + 1),
     )
     if result is None:
-        logger.error("indeed scraper gave up after retries; returning empty list")
+        structured_log(logger, "error", "scraper_give_up", source="indeed")
+        _METRICS.scraper_failures += 1
         return []
 
+    _METRICS.inc_jobs("indeed", len(result))
     jobs: List[Dict[str, str]] = []
     for item in result:
-        jobs.append(
-            {
-                "title": str(item.get("title", "")),
-                "location": str(item.get("location", "")),
-                "company": str(item.get("company", "")),
-                "source": "indeed",
-                "url": str(item.get("url", "")),
-                "posted_date": _normalize_date(item.get("posted_date", today), today),
-            }
-        )
+        mapped = {
+            "title": str(item.get("title", "")),
+            "location": str(item.get("location", "")),
+            "company": str(item.get("company", "")),
+            "source": "indeed",
+            "url": str(item.get("url", "")),
+            "posted_date": _normalize_date(item.get("posted_date", today), today),
+        }
+        if not all(mapped.get(k) for k in ("title", "location", "company", "url", "posted_date")):
+            _METRICS.inc_malformed("indeed", 1)
+            structured_log(logger, "warning", "malformed_entry", source="indeed")
+        jobs.append(mapped)
     return jobs

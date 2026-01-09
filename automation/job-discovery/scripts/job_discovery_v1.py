@@ -16,9 +16,10 @@ try:  # Python 3.11+
 except Exception:  # Python <3.11
     from datetime import timezone as _tz  # type: ignore
     UTC = _tz.utc  # type: ignore
-from typing import Dict, List, Callable, Any
+from typing import Dict, List, Callable, Any, Optional
 import argparse
 import logging
+import json
 
 # Ensure repo root on path to import config and filters
 _ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
@@ -121,6 +122,33 @@ def export_to_csv(rows: List[Dict[str, str]], out_dir: str) -> str:
     return path
 
 
+def export_to_csv_with_ts(rows: List[Dict[str, str]], out_dir: str, ts: str) -> str:
+    ensure_dir(out_dir)
+    path = os.path.join(out_dir, f"jobs_discovered_{ts}.csv")
+    fieldnames = [
+        "title",
+        "location",
+        "company",
+        "source",
+        "url",
+        "posted_date",
+    ]
+    with open(path, "w", encoding="utf-8", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+        for r in rows:
+            writer.writerow({k: r.get(k, "") for k in fieldnames})
+    return path
+
+
+def export_summary(out_dir: str, ts: str, summary: Dict[str, Any]) -> str:
+    ensure_dir(out_dir)
+    path = os.path.join(out_dir, f"jobs_discovered_{ts}.summary.json")
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(summary, f, ensure_ascii=False, separators=(",", ":"))
+    return path
+
+
 def main(argv: List[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Job discovery orchestrator")
     parser.add_argument("--out-dir", dest="out_dir", default=None, help="Override output directory")
@@ -143,6 +171,10 @@ def main(argv: List[str] | None = None) -> None:
         f"Keywords: {', '.join(keywords) or '-'} | Locations: {', '.join(locations) or '-'} | Exclude: {', '.join(exclude) or '-'}"
     )
 
+    # Reset per-run source metrics
+    if hasattr(sources, "reset_metrics"):
+        sources.reset_metrics()
+
     # Fetch and filter
     jobs = discover_jobs()
     matched: List[Dict[str, str]] = []
@@ -151,8 +183,39 @@ def main(argv: List[str] | None = None) -> None:
             matched.append(job)
 
     print(f"Found {len(jobs)} jobs; {len(matched)} matched filters")
-    out_csv = export_to_csv(matched, out_dir)
-    print(f"Exported matched jobs to: {out_csv}")
+    # Single timestamp for CSV + summary for determinism
+    ts = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
+    out_csv = export_to_csv_with_ts(matched, out_dir, ts)
+
+    # Build summary artifact
+    enabled_sources = {
+        "linkedin": bool(config.get_bool("LINKEDIN_ENABLED", False)),
+        "indeed": bool(config.get_bool("INDEED_ENABLED", True)),
+    }
+    per_source = {}
+    if hasattr(sources, "get_metrics"):
+        m = sources.get_metrics().to_dict()
+        per_source = {
+            "jobs_fetched": m.get("jobs_fetched", {}),
+            "malformed_entries": m.get("malformed_entries", {}),
+            "retries_attempted": m.get("retries_attempted", 0),
+            "rate_limit_sleeps": m.get("rate_limit_sleeps", 0),
+            "scraper_failures": m.get("scraper_failures", 0),
+        }
+
+    filtered_out = max(0, len(jobs) - len(matched))
+    summary = {
+        "timestamp_utc": datetime.now(UTC).isoformat(),
+        "enabled_sources": enabled_sources,
+        "counts": {
+            "total_discovered": len(jobs),
+            "filtered_out": filtered_out,
+            "exported": len(matched),
+        },
+        "per_source": per_source,
+    }
+    out_json = export_summary(out_dir, ts, summary)
+    print(f"Exported matched jobs to: {out_csv}\nSummary: {out_json}")
 
 
 if __name__ == "__main__":

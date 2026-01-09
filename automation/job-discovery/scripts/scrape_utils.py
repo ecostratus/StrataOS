@@ -6,7 +6,8 @@ from __future__ import annotations
 import time
 import random
 import logging
-from typing import Callable, TypeVar, Optional, Tuple
+from typing import Callable, TypeVar, Optional
+from .logging_utils import structured_log  # type: ignore
 
 T = TypeVar("T")
 logger = logging.getLogger(__name__)
@@ -20,10 +21,17 @@ class RateLimiter:
     - sleep_fn: injectable sleep function for tests
     """
 
-    def __init__(self, rpm: int = 60, now_fn: Callable[[], float] = time.time, sleep_fn: Callable[[float], None] = time.sleep):
+    def __init__(
+        self,
+        rpm: int = 60,
+        now_fn: Callable[[], float] = time.time,
+        sleep_fn: Callable[[float], None] = time.sleep,
+        on_sleep: Optional[Callable[[float], None]] = None,
+    ):
         self.rpm = max(1, int(rpm))
         self._now = now_fn
         self._sleep = sleep_fn
+        self._on_sleep = on_sleep
         self._window_start = self._now()
         self._count = 0
 
@@ -37,7 +45,12 @@ class RateLimiter:
         if self._count >= self.rpm:
             wait = max(0.0, 60.0 - elapsed)
             if wait > 0:
-                logger.info("rate limit reached; sleeping %.2fs", wait)
+                structured_log(logger, "info", "rate_limit_sleep", wait_seconds=round(wait, 3))
+                if self._on_sleep:
+                    try:
+                        self._on_sleep(wait)
+                    except Exception:
+                        logger.debug("on_sleep callback error", exc_info=True)
                 self._sleep(wait)
             # reset after waiting
             self._window_start = self._now()
@@ -53,6 +66,7 @@ def with_retry(
     jitter_ms: int = 100,
     sleep_fn: Callable[[float], None] = time.sleep,
     on_error: Optional[Callable[[int, BaseException], None]] = None,
+    on_retry: Optional[Callable[[int, float, BaseException], None]] = None,
 ) -> Optional[T]:
     """Execute func with exponential backoff + jitter on exceptions.
 
@@ -67,12 +81,17 @@ def with_retry(
             attempts += 1
             if on_error:
                 on_error(attempts, e)
-            logger.error("scraper attempt %d failed: %s", attempts, e, exc_info=True)
+            structured_log(logger, "error", "scraper_retry_error", attempt=attempts, message=str(e))
             if attempts > max_retries:
-                logger.error("scraper exhausted retries (max=%d)", max_retries)
+                structured_log(logger, "error", "scraper_exhausted", max_retries=max_retries)
                 return None
             # compute backoff with jitter
             delay = min(backoff_max, backoff_base * (2 ** (attempts - 1)))
             delay += random.uniform(0, jitter_ms / 1000.0)
+            if on_retry:
+                try:
+                    on_retry(attempts, delay, e)
+                except Exception:
+                    logger.debug("on_retry callback error", exc_info=True)
             sleep_fn(delay)
 
