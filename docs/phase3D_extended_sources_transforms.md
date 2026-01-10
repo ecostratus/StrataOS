@@ -17,6 +17,13 @@
 - Indeed/Greenhouse/Lever (JSON feeds)
 - Company RSS/job boards
 
+### Lever Adapter Details
+- Mapping: `title` (Lever `text`/`title`), `company`, `location` (from `categories.location`), `url` (Lever `hostedUrl`), `source="lever"`.
+- Determinism: `job_id` = SHA-256 of `title|company|url` (lower+trim) truncated to 16 hex chars; outputs sorted and de-duplicated by `job_id`.
+- Config: `LEVER_ENABLED` (bool, default false), `LEVER_API_URL` (string).
+- Normalization: Use `ensure_str` for all fields; apply `strip().lower()` only in `job_id` canonicalization.
+- Tests: Unit tests validate mapping, normalization, dedup, gating; integration tests validate multi-source ingestion determinism.
+
 ### Source Integration Guidelines
 - Deterministic `job_id` generation (hash of canonical fields)
 - Retry/backoff with bounded jitter; structured logging
@@ -34,6 +41,10 @@
 - `enrichment.seniority_patterns` refinements
 - Optional `enrichment.company_signals` lookup toggles (off by default)
 
+### Lever Config Keys
+- `LEVER_ENABLED`: Set to true to enable Lever adapter.
+- `LEVER_API_URL`: URL for Lever postings feed (e.g., `https://api.lever.co/postings/<company>`).
+
 ## Determinism & Testing
 - Unit tests for each new source mapping and transform boundary
 - Repeat-run determinism tests; sorted outputs where applicable
@@ -43,6 +54,10 @@
 - New sources produce consistent schema aligned to existing pipeline
 - Enrichment outputs unchanged for existing inputs when new features disabled
 - All tests pass; zero Pylance warnings for added modules
+
+### Lever Acceptance
+- Adapter returns deterministic, de-duplicated outputs with required fields when enabled.
+- Disabled state returns empty list.
 
 ## Rollout Plan
 - Feature-gate new sources and transforms via config (disabled by default)
