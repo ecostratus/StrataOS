@@ -26,6 +26,22 @@ This project follows Semantic Versioning.
 ### Planned
 - Bump to `v0.1.1` after adding more tests and features.
 
+## [v0.3.0-Phase3C-Normalization] - 2026-01-10
+
+"Phase 3C: Data Normalization Milestone"
+
+### Added
+- Shared normalization helpers in `automation/common/normalization.py`: `normalize_terms`, `ensure_str`, `ensure_int`, `ensure_float`.
+- Deterministic ordering guarantees across enrichment outputs.
+- Focused tests for normalization edge cases and deterministic enrichment behavior.
+
+### Changed
+- Consolidated normalization boundary: enrichment config lists (seniority patterns, stack patterns, keyword lists, role‑fit heuristics) are normalized once at load time, with defensive normalization at function entry.
+- Removed ad‑hoc inline normalization and enforced type‑safe, pure functions at boundaries.
+
+### Fixed
+- Eliminated Pylance warnings by using typed helpers for all normalization boundaries.
+
 ## [v0.1.0] - 2026-01-08
 
 "Stable dev environment baseline"
@@ -38,5 +54,6 @@ This project follows Semantic Versioning.
 ### Fixed
 - `normalize_terms()` in `automation/job-discovery/scripts/filters.py` to skip `None`/empty values.
 
-[Unreleased]: https://github.com/ecostratus/personal-operating-system-60d/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/ecostratus/personal-operating-system-60d/compare/v0.3.0-Phase3C-Normalization...HEAD
+[v0.3.0-Phase3C-Normalization]: https://github.com/ecostratus/personal-operating-system-60d/releases/tag/v0.3.0-Phase3C-Normalization
 [v0.1.0]: https://github.com/ecostratus/personal-operating-system-60d/releases/tag/v0.1.0

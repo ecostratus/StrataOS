@@ -20,3 +20,6 @@ The docs folder serves as the central knowledge base for:
 - Reference materials
 
 This documentation supports the 60-day operating system by providing clear, accessible information for understanding and using the system effectively.
+
+## Releases
+Latest release: [v0.3.0-Phase3C-Normalization](https://github.com/ecostratus/personal-operating-system-60d/releases/tag/v0.3.0-Phase3C-Normalization). See the top-level [changelog.md](../changelog.md) for detailed history.
