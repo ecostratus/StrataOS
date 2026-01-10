@@ -19,7 +19,8 @@ def fetch_lever_jobs(config: Dict[str, Any]) -> List[Dict[str, Any]]:
 
     api_url = ensure_str(config.get("LEVER_API_URL"))
     # Placeholder: in future, fetch from api_url
-    raw_jobs: List[Dict[str, Any]] = []
+    # Allow tests to inject via module-scoped raw_jobs
+    raw_jobs = globals().get("raw_jobs", [])  # type: ignore
 
     normalized: List[Dict[str, Any]] = []
     for job in raw_jobs or []:

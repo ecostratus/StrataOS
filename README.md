@@ -160,15 +160,9 @@ python automation/job-discovery/scripts/job_scraper_v1.py
 ## Documentation
 
 ### Essential Reading
-1. **[Master Brief](docs/master-brief.md)** - Start here to understand the overall approach
-2. **[Operating Constraints](docs/operating-constraints.md)** - System boundaries and rules
-3. **[Governance Model](docs/governance-model.md)** - How decisions are made
-4. **[Weekly Cadence](docs/weekly-cadence.md)** - Your operating rhythm
-5. **[Risk Map](docs/risk-map.md)** - Risks and mitigation strategies
 
 ### Technical Documentation
 - **[Copilot Flows Architecture](copilot-flows/high-level-architecture.md)** - System design
-- **[Prompt Style Guide](prompts/style-guide.md)** - AI prompt best practices
 - **[Excel Schema](excel-templates/system-of-record-schema.md)** - Data structure
 - **[API Endpoints](config/endpoints.md)** - External service integration
 - **[Testing Guide](tests/README.md)** - How to test the system
@@ -178,10 +172,6 @@ Each automation module includes detailed specifications:
 - `automation/job-discovery/scraper-spec.md`
 - `automation/job-discovery/scoring-model.md`
 - `automation/resume-tailoring/prompt-spec.md`
-- `automation/outreach/prompt-spec.md`
-- `automation/consulting-funnel/prompt-spec.md`
-- `automation/interview-prep/prompt-spec.md`
-
 ## Security & Privacy
 
 - **No credentials in code**: Use environment variables
