@@ -1,5 +1,5 @@
 import hashlib
-from datetime import datetime
+from datetime import datetime, UTC
 from typing import Dict, List, Any
 
 from automation.common.normalization import ensure_str, normalize_terms
@@ -38,9 +38,17 @@ def adapt_new_source(items: List[Dict[str, Any]], config: Dict[str, Any]) -> Lis
             "company": company.strip(),
             "location": location.strip(),
             "url": url.strip(),
-            "posted_at": posted.strip() or datetime.utcnow().strftime("%Y-%m-%d"),
+            "posted_at": posted.strip() or datetime.now(UTC).strftime("%Y-%m-%d"),
         })
 
-    # Deterministic ordering
+    # Deterministic ordering and de-duplication by job_id
     out.sort(key=lambda x: x["job_id"])
-    return out
+    unique: List[Dict[str, Any]] = []
+    seen = set()
+    for item in out:
+        jid = item["job_id"]
+        if jid in seen:
+            continue
+        seen.add(jid)
+        unique.append(item)
+    return unique

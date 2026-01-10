@@ -1,4 +1,13 @@
-from automation.job-discovery.scripts.new_source_adapter import adapt_new_source
+import importlib.util
+import pathlib
+
+MODULE_PATH = pathlib.Path(__file__).resolve().parents[2] / 'automation' / 'job-discovery' / 'scripts' / 'new_source_adapter.py'
+spec = importlib.util.spec_from_file_location("new_source_adapter", str(MODULE_PATH))
+module = importlib.util.module_from_spec(spec)
+assert spec and spec.loader
+spec.loader.exec_module(module)  # type: ignore
+
+adapt_new_source = module.adapt_new_source
 
 
 def test_disabled_returns_empty():
