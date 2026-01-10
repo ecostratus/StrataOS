@@ -54,7 +54,7 @@ This project follows Semantic Versioning.
 ### Fixed
 - `normalize_terms()` in `automation/job-discovery/scripts/filters.py` to skip `None`/empty values.
 
-[Unreleased]: https://github.com/ecostratus/personal-operating-system-60d/compare/v0.3.2-Phase3D-Lever...HEAD
+[Unreleased]: https://github.com/ecostratus/personal-operating-system-60d/compare/v0.3.3-Phase3D-ExtendedSources...HEAD
 [v0.3.0-Phase3C-Normalization]: https://github.com/ecostratus/personal-operating-system-60d/releases/tag/v0.3.0-Phase3C-Normalization
 [v0.3.2-Phase3D-Lever]: https://github.com/ecostratus/personal-operating-system-60d/releases/tag/v0.3.2-Phase3D-Lever
 [v0.1.0]: https://github.com/ecostratus/personal-operating-system-60d/releases/tag/v0.1.0
@@ -73,3 +73,19 @@ This project follows Semantic Versioning.
 
 ### Compatibility
 - Adapter is disabled by default; existing flows and outputs remain unchanged unless explicitly enabled.
+
+## [v0.3.3-Phase3D-ExtendedSources] - 2026-01-10
+
+"Phase 3D: Extended Sources"
+
+### Added
+- Adapters added/scaffolded: Greenhouse, Ashby, Indeed, ZipRecruiter, Google Jobs, Glassdoor, Craigslist, GoRemote (pure functions; deterministic `job_id`; sorted, de‑duplicated outputs; UTC `posted_at` fallback).
+- Documentation updates: README enablement notes for new sources; expanded Field Mapping Reference to include all new source→canonical mappings.
+- Tests: Unit tests for Lever/Greenhouse/Ashby/Indeed covering mapping, gating, determinism, malformed handling; full suite passing.
+
+### Configuration
+- Opt‑in flags and endpoints added to `config/env.sample.json` for each source. All adapters disabled by default to prevent behavioral drift.
+
+### Compatibility
+- No orchestrator changes; integration test remains skip‑based until orchestrator exists.
+- Cross‑source `job_id` compatibility maintained (canonical hash of lower‑trimmed `title|company|url`, truncated to 16 hex).
