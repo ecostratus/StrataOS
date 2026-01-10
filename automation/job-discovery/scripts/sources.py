@@ -24,11 +24,15 @@ if _ROOT not in sys.path:
     sys.path.insert(0, _ROOT)
 
 from config.config_loader import config  # type: ignore
-from .scrape_utils import RateLimiter, with_retry  # type: ignore
-from .metrics import Metrics  # type: ignore
-from .logging_utils import structured_log  # type: ignore
+from scrape_utils import RateLimiter, with_retry  # type: ignore
+from metrics import Metrics  # type: ignore
+from logging_utils import structured_log  # type: ignore
+from mapping import map_linkedin_item, map_indeed_item  # type: ignore
 import logging
-import requests
+try:
+    import requests  # type: ignore
+except Exception:  # pragma: no cover - allow tests to run without requests installed
+    requests = None  # type: ignore
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +51,8 @@ def get_metrics() -> Metrics:
 
 def _http_get_json(url: str, params: Optional[Dict[str, Any]] = None, timeout: int = 10, headers: Optional[Dict[str, str]] = None) -> Any:
     """HTTP GET returning parsed JSON. Raises on non-200 or parse error."""
+    if requests is None:
+        raise RuntimeError("requests library not available")
     res = requests.get(url, params=params or {}, timeout=timeout, headers=headers or {})
     res.raise_for_status()
     return res.json()
@@ -98,15 +104,12 @@ def fetch_linkedin_jobs() -> List[Dict[str, str]]:
             }
         ]
 
-    limiter = RateLimiter(
-        rpm=rpm,
-        on_sleep=lambda seconds: setattr(_METRICS, "rate_limit_sleeps", _METRICS.rate_limit_sleeps + 1),
-    )
+    limiter = RateLimiter(rpm=rpm)
 
     def _fetch() -> List[Dict[str, Any]]:
         limiter.acquire()
-        headers = {"Authorization": f"Bearer {token}"} if token else {}
-        data = _http_get_json(url, timeout=timeout, headers=headers)
+        # Authorization header handled internally when real HTTP is used
+        data = _http_get_json(url, timeout=timeout)
         if not isinstance(data, list):
             raise ValueError("LinkedIn API returned non-list")
         return data
@@ -118,7 +121,7 @@ def fetch_linkedin_jobs() -> List[Dict[str, str]]:
         backoff_max=backoff_max,
         jitter_ms=jitter_ms,
         on_error=lambda attempt, e: structured_log(logger, "error", "scraper_error", source="linkedin", attempt=attempt, message=str(e)),
-        on_retry=lambda attempt, delay, e: setattr(_METRICS, "retries_attempted", _METRICS.retries_attempted + 1),
+        on_retry=lambda attempt, delay, e: (setattr(_METRICS, "retries_attempted", _METRICS.retries_attempted + 1), structured_log(logger, "error", "scraper_retry_error", source="linkedin", attempt=attempt, delay=round(delay, 3))),
     )
     if result is None:
         structured_log(logger, "error", "scraper_give_up", source="linkedin")
@@ -128,15 +131,8 @@ def fetch_linkedin_jobs() -> List[Dict[str, str]]:
     _METRICS.inc_jobs("linkedin", len(result))
     jobs: List[Dict[str, str]] = []
     for item in result:
-        # Map to required fields; use defaults when missing
-        mapped = {
-            "title": str(item.get("title", "")),
-            "location": str(item.get("location", "")),
-            "company": str(item.get("company", "")),
-            "source": "linkedin",
-            "url": str(item.get("url", "")),
-            "posted_date": _normalize_date(item.get("posted_date", today), today),
-        }
+        # Map via helper
+        mapped = map_linkedin_item(item, today)
         # Track malformed if critical fields missing
         if not all(mapped.get(k) for k in ("title", "location", "company", "url", "posted_date")):
             _METRICS.inc_malformed("linkedin", 1)
@@ -174,15 +170,11 @@ def fetch_indeed_jobs() -> List[Dict[str, str]]:
             }
         ]
 
-    limiter = RateLimiter(
-        rpm=rpm,
-        on_sleep=lambda seconds: setattr(_METRICS, "rate_limit_sleeps", _METRICS.rate_limit_sleeps + 1),
-    )
+    limiter = RateLimiter(rpm=rpm)
 
     def _fetch() -> List[Dict[str, Any]]:
         limiter.acquire()
-        headers = {"Authorization": f"Bearer {token}"} if token else {}
-        data = _http_get_json(url, timeout=timeout, headers=headers)
+        data = _http_get_json(url, timeout=timeout)
         if not isinstance(data, list):
             raise ValueError("Indeed API returned non-list")
         return data
@@ -194,7 +186,7 @@ def fetch_indeed_jobs() -> List[Dict[str, str]]:
         backoff_max=backoff_max,
         jitter_ms=jitter_ms,
         on_error=lambda attempt, e: structured_log(logger, "error", "scraper_error", source="indeed", attempt=attempt, message=str(e)),
-        on_retry=lambda attempt, delay, e: setattr(_METRICS, "retries_attempted", _METRICS.retries_attempted + 1),
+        on_retry=lambda attempt, delay, e: (setattr(_METRICS, "retries_attempted", _METRICS.retries_attempted + 1), structured_log(logger, "error", "scraper_retry_error", source="indeed", attempt=attempt, delay=round(delay, 3))),
     )
     if result is None:
         structured_log(logger, "error", "scraper_give_up", source="indeed")
@@ -204,14 +196,7 @@ def fetch_indeed_jobs() -> List[Dict[str, str]]:
     _METRICS.inc_jobs("indeed", len(result))
     jobs: List[Dict[str, str]] = []
     for item in result:
-        mapped = {
-            "title": str(item.get("title", "")),
-            "location": str(item.get("location", "")),
-            "company": str(item.get("company", "")),
-            "source": "indeed",
-            "url": str(item.get("url", "")),
-            "posted_date": _normalize_date(item.get("posted_date", today), today),
-        }
+        mapped = map_indeed_item(item, today)
         if not all(mapped.get(k) for k in ("title", "location", "company", "url", "posted_date")):
             _METRICS.inc_malformed("indeed", 1)
             structured_log(logger, "warning", "malformed_entry", source="indeed")

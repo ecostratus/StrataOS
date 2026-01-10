@@ -7,7 +7,7 @@ import time
 import random
 import logging
 from typing import Callable, TypeVar, Optional
-from .logging_utils import structured_log  # type: ignore
+from logging_utils import structured_log  # type: ignore
 
 T = TypeVar("T")
 logger = logging.getLogger(__name__)

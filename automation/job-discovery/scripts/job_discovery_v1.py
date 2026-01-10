@@ -35,7 +35,8 @@ if _SCRIPTS_DIR not in sys.path:
 
 from filters import normalize_terms, matches_filters  # type: ignore
 import sources  # type: ignore
-from logging_utils import set_jsonl_sink  # type: ignore
+from logging_utils import set_jsonl_sink, set_suppress_stdout_if_jsonl  # type: ignore
+from summary_utils import pretty_print_summary  # type: ignore
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
@@ -153,13 +154,14 @@ def export_summary(out_dir: str, ts: str, summary: Dict[str, Any]) -> str:
 def main(argv: List[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Job discovery orchestrator")
     parser.add_argument("--out-dir", dest="out_dir", default=None, help="Override output directory")
+    parser.add_argument("--summary-only", dest="summary_only", action="store_true", help="Run discovery without CSV export")
     args = parser.parse_args(argv)
 
     config.initialize()
 
     environment = config.get("SYSTEM_ENVIRONMENT", "development")
     log_level = config.get("SYSTEM_LOG_LEVEL", "INFO")
-    out_dir = args.out_dir or config.get("SYSTEM_OUTPUT_DIRECTORY", "output")
+    out_dir = str(args.out_dir or config.get("SYSTEM_OUTPUT_DIRECTORY", "output"))
 
     # Filters from config
     keywords = normalize_terms(config.get_list("JOB_FILTER_KEYWORDS", ["software engineer", "developer"]) or [])
@@ -181,6 +183,9 @@ def main(argv: List[str] | None = None) -> None:
     run_ts = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
     if config.get_bool("LOG_TO_FILE", False):
         set_jsonl_sink(os.path.join(out_dir, f"run-{run_ts}.jsonl"))
+        # Optional suppression of stdout logs when JSONL is enabled
+        suppress = config.get_bool("LOG_SUPPRESS_STDOUT_IF_JSONL", False)
+        set_suppress_stdout_if_jsonl(bool(suppress))
 
     # Fetch and filter
     jobs = discover_jobs()
@@ -192,7 +197,9 @@ def main(argv: List[str] | None = None) -> None:
     print(f"Found {len(jobs)} jobs; {len(matched)} matched filters")
     # Single timestamp for CSV + summary for determinism
     ts = run_ts
-    out_csv = export_to_csv_with_ts(matched, out_dir, ts)
+    out_csv = None
+    if not args.summary_only:
+        out_csv = export_to_csv_with_ts(matched, out_dir, ts)
 
     # Build summary artifact
     enabled_sources = {
@@ -212,7 +219,7 @@ def main(argv: List[str] | None = None) -> None:
 
     filtered_out = max(0, len(jobs) - len(matched))
     summary = {
-        "timestamp_utc": datetime.now(UTC).isoformat(),
+        "timestamp_utc": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%S+00:00"),
         "enabled_sources": enabled_sources,
         "counts": {
             "total_discovered": len(jobs),
@@ -222,7 +229,11 @@ def main(argv: List[str] | None = None) -> None:
         "per_source": per_source,
     }
     out_json = export_summary(out_dir, ts, summary)
-    print(f"Exported matched jobs to: {out_csv}\nSummary: {out_json}")
+    # Optionally pretty-print a short summary after export
+    print(pretty_print_summary(summary))
+    if not args.summary_only and out_csv:
+        print(f"Exported matched jobs to: {out_csv}")
+    print(f"Summary: {out_json}")
 
 
 if __name__ == "__main__":

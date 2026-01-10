@@ -94,6 +94,7 @@ class Config:
             "SCRAPER_BACKOFF_BASE": "job_discovery.rate_limits.backoff_base",
             "SCRAPER_BACKOFF_MAX": "job_discovery.rate_limits.backoff_max",
             "SCRAPER_JITTER_MS": "job_discovery.rate_limits.jitter_ms",
+            "LOG_SUPPRESS_STDOUT_IF_JSONL": "system.log_suppress_stdout_if_jsonl",
         }
 
     def initialize(self, env_path: str = ".env", json_path: str = "config/env.sample.json") -> None:

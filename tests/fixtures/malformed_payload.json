@@ -1,0 +1,4 @@
+[
+  {"title": null, "location": null, "company": null, "url": "http://bad", "posted_date": "not-a-date"},
+  {"company": "X", "url": "http://bad2"}
+]

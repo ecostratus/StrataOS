@@ -222,6 +222,49 @@ Add a new targeted test task by reusing the shared matcher and short tracebacks:
 
 The matcher `"$pytest-short"` is defined once in [.vscode/tasks.json](.vscode/tasks.json) and can be referenced by any future test task.
 
+## Job Discovery: Real Endpoints
+- Configure API URLs and tokens in `.env` or `config/env.sample.json`:
+    - `LINKEDIN_API_URL`, `LINKEDIN_API_TOKEN` (or `LINKEDIN_API_KEY`)
+    - `INDEED_API_URL`, `INDEED_API_TOKEN` (or `INDEED_PUBLISHER_KEY`)
+    - Rate limits/retries: `SCRAPER_RPM`, `SCRAPER_TIMEOUT`, `SCRAPER_MAX_RETRIES`, `SCRAPER_BACKOFF_BASE`, `SCRAPER_BACKOFF_MAX`, `SCRAPER_JITTER_MS`
+- Enable structured logs to a JSONL file:
+    - Set `LOG_TO_FILE=true` and run with `--out-dir` to write logs to `output/run-<timestamp>.jsonl`
+- Run discovery:
+    - `python3 automation/job-discovery/scripts/job_discovery_v1.py --out-dir ./output`
+- Summary artifact:
+    - After each run, `jobs_discovered_<timestamp>.summary.json` includes enabled sources, per-source job counts, retries, rate-limit events, and totals.
+
+### Quickstart: Job Discovery
+- Prepare config in `config/env.sample.json` or `.env`.
+- Run: `python3 automation/job-discovery/scripts/job_discovery_v1.py --out-dir ./output`
+- Optional: `--summary-only` prints/exports summary without CSV.
+
+### Logging and JSONL Emission
+- Default logs print to stdout.
+- To write logs to JSONL, set `LOG_TO_FILE=true`.
+- To suppress stdout when JSONL is enabled, set `system.log_suppress_stdout_if_jsonl=true`.
+
+### Metrics Glossary
+- jobs_fetched: items retrieved per source.
+- malformed_entries: invalid or incomplete items discarded.
+- retries_attempted: total retry attempts.
+- rate_limit_sleeps: total sleeps due to rate limiting.
+- scraper_failures: number of source failures.
+
+### Troubleshooting
+-### How to Interpret Logs and Summary Artifacts
+- Logs: Each line is structured JSON with `ts`, `level`, and `event`. When JSONL is enabled, inspect the file under `output/run-<timestamp>.jsonl`. Common events include `scraper_error`, `scraper_retry_error`, `rate_limit_sleep`, and `malformed_entry`.
+- Summary: A human-readable preview is printed at the end of the run. It shows totals, enabled sources, per-source jobs, malformed counts, retries, rate-limit sleeps, and failures. The full JSON summary is saved to `jobs_discovered_<timestamp>.summary.json`.
+
+## Documentation Index
+- SOP: [docs/job_discovery_sop.md](docs/job_discovery_sop.md)
+- Field Mapping Reference: [docs/field_mapping_reference.md](docs/field_mapping_reference.md)
+- Fixtures Overview: [tests/fixtures/README.md](tests/fixtures/README.md)
+- No results: verify endpoint URLs, tokens, and source enable flags.
+- Low export count: adjust filters (keywords, locations, excludes).
+- Slow runs: review rate limits and timeouts in config.
+- Errors only in JSONL: disable suppression or inspect JSONL file.
+
 ## Technology Stack
 
 - **Python 3.8+**: Automation scripts
