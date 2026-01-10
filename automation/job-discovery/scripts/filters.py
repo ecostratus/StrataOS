@@ -3,23 +3,7 @@ Filter helpers for job discovery.
 """
 
 from typing import List
-
-
-def normalize_terms(items: List[str]) -> List[str]:
-    """Trim whitespace and case-fold a list of terms.
-
-    Skips None and empty/whitespace-only entries.
-    """
-    normalized: List[str] = []
-    for t in items:
-        if t is None:
-            continue
-        s = t if isinstance(t, str) else str(t)
-        s = s.strip()
-        if not s:
-            continue
-        normalized.append(s.lower())
-    return normalized
+from automation.common.normalization import normalize_terms
 
 
 def matches_filters(title: str, location: str, keywords: List[str], locations: List[str], exclude_keywords: List[str]) -> bool:

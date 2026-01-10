@@ -16,7 +16,7 @@ try:  # Python 3.11+
 except Exception:  # Python <3.11
     from datetime import timezone as _tz  # type: ignore
     UTC = _tz.utc  # type: ignore
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, Callable
 
 # Ensure repo root on path (mirrors orchestrator behavior)
 _ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
@@ -24,6 +24,7 @@ if _ROOT not in sys.path:
     sys.path.insert(0, _ROOT)
 
 from config.config_loader import config  # type: ignore
+from automation.common.normalization import ensure_int, ensure_float, ensure_str
 from scrape_utils import RateLimiter, with_retry  # type: ignore
 from metrics import Metrics  # type: ignore
 from logging_utils import structured_log  # type: ignore
@@ -38,6 +39,8 @@ logger = logging.getLogger(__name__)
 
 # Module-level metrics to keep orchestrator simple
 _METRICS = Metrics()
+
+
 
 
 def reset_metrics() -> None:
@@ -82,14 +85,14 @@ def fetch_linkedin_jobs() -> List[Dict[str, str]]:
     Expects the API to return a JSON list of items with at least title, company, location, url, posted_date.
     """
     today = datetime.now(UTC).strftime("%Y-%m-%d")
-    url = config.get("LINKEDIN_API_URL", "")
-    token = config.get("LINKEDIN_API_TOKEN", config.get("LINKEDIN_API_KEY", "")) or ""
-    rpm = int(config.get_int("SCRAPER_RPM", 30))
-    timeout = int(config.get_int("SCRAPER_TIMEOUT", 10))
-    max_retries = int(config.get_int("SCRAPER_MAX_RETRIES", 3))
-    backoff_base = float(config.get_float("SCRAPER_BACKOFF_BASE", 0.5))
-    backoff_max = float(config.get_float("SCRAPER_BACKOFF_MAX", 4.0))
-    jitter_ms = int(config.get_int("SCRAPER_JITTER_MS", 100))
+    url = ensure_str(config.get("LINKEDIN_API_URL", ""))
+    token = ensure_str(config.get("LINKEDIN_API_TOKEN", config.get("LINKEDIN_API_KEY", "")))
+    rpm = ensure_int(config.get_int("SCRAPER_RPM", 30), 30)
+    timeout = ensure_int(config.get_int("SCRAPER_TIMEOUT", 10), 10)
+    max_retries = ensure_int(config.get_int("SCRAPER_MAX_RETRIES", 3), 3)
+    backoff_base = ensure_float(config.get_float("SCRAPER_BACKOFF_BASE", 0.5), 0.5)
+    backoff_max = ensure_float(config.get_float("SCRAPER_BACKOFF_MAX", 4.0), 4.0)
+    jitter_ms = ensure_int(config.get_int("SCRAPER_JITTER_MS", 100), 100)
 
     # Safe fallback when no configured endpoint
     if not url:
@@ -109,10 +112,17 @@ def fetch_linkedin_jobs() -> List[Dict[str, str]]:
     def _fetch() -> List[Dict[str, Any]]:
         limiter.acquire()
         # Authorization header handled internally when real HTTP is used
-        data = _http_get_json(url, timeout=timeout)
+        data = _http_get_json(ensure_str(url), timeout=timeout)
         if not isinstance(data, list):
             raise ValueError("LinkedIn API returned non-list")
         return data
+
+    def _on_error(attempt: int, e: Exception) -> None:
+        structured_log(logger, "error", "scraper_error", source="linkedin", attempt=attempt, message=str(e))
+
+    def _on_retry(attempt: int, delay: float, e: Exception) -> None:
+        _METRICS.retries_attempted += 1
+        structured_log(logger, "error", "scraper_retry_error", source="linkedin", attempt=attempt, delay=round(delay, 3))
 
     result = with_retry(
         _fetch,
@@ -120,8 +130,8 @@ def fetch_linkedin_jobs() -> List[Dict[str, str]]:
         backoff_base=backoff_base,
         backoff_max=backoff_max,
         jitter_ms=jitter_ms,
-        on_error=lambda attempt, e: structured_log(logger, "error", "scraper_error", source="linkedin", attempt=attempt, message=str(e)),
-        on_retry=lambda attempt, delay, e: (setattr(_METRICS, "retries_attempted", _METRICS.retries_attempted + 1), structured_log(logger, "error", "scraper_retry_error", source="linkedin", attempt=attempt, delay=round(delay, 3))),
+        on_error=_on_error,
+        on_retry=_on_retry,
     )
     if result is None:
         structured_log(logger, "error", "scraper_give_up", source="linkedin")
@@ -149,14 +159,14 @@ def fetch_indeed_jobs() -> List[Dict[str, str]]:
     Expects the API to return a JSON list of items with at least title, company, location, url, posted_date.
     """
     today = datetime.now(UTC).strftime("%Y-%m-%d")
-    url = config.get("INDEED_API_URL", "")
-    token = config.get("INDEED_API_TOKEN", config.get("INDEED_PUBLISHER_KEY", "")) or ""
-    rpm = int(config.get_int("SCRAPER_RPM", 30))
-    timeout = int(config.get_int("SCRAPER_TIMEOUT", 10))
-    max_retries = int(config.get_int("SCRAPER_MAX_RETRIES", 3))
-    backoff_base = float(config.get_float("SCRAPER_BACKOFF_BASE", 0.5))
-    backoff_max = float(config.get_float("SCRAPER_BACKOFF_MAX", 4.0))
-    jitter_ms = int(config.get_int("SCRAPER_JITTER_MS", 100))
+    url = ensure_str(config.get("INDEED_API_URL", ""))
+    token = ensure_str(config.get("INDEED_API_TOKEN", config.get("INDEED_PUBLISHER_KEY", "")))
+    rpm = ensure_int(config.get_int("SCRAPER_RPM", 30), 30)
+    timeout = ensure_int(config.get_int("SCRAPER_TIMEOUT", 10), 10)
+    max_retries = ensure_int(config.get_int("SCRAPER_MAX_RETRIES", 3), 3)
+    backoff_base = ensure_float(config.get_float("SCRAPER_BACKOFF_BASE", 0.5), 0.5)
+    backoff_max = ensure_float(config.get_float("SCRAPER_BACKOFF_MAX", 4.0), 4.0)
+    jitter_ms = ensure_int(config.get_int("SCRAPER_JITTER_MS", 100), 100)
 
     if not url:
         return [
@@ -174,10 +184,17 @@ def fetch_indeed_jobs() -> List[Dict[str, str]]:
 
     def _fetch() -> List[Dict[str, Any]]:
         limiter.acquire()
-        data = _http_get_json(url, timeout=timeout)
+        data = _http_get_json(ensure_str(url), timeout=timeout)
         if not isinstance(data, list):
             raise ValueError("Indeed API returned non-list")
         return data
+
+    def _on_error(attempt: int, e: Exception) -> None:
+        structured_log(logger, "error", "scraper_error", source="indeed", attempt=attempt, message=str(e))
+
+    def _on_retry(attempt: int, delay: float, e: Exception) -> None:
+        _METRICS.retries_attempted += 1
+        structured_log(logger, "error", "scraper_retry_error", source="indeed", attempt=attempt, delay=round(delay, 3))
 
     result = with_retry(
         _fetch,
@@ -185,8 +202,8 @@ def fetch_indeed_jobs() -> List[Dict[str, str]]:
         backoff_base=backoff_base,
         backoff_max=backoff_max,
         jitter_ms=jitter_ms,
-        on_error=lambda attempt, e: structured_log(logger, "error", "scraper_error", source="indeed", attempt=attempt, message=str(e)),
-        on_retry=lambda attempt, delay, e: (setattr(_METRICS, "retries_attempted", _METRICS.retries_attempted + 1), structured_log(logger, "error", "scraper_retry_error", source="indeed", attempt=attempt, delay=round(delay, 3))),
+        on_error=_on_error,
+        on_retry=_on_retry,
     )
     if result is None:
         structured_log(logger, "error", "scraper_give_up", source="indeed")
