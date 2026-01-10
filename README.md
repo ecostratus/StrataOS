@@ -367,6 +367,19 @@ for j in jobs:
     print(j["job_id"], j["title"], j["url"])  # deterministic order
 ```
 
+## Enable Additional Sources (Optional)
+
+These adapters are disabled by default to prevent behavioral drift.
+
+- **ZipRecruiter:** keys `ZIPRECRUITER_ENABLED` (default `false`), `ZIPRECRUITER_API_URL`, `ZIPRECRUITER_API_KEY`
+- **Google Jobs:** keys `GOOGLEJOBS_ENABLED` (default `false`), `GOOGLEJOBS_API_URL`, `GOOGLEJOBS_API_KEY`
+- **Glassdoor:** keys `GLASSDOOR_ENABLED` (default `false`), `GLASSDOOR_API_URL`, `GLASSDOOR_API_KEY`
+- **Craigslist:** keys `CRAIGSLIST_ENABLED` (default `false`), `CRAIGSLIST_API_URL`
+- **GoRemote:** keys `GOREMOTE_ENABLED` (default `false`), `GOREMOTE_API_URL`
+
+- **Activation:** Set `*_ENABLED` to `true` and provide the corresponding URL/key as applicable.
+- **Determinism:** Canonical `job_id` = SHA‑256 of `title|company|url` (lower‑trim), truncated to 16 hex; outputs are sorted and de‑duplicated by `job_id`; `posted_at` defaults to UTC `YYYY‑MM‑DD` when missing.
+
 ## Scoring Configuration (Phase 3A)
 - Configure scoring in [config/env.sample.json](config/env.sample.json) under `scoring.weights` and `scoring.thresholds`.
 - Typical keys for Phase 3A:

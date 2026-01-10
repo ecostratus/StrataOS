@@ -1,43 +1,42 @@
 ## Summary
-This PR introduces the foundational scaffolding for Phase 3D, enabling the system to expand into multiple new data sources and enrichment transforms. It establishes the adapter pattern, config surfaces, and test harness that all future sources will follow.
+This PR advances Phase 3D by adding deterministic, config‑gated adapters for multiple job sources, expanding documentation, and aligning field mappings. All adapters follow the same canonical mapping and normalization boundary with zero orchestrator drift.
 
 ## Technical Changes
-- Added new source adapter skeleton (`new_source_adapter.py`)
-- Added unit tests for mapping, normalization, determinism, and config gating
-- Added opt‑in config placeholders (`NEW_SOURCE_ENABLED`, `NEW_SOURCE_API_URL`, `NEW_SOURCE_API_KEY`)
-- Ensured all new code uses shared normalization helpers (`ensure_str`, `normalize_terms`)
-- Added Phase 3D documentation scaffold outlining goals, scope, and acceptance criteria
+- Added adapters: Lever, Greenhouse, Ashby, Indeed, ZipRecruiter, Google Jobs, Glassdoor, Craigslist, GoRemote
+- All adapters: pure functions, deterministic `job_id`, sorted output, cross‑run repeatability
+- Config placeholders added (all disabled by default) in `config/env.sample.json`
+- Unit tests for Lever/Greenhouse/Ashby/Indeed; scaffolds untouched for orchestrator until `fetch_all_sources` exists
+- Updated documentation: README enablement notes; expanded Field Mapping Reference to include all sources
+- Structured logging events per adapter (e.g., `pipeline.ingest.<source>.*`)
 
 ## Normalization Boundary
-- All inbound fields normalized once at adapter entry
-- Canonical mapping enforced (`title`, `company`, `location`, `url`, `source`)
-- Deterministic `job_id` generation using SHA‑256 truncated hash
-- No inline `.lower()` / `.strip()` logic
-- Pure, deterministic functions with no side effects
+- Inbound fields normalized once per adapter using shared helpers (`ensure_str`) and consistent patterns
+- Canonical mapping enforced: `title`, `company`, `location`, `url`, `source`, `posted_at (YYYY‑MM‑DD)`
+- Deterministic `job_id` = SHA‑256 of `title|company|url` (lower‑trim), truncated to 16 hex
+- No orchestrator changes or side effects; functions remain pure
 
 ## Backward Compatibility
-- No orchestrator changes
-- No config surface changes beyond opt‑in placeholders
-- No behavioral drift
-- All existing tests remain green
+- No orchestrator changes; multi‑source orchestrator test remains skip‑based until introduced
+- Config surfaces are opt‑in and disabled by default (`*_ENABLED=false`)
+- No behavioral drift across existing modules
+- Full test suite remains green
 
 ## Testing
-- Added unit tests for the new adapter
-- Verified deterministic outputs across repeated runs
-- Confirmed config-driven enable/disable behavior
-- Full suite passes
+- Unit tests for Lever/Greenhouse/Ashby/Indeed: mapping, gating, determinism, malformed handling
+- Cross‑source `job_id` compatibility validated between Lever and Greenhouse
+- Full suite passes; repeat runs produce identical outputs
 
 ## Checklist
 - [x] Branch created
 - [x] Config placeholders added
-- [x] Adapter skeleton created
-- [x] Unit tests added
-- [x] Documentation scaffold added
+- [x] Adapters implemented/scaffolded
+- [x] Unit tests added (where applicable)
+- [x] Documentation updated (README, Field Mapping Reference)
 - [ ] PR opened
 - [ ] Merge once green
 
 ## Future Scope (Phase 3D)
-- Implement real source adapters
-- Expand enrichment transforms (skills, domain tags, seniority heuristics)
-- Add integration tests for multi-source ingestion
-- Prepare for Phase 3E (Outreach + Resume + Prep behaviors)
+- Implement real HTTP fetches for all adapters (respecting rate limits and retries)
+- Add multi‑source orchestrator and integration tests once `fetch_all_sources` exists
+- Extend enrichment transforms (skills, domain tags, seniority heuristics)
+- Prepare Phase 3E integrations across outreach, resume tailoring, and interview prep
