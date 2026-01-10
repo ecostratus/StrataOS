@@ -327,6 +327,46 @@ See the dashboard specification for comprehensive metrics tracking.
 
 **Philosophy**: Automate the repetitive, maintain human judgment on the critical.
 
+## Enable Ashby and Indeed (Optional)
+
+Both adapters are disabled by default to prevent behavioral drift.
+
+- **Config keys (Ashby):** `ASHBY_ENABLED` (default `false`), `ASHBY_API_URL`, `ASHBY_API_KEY`
+- **Config keys (Indeed):** `INDEED_ENABLED` (default `false`), `INDEED_API_URL`, `INDEED_API_KEY`
+- **Activation:** Set `*_ENABLED` to `true` and provide the corresponding URL and key.
+- **Determinism:** Canonical `job_id` = SHA‑256 of `title|company|url` (lower‑trim), truncated to 16 hex; outputs are sorted and de‑duplicated by `job_id`; `posted_at` defaults to UTC `YYYY‑MM‑DD` when missing.
+- **Example (Ashby):**
+
+```python
+from automation.job-discovery.scripts.source_ashby_adapter import fetch_ashby_jobs
+
+cfg = {
+    "ASHBY_ENABLED": True,
+    "ASHBY_API_URL": "https://api.ashbyhq.com/jobs",
+    "ASHBY_API_KEY": "YOUR_KEY"
+}
+
+jobs = fetch_ashby_jobs(cfg)
+for j in jobs:
+    print(j["job_id"], j["title"], j["url"])  # deterministic order
+```
+
+- **Example (Indeed):**
+
+```python
+from automation.job-discovery.scripts.source_indeed_adapter import fetch_indeed_jobs
+
+cfg = {
+    "INDEED_ENABLED": True,
+    "INDEED_API_URL": "https://api.indeed.com/jobs",
+    "INDEED_API_KEY": "YOUR_KEY"
+}
+
+jobs = fetch_indeed_jobs(cfg)
+for j in jobs:
+    print(j["job_id"], j["title"], j["url"])  # deterministic order
+```
+
 ## Scoring Configuration (Phase 3A)
 - Configure scoring in [config/env.sample.json](config/env.sample.json) under `scoring.weights` and `scoring.thresholds`.
 - Typical keys for Phase 3A:
