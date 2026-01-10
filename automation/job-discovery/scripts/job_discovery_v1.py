@@ -33,10 +33,26 @@ _SCRIPTS_DIR = os.path.join(_ROOT, "automation", "job-discovery", "scripts")
 if _SCRIPTS_DIR not in sys.path:
     sys.path.insert(0, _SCRIPTS_DIR)
 
+# Add enrichment scripts dir for Phase 3A pipeline
+_ENRICHMENT_SCRIPTS_DIR = os.path.join(_ROOT, "automation", "enrichment", "scripts")
+if _ENRICHMENT_SCRIPTS_DIR not in sys.path:
+    sys.path.insert(0, _ENRICHMENT_SCRIPTS_DIR)
+
+# Add scheduling dir for Phase 3B scheduling helpers
+_SCHEDULING_DIR = os.path.join(_ROOT, "automation", "scheduling")
+if _SCHEDULING_DIR not in sys.path:
+    sys.path.insert(0, _SCHEDULING_DIR)
+
 from filters import normalize_terms, matches_filters  # type: ignore
 import sources  # type: ignore
 from logging_utils import set_jsonl_sink, set_suppress_stdout_if_jsonl  # type: ignore
 from summary_utils import pretty_print_summary  # type: ignore
+try:
+    import enrichment  # type: ignore
+    import scoring  # type: ignore
+except Exception:
+    enrichment = None  # type: ignore
+    scoring = None  # type: ignore
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
@@ -151,10 +167,43 @@ def export_summary(out_dir: str, ts: str, summary: Dict[str, Any]) -> str:
     return path
 
 
+def export_enriched_json_with_ts(rows: List[Dict[str, Any]], out_dir: str, ts: str) -> str:
+    """Export enriched job records as compact JSON array with deterministic filename."""
+    ensure_dir(out_dir)
+    path = os.path.join(out_dir, f"jobs_enriched_{ts}.json")
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(rows, f, ensure_ascii=False, separators=(",", ":"))
+    return path
+
+
+def export_scored_csv_with_ts(rows: List[Dict[str, Any]], out_dir: str, ts: str) -> str:
+    """Export scored job records to CSV including original fields and scoring columns."""
+    ensure_dir(out_dir)
+    path = os.path.join(out_dir, f"jobs_scored_{ts}.csv")
+    fieldnames = [
+        "title",
+        "location",
+        "company",
+        "source",
+        "url",
+        "posted_date",
+        "score",
+        "bucket",
+    ]
+    with open(path, "w", encoding="utf-8", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+        for r in rows:
+            writer.writerow({k: r.get(k, "") for k in fieldnames})
+    return path
+
+
 def main(argv: List[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Job discovery orchestrator")
     parser.add_argument("--out-dir", dest="out_dir", default=None, help="Override output directory")
     parser.add_argument("--summary-only", dest="summary_only", action="store_true", help="Run discovery without CSV export")
+    parser.add_argument("--enrich", dest="enrich", action="store_true", help="Run enrichment + scoring and export artifacts")
+    parser.add_argument("--schedule", dest="schedule", action="store_true", help="Enable scheduling gate (Phase 3B)")
     args = parser.parse_args(argv)
 
     config.initialize()
@@ -187,6 +236,25 @@ def main(argv: List[str] | None = None) -> None:
         suppress = config.get_bool("LOG_SUPPRESS_STDOUT_IF_JSONL", False)
         set_suppress_stdout_if_jsonl(bool(suppress))
 
+    # Optional scheduling gate (Phase 3B)
+    if getattr(args, "schedule", False):
+        try:
+            import scheduler  # type: ignore
+
+            now_utc = datetime.now(UTC)
+            last_run_ts = None  # TODO: load from storage backend when available
+            cfg_map = config.to_dict() if hasattr(config, "to_dict") else {}
+            try:
+                should = scheduler.should_run(now_utc, last_run_ts, cfg_map)  # type: ignore[attr-defined]
+            except NotImplementedError:
+                should = True  # defer gating until implemented
+            if not should:
+                print("--schedule enabled: not time to run; exiting early")
+                return
+        except Exception:
+            # Scheduling unavailable; proceed without gating
+            logger.info("Scheduling helpers unavailable; proceeding without schedule gating")
+
     # Fetch and filter
     jobs = discover_jobs()
     matched: List[Dict[str, str]] = []
@@ -198,8 +266,43 @@ def main(argv: List[str] | None = None) -> None:
     # Single timestamp for CSV + summary for determinism
     ts = run_ts
     out_csv = None
+    enriched_json_path = None
+    out_scored_csv = None
     if not args.summary_only:
         out_csv = export_to_csv_with_ts(matched, out_dir, ts)
+
+    # Optional enrichment + scoring pipeline (Phase 3A)
+    if args.enrich and not args.summary_only:
+        if enrichment and scoring:
+            # Build config slices for enrichment/scoring (defaults if missing)
+            # Enrichment uses config within extract_features; scoring uses weights/thresholds
+            weights = {}
+            thresholds = {
+                "exceptional": 0.8,
+                "strong": 0.6,
+                "moderate": 0.4,
+            }
+            # Attempt to read weights/thresholds from config if available
+            try:
+                cfg_scoring = config.get("SCORING", {})
+                if isinstance(cfg_scoring, dict):
+                    weights = cfg_scoring.get("weights", {}) or weights
+                    thresholds = cfg_scoring.get("thresholds", {}) or thresholds
+            except Exception:
+                pass
+
+            enriched_rows: List[Dict[str, Any]] = [enrichment.extract_features(j, config.to_dict() if hasattr(config, "to_dict") else {}) for j in matched]
+            enriched_json_path = export_enriched_json_with_ts(enriched_rows, out_dir, ts)
+
+            scored_rows: List[Dict[str, Any]] = []
+            for e in enriched_rows:
+                s = scoring.score_job(e, weights, thresholds)
+                combined = dict(e)
+                combined.update({"score": s.get("score", 0.0), "bucket": s.get("bucket", "Weak")})
+                scored_rows.append(combined)
+            out_scored_csv = export_scored_csv_with_ts(scored_rows, out_dir, ts)
+        else:
+            logger.warning("Enrichment/scoring modules not available; skipping --enrich pipeline.")
 
     # Build summary artifact
     enabled_sources = {
@@ -233,7 +336,33 @@ def main(argv: List[str] | None = None) -> None:
     print(pretty_print_summary(summary))
     if not args.summary_only and out_csv:
         print(f"Exported matched jobs to: {out_csv}")
+    if enriched_json_path:
+        print(f"Exported enriched jobs to: {enriched_json_path}")
+    if out_scored_csv:
+        print(f"Exported scored jobs to: {out_scored_csv}")
     print(f"Summary: {out_json}")
+
+    # Optional retention prune (Phase 3B)
+    try:
+        retention_cfg = {}
+        try:
+            retention_cfg = (config.get("RETENTION", {}) or {})
+        except Exception:
+            retention_cfg = {}
+        enabled = bool(retention_cfg.get("enabled", False))
+        if enabled:
+            storage_cfg = (config.get("STORAGE", {}) or {})
+            backend = str(storage_cfg.get("backend", "sqlite")).lower()
+            if backend == "json":
+                from automation.storage import json_store  # type: ignore
+
+                _ = json_store.prune(config.to_dict() if hasattr(config, "to_dict") else {})
+            else:
+                from automation.storage import sqlite_store  # type: ignore
+
+                _ = sqlite_store.prune(config.to_dict() if hasattr(config, "to_dict") else {})
+    except Exception:
+        logger.info("Retention prune skipped due to missing backend or config")
 
 
 if __name__ == "__main__":

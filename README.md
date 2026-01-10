@@ -239,6 +239,15 @@ The matcher `"$pytest-short"` is defined once in [.vscode/tasks.json](.vscode/ta
 - Run: `python3 automation/job-discovery/scripts/job_discovery_v1.py --out-dir ./output`
 - Optional: `--summary-only` prints/exports summary without CSV.
 
+#### Enrichment + Scoring (Phase 3A)
+- Enable enrichment + scoring artifacts with `--enrich`:
+    - `python3 automation/job-discovery/scripts/job_discovery_v1.py --out-dir ./output --enrich`
+- Artifacts (deterministic filenames):
+    - Matched CSV: `jobs_discovered_{YYYYMMDD_HHMMSS}.csv`
+    - Enriched JSON: `jobs_enriched_{YYYYMMDD_HHMMSS}.json`
+    - Scored CSV: `jobs_scored_{YYYYMMDD_HHMMSS}.csv`
+- Configure scoring and enrichment in [config/env.sample.json](config/env.sample.json) and see examples in [docs/phase3A_enrichment_scoring.md](docs/phase3A_enrichment_scoring.md).
+
 ### Logging and JSONL Emission
 - Default logs print to stdout.
 - To write logs to JSONL, set `LOG_TO_FILE=true`.
@@ -323,3 +332,26 @@ See the dashboard specification for comprehensive metrics tracking.
 **Built for**: Career development professionals who want a systematic, auditable approach to their 60-day execution plan.
 
 **Philosophy**: Automate the repetitive, maintain human judgment on the critical.
+
+## Scoring Configuration (Phase 3A)
+- Configure scoring in [config/env.sample.json](config/env.sample.json) under `scoring.weights` and `scoring.thresholds`.
+- Typical keys for Phase 3A:
+    - `weights`: `role_fit`, `stack`, `remote` (proportions; sum not required to equal 1.0)
+    - `thresholds`: `exceptional`, `strong`, `moderate`, `weak` in [0,1]
+- See examples and details in [docs/phase3A_enrichment_scoring.md](docs/phase3A_enrichment_scoring.md).
+
+Minimal example (see full sample in config/env.sample.json):
+
+```json
+{
+    "scoring": {
+        "weights": { "role_fit": 0.5, "stack": 0.3, "remote": 0.2 },
+        "thresholds": { "exceptional": 0.85, "strong": 0.7, "moderate": 0.5 }
+    },
+    "enrichment": {
+        "keywords": { "role": ["engineer", "developer"], "stack": ["python", "aws"] },
+        "remote_aliases": ["remote", "hybrid"],
+        "seniority_patterns": { "\\b(sr|senior)\\b": "Senior", "\\b(jr|junior)\\b": "Junior" }
+    }
+}
+```

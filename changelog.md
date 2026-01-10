@@ -10,6 +10,19 @@ This project follows Semantic Versioning.
 - Job discovery orchestrator: `automation/job-discovery/scripts/job_discovery_v1.py` that loads config, applies filters, and exports matched jobs to CSV.
 - VS Code task "Run job discovery v1" in `.vscode/tasks.json`.
 
+### PR Summary: Phase 3A Enrichment + Scoring (scaffold)
+- Introduced enrichment transforms and scoring module:
+	- `automation/enrichment/scripts/enrichment.py`
+	- `automation/enrichment/scripts/scoring.py`
+- Added `--enrich` flag to `automation/job-discovery/scripts/job_discovery_v1.py` to export:
+	- Enriched JSON: `jobs_enriched_{YYYYMMDD_HHMMSS}.json`
+	- Scored CSV: `jobs_scored_{YYYYMMDD_HHMMSS}.csv`
+- Documented scoring/enrichment config examples in `config/env.sample.json` and usage in `docs/phase3A_enrichment_scoring.md`.
+- Improved discoverability:
+	- Top-level README highlights `--enrich` and artifacts
+	- Added `automation/job-discovery/scripts/README.md` with quick usage
+- Tests: Full suite passing (137 tests).
+
 ### Planned
 - Bump to `v0.1.1` after adding more tests and features.
 
