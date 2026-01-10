@@ -9,7 +9,7 @@ FIX_DIR = os.path.join(ROOT, "tests", "fixtures")
 def test_field_mapping_reference_mentions_canonical_fields():
     with open(REF, "r", encoding="utf-8") as f:
         content = f.read()
-    for field in ["title", "location", "company", "source", "url", "posted_date"]:
+    for field in ["title", "location", "company", "source", "url", "posted_at"]:
         assert field in content
 
 

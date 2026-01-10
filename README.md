@@ -3,6 +3,7 @@
 [![GitHub Release](https://img.shields.io/github/v/release/ecostratus/personal-operating-system-60d)](https://github.com/ecostratus/personal-operating-system-60d/releases)
 [![Phase 3C](https://img.shields.io/badge/release-v0.3.0--Phase3C--Normalization-blue)](https://github.com/ecostratus/personal-operating-system-60d/releases/tag/v0.3.0-Phase3C-Normalization)
 [![Phase 3D](https://img.shields.io/badge/release-v0.3.2--Phase3D--Lever-blue)](https://github.com/ecostratus/personal-operating-system-60d/releases/tag/v0.3.2-Phase3D-Lever)
+[![Phase 3D](https://img.shields.io/badge/release-v0.3.3--Phase3D--ExtendedSources-blue)](https://github.com/ecostratus/personal-operating-system-60d/releases/tag/v0.3.3-Phase3D-ExtendedSources)
 
 A comprehensive, auditable system for executing a 60-day career development plan integrating job search, networking, and consulting opportunities through Microsoft 365, Copilot Studio, and Python automation.
 
@@ -366,6 +367,19 @@ jobs = fetch_indeed_jobs(cfg)
 for j in jobs:
     print(j["job_id"], j["title"], j["url"])  # deterministic order
 ```
+
+## Enable Additional Sources (Optional)
+
+These adapters are disabled by default to prevent behavioral drift.
+
+- **ZipRecruiter:** keys `ZIPRECRUITER_ENABLED` (default `false`), `ZIPRECRUITER_API_URL`, `ZIPRECRUITER_API_KEY`
+- **Google Jobs:** keys `GOOGLEJOBS_ENABLED` (default `false`), `GOOGLEJOBS_API_URL`, `GOOGLEJOBS_API_KEY`
+- **Glassdoor:** keys `GLASSDOOR_ENABLED` (default `false`), `GLASSDOOR_API_URL`, `GLASSDOOR_API_KEY`
+- **Craigslist:** keys `CRAIGSLIST_ENABLED` (default `false`), `CRAIGSLIST_API_URL`
+- **GoRemote:** keys `GOREMOTE_ENABLED` (default `false`), `GOREMOTE_API_URL`
+
+- **Activation:** Set `*_ENABLED` to `true` and provide the corresponding URL/key as applicable.
+- **Determinism:** Canonical `job_id` = SHA‑256 of `title|company|url` (lower‑trim), truncated to 16 hex; outputs are sorted and de‑duplicated by `job_id`; `posted_at` defaults to UTC `YYYY‑MM‑DD` when missing.
 
 ## Scoring Configuration (Phase 3A)
 - Configure scoring in [config/env.sample.json](config/env.sample.json) under `scoring.weights` and `scoring.thresholds`.
