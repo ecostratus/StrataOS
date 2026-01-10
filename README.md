@@ -2,6 +2,7 @@
 
 [![GitHub Release](https://img.shields.io/github/v/release/ecostratus/personal-operating-system-60d)](https://github.com/ecostratus/personal-operating-system-60d/releases)
 [![Phase 3C](https://img.shields.io/badge/release-v0.3.0--Phase3C--Normalization-blue)](https://github.com/ecostratus/personal-operating-system-60d/releases/tag/v0.3.0-Phase3C-Normalization)
+[![Phase 3D](https://img.shields.io/badge/release-v0.3.2--Phase3D--Lever-blue)](https://github.com/ecostratus/personal-operating-system-60d/releases/tag/v0.3.2-Phase3D-Lever)
 
 A comprehensive, auditable system for executing a 60-day career development plan integrating job search, networking, and consulting opportunities through Microsoft 365, Copilot Studio, and Python automation.
 
@@ -305,7 +306,7 @@ This is a personal operating system, but the structure can be adapted for your u
 
 ## Changelog
 
-See [changelog.md](changelog.md) for version history and updates. Latest release: [v0.3.0-Phase3C-Normalization](https://github.com/ecostratus/personal-operating-system-60d/releases/tag/v0.3.0-Phase3C-Normalization).
+See [changelog.md](changelog.md) for version history and updates. Latest release: [v0.3.2-Phase3D-Lever](https://github.com/ecostratus/personal-operating-system-60d/releases/tag/v0.3.2-Phase3D-Lever).
 
 ## License
 
