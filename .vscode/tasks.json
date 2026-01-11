@@ -10,6 +10,17 @@
       "problemMatcher": []
     },
     {
+      "label": "Metrics: Open JSON",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "-lc",
+        "if [ -f '${workspaceFolder}/logs/metrics.json' ]; then cat '${workspaceFolder}/logs/metrics.json'; else echo '{}' ; fi"
+      ],
+      "dependsOn": "Setup Python env",
+      "problemMatcher": []
+    },
+    {
       "label": "Metrics: Show summary",
       "type": "shell",
       "command": "${workspaceFolder}/.venv/bin/python",
