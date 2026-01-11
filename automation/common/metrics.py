@@ -45,3 +45,8 @@ def inc(category: str, counter: str, amount: int = 1, path: str = _DEFAULT_FILE)
 def get_summary(path: str = _DEFAULT_FILE) -> Dict[str, Any]:
     """Return metrics summary dictionary."""
     return _load(path)
+
+
+def reset(path: str = _DEFAULT_FILE) -> None:
+    """Reset metrics file to empty state."""
+    _save(path, {})

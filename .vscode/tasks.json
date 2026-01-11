@@ -10,6 +10,22 @@
       "problemMatcher": []
     },
     {
+      "label": "Metrics: Show summary",
+      "type": "shell",
+      "command": "${workspaceFolder}/.venv/bin/python",
+      "args": ["automation/common/metrics_cli.py", "--summary"],
+      "dependsOn": "Setup Python env",
+      "problemMatcher": []
+    },
+    {
+      "label": "Metrics: Reset counters",
+      "type": "shell",
+      "command": "${workspaceFolder}/.venv/bin/python",
+      "args": ["automation/common/metrics_cli.py", "--reset"],
+      "dependsOn": "Setup Python env",
+      "problemMatcher": []
+    },
+    {
       "label": "Install dev requirements",
       "type": "shell",
       "command": "${workspaceFolder}/.venv/bin/python",
