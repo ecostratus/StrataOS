@@ -37,6 +37,16 @@
 	- Deterministic ordering by `job_id`.
 	- Returns a single canonical list with fields: `job_id`, `title`, `company`, `location`, `url`, `source`, `posted_at`.
 
+	### Enrichment Contract (Phase 3E)
+	- Enrichment is applied post-dedup and ordering via pure transforms in [automation/job-discovery/scripts/enrichment_transforms.py](automation/job-discovery/scripts/enrichment_transforms.py).
+	- Added fields (deterministic, stable):
+		- `seniority`: one of `intern`, `junior`, `mid`, `senior`, `staff`, `principal`, `lead`, `manager`.
+		- `domain_tags`: array of tags inferred from role (e.g., `backend`, `frontend`, `mobile`, `data`, `devops`, `security`).
+		- `stack`: array of technologies/frameworks/cloud providers inferred from role text.
+		- `skills`: array inclusive of `stack` plus soft skills like `Leadership`, `Agile` when present.
+	- Inputs used: `title` and optional `description` when available; transforms are resilient to missing fields.
+	- Determinism: same inputs → same enriched outputs; ordering within arrays is stable and sorted.
+
 ### Adapter Registry
 Orchestrator maintains a stable registry mapping enable keys to adapter fetch functions. New adapters can be added without changing orchestrator semantics if they follow the canonical mapping and opt‑in gating.
 
