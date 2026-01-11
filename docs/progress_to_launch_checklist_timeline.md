@@ -20,12 +20,14 @@ Phase 3E delivers enrichment transforms, prompt wiring, a minimal deterministic 
 - Combined runner orchestrates both flows with overrides.
 - Config mappings and `env.sample.json` updated for user context and output directories.
 - Docs updated; VS Code tasks added for common runs.
-- Unit tests for enrichment and renderer basics added; initial integration test coverage.
+- Snapshot tests (base + enriched) added; deterministic outputs verified; full test suite green.
+- Behavior-level JSONL logging (logs/events.jsonl) and metrics counters (logs/metrics.json) integrated; combined runner prints per-script timing and a metrics summary.
+- Metrics CLI and tasks added (show/reset/open); Makefile utilities for logs-open-events, metrics-summary/reset, clean-cache, next-changelog draft.
 
 ## Pending
-- Snapshot tests for rendered prompts and behavior-level logging/metrics.
 - Resume tailoring v1 full behavior and variants.
 - Interview prep v1; consulting funnel ingestion; weekly review automation.
+- Metrics aggregation/dashboarding and broader end-to-end validations.
 
 ## Timeline (Target)
 - Week of Jan 12–16: Snapshot tests; behavior-level logging; metrics scaffolding.
@@ -61,7 +63,26 @@ python3 automation/resume-tailoring/scripts/resume_tailor_v1.py \
 ```
 
 ### VS Code tasks
-Open the tasks in the command palette: `Tasks: Run Task`, then choose outreach/resume/combined.
+Open the tasks in the command palette: `Tasks: Run Task`.
+
+- Prompts: Outreach (venv) / Resume (venv) / Combined (venv)
+- Tests: Run All / Snapshot Tests
+- Metrics: Show summary / Reset counters / Open JSON
+- Logs: Open events (or run `make logs-open-events`)
+
+## Logging & Metrics
+- Events log: logs/events.jsonl (one JSON object per event). Open via task "Logs: Open events" or:
+
+```bash
+make logs-open-events
+```
+
+- Metrics counters: logs/metrics.json. View or reset via tasks or CLI:
+
+```bash
+./.venv/bin/python automation/common/metrics_cli.py --summary
+./.venv/bin/python automation/common/metrics_cli.py --reset
+```
 
 ## Key Artifacts & Quick Links
 - Combined runner: [automation/common/run_prompts.py](automation/common/run_prompts.py)
@@ -73,10 +94,14 @@ Open the tasks in the command palette: `Tasks: Run Task`, then choose outreach/r
 - Resume prompt: [prompts/resume/resume_tailor_prompt_v1.md](prompts/resume/resume_tailor_prompt_v1.md)
 - VS Code tasks: [.vscode/tasks.json](.vscode/tasks.json)
 - Sample env config: [config/env.sample.json](config/env.sample.json)
+- Logging utility: [automation/common/logging.py](automation/common/logging.py)
+- Metrics module: [automation/common/metrics.py](automation/common/metrics.py)
+- Metrics CLI: [automation/common/metrics_cli.py](automation/common/metrics_cli.py)
+- Makefile utilities: [Makefile](Makefile)
 
 ## Environment Notes
 - Enrichment import path issues in direct Python REPL can occur when running outside the package layout; scripts use dynamic, file-based import fallbacks.
 - Local pytest may require environment setup; CI should validate tests when dependencies are present.
 
 ## Release Context
-- Phase 3E prompt rendering and CLI wiring completed; release notes drafted for v0.3.4 and v0.3.5.
+- Phase 3E finalized in v0.3.5: deterministic renderer, enrichment wiring, CLI/runner, snapshot tests, and telemetry. See [docs/releases/v0.3.5-Phase3E-CLI-PromptRendering.md](docs/releases/v0.3.5-Phase3E-CLI-PromptRendering.md) for details and the Verification Checklist.

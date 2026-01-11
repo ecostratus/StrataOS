@@ -35,3 +35,21 @@ Latest release: [v0.3.5-Phase3E-CLI-PromptRendering](https://github.com/ecostrat
 	- “Metrics: Show summary” — prints metrics via CLI
 	- “Metrics: Reset counters” — clears counters via CLI
 	- “Metrics: Open JSON” — prints raw `logs/metrics.json`
+
+## Try It
+Jump into observability quickly:
+
+```bash
+# Open the events log via Makefile utility
+make logs-open-events
+
+# Show metrics summary via CLI
+./.venv/bin/python automation/common/metrics_cli.py --summary
+
+# Reset metrics counters
+./.venv/bin/python automation/common/metrics_cli.py --reset
+```
+
+See the “Logging & Metrics” section above for paths and task shortcuts.
+
+Tip: Open the command palette and run "Tasks: Run Task" → "Metrics: Show summary" (or "Metrics: Reset counters" / "Logs: Open events").
