@@ -54,7 +54,7 @@ This project follows Semantic Versioning.
 ### Fixed
 - `normalize_terms()` in `automation/job-discovery/scripts/filters.py` to skip `None`/empty values.
 
-[Unreleased]: https://github.com/ecostratus/personal-operating-system-60d/compare/v0.3.3-Phase3D-ExtendedSources...HEAD
+[Unreleased]: https://github.com/ecostratus/personal-operating-system-60d/compare/v0.3.4-Phase3E-Enrichment...HEAD
 [v0.3.0-Phase3C-Normalization]: https://github.com/ecostratus/personal-operating-system-60d/releases/tag/v0.3.0-Phase3C-Normalization
 [v0.3.2-Phase3D-Lever]: https://github.com/ecostratus/personal-operating-system-60d/releases/tag/v0.3.2-Phase3D-Lever
 [v0.1.0]: https://github.com/ecostratus/personal-operating-system-60d/releases/tag/v0.1.0
@@ -89,3 +89,21 @@ This project follows Semantic Versioning.
 ### Compatibility
 - No orchestrator changes; integration test remains skip‑based until orchestrator exists.
 - Cross‑source `job_id` compatibility maintained (canonical hash of lower‑trimmed `title|company|url`, truncated to 16 hex).
+
+## [v0.3.4-Phase3E-Enrichment] - 2026-01-10
+
+"Phase 3E: Enrichment Transforms + Orchestrator Integration"
+
+### Added
+- Deterministic enrichment transforms module: `automation/job-discovery/scripts/enrichment_transforms.py`.
+- Extended canonical schema with `seniority`, `domain_tags[]`, `stack[]`, `skills[]` applied post-dedup/order in orchestrator.
+- Outreach and resume scripts now consume enriched fields for prompts and tailoring focus.
+- Documentation: Enrichment Contract added to `docs/phase3D_extended_sources_transforms.md`.
+
+### Changed
+- Orchestrator applies enrichment after cross-source deduplication and deterministic ordering by `job_id`.
+
+### Testing
+- Added unit tests for enrichment transforms; full suite passing.
+
+[v0.3.4-Phase3E-Enrichment]: https://github.com/ecostratus/personal-operating-system-60d/releases/tag/v0.3.4-Phase3E-Enrichment
