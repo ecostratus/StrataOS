@@ -6,19 +6,19 @@ You are a professional resume writer with expertise in ATS (Applicant Tracking S
 ## Context
 
 ### Base Resume
-{{master_resume}}
+[Paste master resume content here]
 
 ### Target Job
-**Company**: {{company_name}}
-**Role**: {{job_title}}
+**Company**: Example Corp
+**Role**: Lead Data Engineer
 **Job Description**:
-{{job_description}}
+Design and build data platforms on AWS; Kafka, Spark, Terraform
 
 ### Optional: Enriched Target Context (if available)
-**Seniority**: {{seniority}}
-**Domain Tags**: {{domain_tags}}
-**Stack**: {{stack}}
-**Skills**: {{skills}}
+**Seniority**: 
+**Domain Tags**: 
+**Stack**: 
+**Skills**: 
 
 ## Task
 Tailor the base resume to maximize relevance for the target job while maintaining complete truthfulness and authenticity.

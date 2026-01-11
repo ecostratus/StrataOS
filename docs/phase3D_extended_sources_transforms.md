@@ -1,5 +1,13 @@
 # Phase 3D: Extended Sources & Enrichment Transforms
 
+## Quick Links
+- [Combined Runner README](automation/common/README.md)
+- [Combined Runner Script](automation/common/run_prompts.py)
+- [Outreach Prompt](prompts/outreach/outreach_prompt_v1.md)
+- [Resume Prompt](prompts/resume/resume_tailor_prompt_v1.md)
+- [Outreach Script](automation/outreach/scripts/outreach_generator_v1.py)
+- [Resume Script](automation/resume-tailoring/scripts/resume_tailor_v1.py)
+
 ## Goals
 - Add new job sources and expand enrichment transforms while reusing the stable normalization boundary from Phase 3C.
 - Maintain deterministic behavior, pure functions, and backward compatibility.
@@ -46,6 +54,70 @@
 		- `skills`: array inclusive of `stack` plus soft skills like `Leadership`, `Agile` when present.
 	- Inputs used: `title` and optional `description` when available; transforms are resilient to missing fields.
 	- Determinism: same inputs → same enriched outputs; ordering within arrays is stable and sorted.
+
+## Phase 3E: Enrichment → Prompt Rendering Contract
+
+Phase 3E introduces a contract between the enrichment layer and the prompt rendering layer.
+
+### Enriched job fields
+
+Each job object passed into outreach and resume behaviors may include:
+
+- `seniority`: inferred string (e.g., "junior", "mid", "senior", "lead")
+- `domain_tags`: list of domain tags (e.g., ["cloud", "ml", "data-platform"]) 
+- `stack`: list of inferred technologies (e.g., ["AWS", "Kubernetes", "Terraform"]) 
+- `skills`: list of extracted skills, including CI/CD, data, ML, and frameworks
+
+These fields are:
+
+- added deterministically by `enrich_job(job)`
+- derived from normalized title + description + metadata
+- stable for a given input job
+
+### Prompt rendering integration
+
+- `outreach_generator_v1.py` and `resume_tailor_v1.py` build a context dict from enriched job fields.
+- Prompts (`prompts/outreach/outreach_prompt_v1.md`, `prompts/resume/resume_tailor_prompt_v1.md`) are rendered via a minimal renderer.
+- Templates treat enriched context as optional: when fields are missing, prompts still render cleanly.
+
+### Config toggle
+
+- Enrichment is controlled by `ENRICHMENT_ENABLED` (default: true).
+- When disabled, jobs flow through without enrichment, and prompts receive only basic fields (title, company, location).
+
+### End-to-end assertions
+
+End-to-end tests assert that:
+
+- domain tags such as `cloud` and `ml` appear for matching roles
+- enriched fields are present in the rendered prompts when enabled
+- behavior remains deterministic across runs for the same input
+
+### CLI usage (Phase 3E)
+
+Outreach prompt:
+
+```
+python3 automation/outreach/scripts/outreach_generator_v1.py \
+	--context ./config/outreach_context.sample.json \
+	--output-dir ./output/outreach
+```
+
+Resume tailoring prompt:
+
+```
+python3 automation/resume-tailoring/scripts/resume_tailor_v1.py \
+	--context ./config/resume_context.sample.json \
+	--output-dir ./output/resume
+```
+
+Flags:
+- `--context`: path to user context JSON (optional)
+- `--output-dir`: directory to save rendered prompt (optional)
+- `--prompt`: override template path (optional)
+- `--no-sources`: skip job discovery (optional; uses sample job)
+
+Quick note: For a one-command workflow that runs both outreach and resume prompt generation, see the combined runner README at [automation/common/README.md](automation/common/README.md).
 
 ### Adapter Registry
 Orchestrator maintains a stable registry mapping enable keys to adapter fetch functions. New adapters can be added without changing orchestrator semantics if they follow the canonical mapping and opt‑in gating.

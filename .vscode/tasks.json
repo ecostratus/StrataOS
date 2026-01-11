@@ -1,4 +1,5 @@
 {
+  // VS Code tasks for prompt generation, tests, and setup
   "version": "2.0.0",
   "tasks": [
     {
@@ -9,54 +10,225 @@
       "problemMatcher": []
     },
     {
-      "label": "Install dev requirements (venv)",
+      "label": "Metrics: Open JSON",
       "type": "shell",
-      "command": "${workspaceFolder}/.venv/bin/python",
-      "args": ["-m", "pip", "install", "-r", "dev-requirements.txt"],
+      "command": "bash",
+      "args": [
+        "-lc",
+        "if [ -f '${workspaceFolder}/logs/metrics.json' ]; then cat '${workspaceFolder}/logs/metrics.json'; else echo '{}' ; fi"
+      ],
+      "dependsOn": "Setup Python env",
       "problemMatcher": []
     },
     {
-      "label": "Setup & Run Tests",
+      "label": "Metrics: Show summary",
+      "type": "shell",
+      "command": "${workspaceFolder}/.venv/bin/python",
+      "args": ["automation/common/metrics_cli.py", "--summary"],
+      "dependsOn": "Setup Python env",
+      "problemMatcher": []
+    },
+    {
+      "label": "Metrics: Reset counters",
+      "type": "shell",
+      "command": "${workspaceFolder}/.venv/bin/python",
+      "args": ["automation/common/metrics_cli.py", "--reset"],
+      "dependsOn": "Setup Python env",
+      "problemMatcher": []
+    },
+    {
+      "label": "Install dev requirements",
+      "type": "shell",
+      "command": "${workspaceFolder}/.venv/bin/python",
+      "args": ["-m", "pip", "install", "-U", "pip", "pytest"],
+      "dependsOn": "Create venv (.venv)",
+      "problemMatcher": []
+    },
+
+    {
+      "label": "Install module requirements",
+      "type": "shell",
+      "command": "${workspaceFolder}/.venv/bin/python",
+      "args": [
+        "-m", "pip", "install",
+        "-r", "${workspaceFolder}/automation/outreach/scripts/requirements.txt",
+        "-r", "${workspaceFolder}/automation/resume-tailoring/scripts/requirements.txt",
+        "-r", "${workspaceFolder}/automation/job-discovery/scripts/requirements.txt"
+      ],
+      "dependsOn": "Create venv (.venv)",
+      "problemMatcher": []
+    },
+
+    {
+      "label": "Setup Python env",
       "type": "shell",
       "command": "echo",
-      "args": ["Setup & Run Tests"],
-      "dependsOn": ["Create venv (.venv)", "Install dev requirements (venv)", "Run all tests"],
+      "args": ["Python env setup complete"],
+      "dependsOn": [
+        "Create venv (.venv)",
+        "Install dev requirements",
+        "Install module requirements"
+      ],
       "dependsOrder": "sequence",
-      "group": "test",
+      "problemMatcher": []
+    },
+
+    {
+      "label": "Run: Outreach Prompt",
+      "type": "shell",
+      "command": "python3",
+      "args": [
+        "automation/outreach/scripts/outreach_generator_v1.py",
+        "--context",
+        "${workspaceFolder}/config/outreach_context.sample.json",
+        "--output-dir",
+        "${workspaceFolder}/output/outreach"
+      ],
       "problemMatcher": []
     },
     {
-      "label": "Run all tests",
+      "label": "Run: Outreach Prompt (venv)",
       "type": "shell",
       "command": "${workspaceFolder}/.venv/bin/python",
-      "args": ["-m", "pytest", "-q", "--tb=short"],
-      "group": "test",
-      "problemMatcher": [
-        {
-          "name": "pytest-short",
-          "owner": "pytest",
-          "fileLocation": ["relative", "${workspaceFolder}"],
-          "pattern": [
-            {
-              "regexp": "^(.*\\.py):(\\d+):\\s+in\\s+.*$",
-              "file": 1,
-              "line": 2
-            },
-            {
-              "regexp": "^\\s*E\\s+(.*)$",
-              "message": 1
-            }
-          ]
-        }
-      ]
+      "args": [
+        "automation/outreach/scripts/outreach_generator_v1.py",
+        "--context",
+        "${workspaceFolder}/config/outreach_context.sample.json",
+        "--output-dir",
+        "${workspaceFolder}/output/outreach"
+      ],
+      "dependsOn": "Setup Python env",
+      "problemMatcher": []
     },
+    {
+      "label": "Run: Outreach Prompt (venv, no-sources)",
+      "type": "shell",
+      "command": "${workspaceFolder}/.venv/bin/python",
+      "args": [
+        "automation/outreach/scripts/outreach_generator_v1.py",
+        "--context",
+        "${workspaceFolder}/config/outreach_context.sample.json",
+        "--output-dir",
+        "${workspaceFolder}/output/outreach",
+        "--no-sources"
+      ],
+      "dependsOn": "Setup Python env",
+      "problemMatcher": []
+    },
+    {
+      "label": "Run: Resume Prompt",
+      "type": "shell",
+      "command": "python3",
+      "args": [
+        "automation/resume-tailoring/scripts/resume_tailor_v1.py",
+        "--context",
+        "${workspaceFolder}/config/resume_context.sample.json",
+        "--output-dir",
+        "${workspaceFolder}/output/resume"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "Run: Resume Prompt (venv)",
+      "type": "shell",
+      "command": "${workspaceFolder}/.venv/bin/python",
+      "args": [
+        "automation/resume-tailoring/scripts/resume_tailor_v1.py",
+        "--context",
+        "${workspaceFolder}/config/resume_context.sample.json",
+        "--output-dir",
+        "${workspaceFolder}/output/resume"
+      ],
+      "dependsOn": "Setup Python env",
+      "problemMatcher": []
+    },
+    {
+      "label": "Run: Resume Prompt (venv, no-sources)",
+      "type": "shell",
+      "command": "${workspaceFolder}/.venv/bin/python",
+      "args": [
+        "automation/resume-tailoring/scripts/resume_tailor_v1.py",
+        "--context",
+        "${workspaceFolder}/config/resume_context.sample.json",
+        "--output-dir",
+        "${workspaceFolder}/output/resume",
+        "--no-sources"
+      ],
+      "dependsOn": "Setup Python env",
+      "problemMatcher": []
+    },
+    {
+      "label": "Run: Combined Prompts",
+      "type": "shell",
+      "command": "python3",
+      "args": [
+        "automation/common/run_prompts.py",
+        "--outreach-context",
+        "${workspaceFolder}/config/outreach_context.sample.json",
+        "--outreach-output-dir",
+        "${workspaceFolder}/output/outreach",
+        "--resume-context",
+        "${workspaceFolder}/config/resume_context.sample.json",
+        "--resume-output-dir",
+        "${workspaceFolder}/output/resume"
+      ],
+      "problemMatcher": []
+    },
+
+    {
+      "label": "Run: Combined Prompts (venv)",
+      "type": "shell",
+      "command": "${workspaceFolder}/.venv/bin/python",
+      "args": [
+        "automation/common/run_prompts.py",
+        "--outreach-context",
+        "${workspaceFolder}/config/outreach_context.sample.json",
+        "--outreach-output-dir",
+        "${workspaceFolder}/output/outreach",
+        "--resume-context",
+        "${workspaceFolder}/config/resume_context.sample.json",
+        "--resume-output-dir",
+        "${workspaceFolder}/output/resume"
+      ],
+      "dependsOn": "Setup Python env",
+      "problemMatcher": []
+    },
+    {
+      "label": "Run: Combined Prompts (venv, no-sources)",
+      "type": "shell",
+      "command": "${workspaceFolder}/.venv/bin/python",
+      "args": [
+        "automation/common/run_prompts.py",
+        "--outreach-context",
+        "${workspaceFolder}/config/outreach_context.sample.json",
+        "--outreach-output-dir",
+        "${workspaceFolder}/output/outreach",
+        "--resume-context",
+        "${workspaceFolder}/config/resume_context.sample.json",
+        "--resume-output-dir",
+        "${workspaceFolder}/output/resume",
+        "--no-sources"
+      ],
+      "dependsOn": "Setup Python env",
+      "problemMatcher": []
+    },
+
     {
       "label": "Run Python tests",
       "type": "shell",
       "command": "${workspaceFolder}/.venv/bin/python",
       "args": ["-m", "pytest", "-q", "--tb=short"],
       "group": { "kind": "test", "isDefault": true },
-      "problemMatcher": ["$pytest-short"]
+      "problemMatcher": {
+        "owner": "pytest",
+        "fileLocation": "relative",
+        "pattern": {
+          "regexp": "^(.*):(\\d+): (.*)$",
+          "file": 1,
+          "line": 2,
+          "message": 3
+        }
+      }
     },
     {
       "label": "Run job discovery tests",
@@ -64,7 +236,16 @@
       "command": "${workspaceFolder}/.venv/bin/python",
       "args": ["-m", "pytest", "tests/job_discovery_tests.py", "-q", "--tb=short"],
       "group": "test",
-      "problemMatcher": ["$pytest-short"]
+      "problemMatcher": {
+        "owner": "pytest",
+        "fileLocation": "relative",
+        "pattern": {
+          "regexp": "^(.*):(\\d+): (.*)$",
+          "file": 1,
+          "line": 2,
+          "message": 3
+        }
+      }
     },
     {
       "label": "Run outreach flow tests",
@@ -72,7 +253,16 @@
       "command": "${workspaceFolder}/.venv/bin/python",
       "args": ["-m", "pytest", "tests/outreach_flow_tests.py", "-q", "--tb=short"],
       "group": "test",
-      "problemMatcher": ["$pytest-short"]
+      "problemMatcher": {
+        "owner": "pytest",
+        "fileLocation": "relative",
+        "pattern": {
+          "regexp": "^(.*):(\\d+): (.*)$",
+          "file": 1,
+          "line": 2,
+          "message": 3
+        }
+      }
     },
     {
       "label": "Run resume tailoring tests",
@@ -80,8 +270,36 @@
       "command": "${workspaceFolder}/.venv/bin/python",
       "args": ["-m", "pytest", "tests/resume_tailoring_tests.py", "-q", "--tb=short"],
       "group": "test",
-      "problemMatcher": ["$pytest-short"]
+      "problemMatcher": {
+        "owner": "pytest",
+        "fileLocation": "relative",
+        "pattern": {
+          "regexp": "^(.*):(\\d+): (.*)$",
+          "file": 1,
+          "line": 2,
+          "message": 3
+        }
+      }
     },
+    {
+      "label": "Run snapshot tests",
+      "type": "shell",
+      "command": "${workspaceFolder}/.venv/bin/python",
+      "args": ["-m", "pytest", "tests/test_prompt_snapshots.py", "-q", "--tb=short"],
+      "group": "test",
+      "dependsOn": "Setup Python env",
+      "problemMatcher": {
+        "owner": "pytest",
+        "fileLocation": "relative",
+        "pattern": {
+          "regexp": "^(.*):(\\d+): (.*)$",
+          "file": 1,
+          "line": 2,
+          "message": 3
+        }
+      }
+    },
+
     {
       "label": "Run consulting offer script",
       "type": "shell",
@@ -123,7 +341,7 @@
       "command": "python3",
       "args": ["automation/job-discovery/scripts/job_discovery_v1.py"],
       "problemMatcher": []
-    }
+    },
     {
       "label": "Run job discovery v1 (out-dir)",
       "type": "shell",

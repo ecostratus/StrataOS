@@ -54,6 +54,55 @@ _TECH_KEYWORDS = {
     "rest": "REST",
     "restful": "REST",
     "microservices": "Microservices",
+    # Expanded cloud/services
+    "lambda": "AWS Lambda",
+    "serverless": "Serverless",
+    "cloud functions": "Cloud Functions",
+    "azure functions": "Azure Functions",
+    "s3": "S3",
+    "ec2": "EC2",
+    "ecs": "ECS",
+    "eks": "EKS",
+    "sqs": "SQS",
+    "bigquery": "BigQuery",
+    "pub/sub": "Pub/Sub",
+    "cloud run": "Cloud Run",
+    # CI/CD & IaC
+    "jenkins": "Jenkins",
+    "github actions": "GitHub Actions",
+    "gitlab ci": "GitLab CI",
+    "circleci": "CircleCI",
+    "ci/cd": "CI/CD",
+    "terraform": "Terraform",
+    "pulumi": "Pulumi",
+    "cloudformation": "CloudFormation",
+    "bicep": "Bicep",
+    "helm": "Helm",
+    # Messaging/observability
+    "kafka": "Kafka",
+    "rabbitmq": "RabbitMQ",
+    "prometheus": "Prometheus",
+    "grafana": "Grafana",
+    # Datastores / NoSQL
+    "mongodb": "MongoDB",
+    "dynamodb": "DynamoDB",
+    "cassandra": "Cassandra",
+    "redis": "Redis",
+    "elasticsearch": "Elasticsearch",
+    # Data/ML libraries
+    "spark": "Apache Spark",
+    "hadoop": "Hadoop",
+    "databricks": "Databricks",
+    "tensorflow": "TensorFlow",
+    "pytorch": "PyTorch",
+    "scikit-learn": "scikit-learn",
+    "xgboost": "XGBoost",
+    "lightgbm": "LightGBM",
+    # Web frameworks
+    "spring boot": "Spring Boot",
+    " spring": "Spring",
+    "asp.net": "ASP.NET",
+    ".net core": ".NET Core",
 }
 
 
@@ -64,6 +113,9 @@ _DOMAIN_TAGS = {
     "data": ["data", "analytics", "etl", "warehouse", "ml", "machine learning"],
     "devops": ["devops", "sre", "platform", "infrastructure", "kubernetes", "docker"],
     "security": ["security", "infosec", "appsec", "secops"],
+    "ml": ["ml", "machine learning", "deep learning", "ai", "pytorch", "tensorflow"],
+    "cloud": ["cloud", "serverless", "lambda", "functions", "aws", "azure", "gcp"],
+    "data-platform": ["spark", "hadoop", "kafka", "warehouse", "databricks"],
 }
 
 
@@ -119,6 +171,8 @@ def extract_skills(text: str) -> List[str]:
         skills.add("Leadership")
     if "agile" in t or "scrum" in t:
         skills.add("Agile")
+    if "ci/cd" in t or "pipeline" in t or "jenkins" in t or "github actions" in t or "gitlab ci" in t or "circleci" in t:
+        skills.add("CI/CD")
     return sorted(skills)
 
 

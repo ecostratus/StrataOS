@@ -21,5 +21,35 @@ The docs folder serves as the central knowledge base for:
 
 This documentation supports the 60-day operating system by providing clear, accessible information for understanding and using the system effectively.
 
+## Quick Links
+- Progress-to-Launch Checklist & Timeline: [progress_to_launch_checklist_timeline.md](progress_to_launch_checklist_timeline.md)
+
 ## Releases
-Latest release: [v0.3.0-Phase3C-Normalization](https://github.com/ecostratus/personal-operating-system-60d/releases/tag/v0.3.0-Phase3C-Normalization). See the top-level [changelog.md](../changelog.md) for detailed history.
+Latest release: [v0.3.5-Phase3E-CLI-PromptRendering](https://github.com/ecostratus/personal-operating-system-60d/releases/tag/v0.3.5-Phase3E-CLI-PromptRendering). See the top-level [changelog.md](../changelog.md) for detailed history.
+
+## Logging & Metrics
+- Events log: `logs/events.jsonl` — JSON Lines of prompt render events (category, timing, output path). Emitted by `outreach_generator_v1.py` and `resume_tailor_v1.py`.
+- Metrics counters: `logs/metrics.json` — simple per-category counters (e.g., renders, errors). Updated automatically by scripts.
+- CLI: `automation/common/metrics_cli.py` — `--summary` prints current metrics; `--reset` clears counters.
+- VS Code tasks:
+	- “Metrics: Show summary” — prints metrics via CLI
+	- “Metrics: Reset counters” — clears counters via CLI
+	- “Metrics: Open JSON” — prints raw `logs/metrics.json`
+
+## Try It
+Jump into observability quickly:
+
+```bash
+# Open the events log via Makefile utility
+make logs-open-events
+
+# Show metrics summary via CLI
+./.venv/bin/python automation/common/metrics_cli.py --summary
+
+# Reset metrics counters
+./.venv/bin/python automation/common/metrics_cli.py --reset
+```
+
+See the “Logging & Metrics” section above for paths and task shortcuts.
+
+Tip: Open the command palette and run "Tasks: Run Task" → "Metrics: Show summary" (or "Metrics: Reset counters" / "Logs: Open events").

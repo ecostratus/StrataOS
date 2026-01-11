@@ -6,33 +6,33 @@ You are a professional career coach and networking expert specializing in authen
 ## Context
 
 ### Recipient Information
-**Name**: {{recipient_name}}
-**Role**: {{recipient_role}}
-**Company**: {{recipient_company}}
-**Background**: {{recipient_background}}
+**Name**: Hiring Team
+**Role**: Senior Python Developer
+**Company**: Example Corp
+**Background**: Leads backend platform initiatives
 
 ### Connection Points
-{{connection_points}}
+Built microservices on Kubernetes; interested in cloud-native ops
 
 ### Your Background
-{{your_background}}
+Senior engineer with production Python, Kubernetes, and CI/CD experience
 
 ### Optional: Target Role (if outreach is about a role)
-**Role Title**: {{target_role_title}}
-**Company**: {{target_role_company}}
-**Link**: {{target_role_url}}
+**Role Title**: Senior Python Developer
+**Company**: Example Corp
+**Link**: https://jobs.example/demo1
 
 ### Optional: Enriched Role Context (if available)
-**Seniority**: {{seniority}}
-**Domain Tags**: {{domain_tags}}
-**Stack**: {{stack}}
-**Skills**: {{skills}}
+**Seniority**: senior
+**Domain Tags**: backend, ml
+**Stack**: Python, Kubernetes, AWS
+**Skills**: CI/CD, Terraform, Kafka
 
 ### Message Purpose
-{{purpose}}
+Introduce myself and express interest in the role
 
 ### Message Type
-{{message_type}}
+cold_outreach
 - Options: cold_outreach, networking, follow_up, referral_request
 
 ## Task
