@@ -219,3 +219,52 @@ def fetch_indeed_jobs() -> List[Dict[str, str]]:
             structured_log(logger, "warning", "malformed_entry", source="indeed")
         jobs.append(mapped)
     return jobs
+
+# ------------------
+# Phase 3D Orchestrator
+# ------------------
+def fetch_all_sources(cfg: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """Fetch jobs from all enabled source adapters and return a single canonical list.
+
+    - Config-gated activation per source
+    - De-duplication by job_id across sources
+    - Deterministic ordering by job_id
+    """
+    import importlib
+
+    registry: List[Dict[str, str]] = [
+        {"enable_key": "LEVER_ENABLED", "module": "automation.job-discovery.scripts.source_lever_adapter", "func": "fetch_lever_jobs"},
+        {"enable_key": "GREENHOUSE_ENABLED", "module": "automation.job-discovery.scripts.source_greenhouse_adapter", "func": "fetch_greenhouse_jobs"},
+        {"enable_key": "ASHBY_ENABLED", "module": "automation.job-discovery.scripts.source_ashby_adapter", "func": "fetch_ashby_jobs"},
+        {"enable_key": "INDEED_ENABLED", "module": "automation.job-discovery.scripts.source_indeed_adapter", "func": "fetch_indeed_jobs"},
+        {"enable_key": "ZIPRECRUITER_ENABLED", "module": "automation.job-discovery.scripts.source_ziprecruiter_adapter", "func": "fetch_ziprecruiter_jobs"},
+        {"enable_key": "GOOGLEJOBS_ENABLED", "module": "automation.job-discovery.scripts.source_google_jobs_adapter", "func": "fetch_google_jobs"},
+        {"enable_key": "GLASSDOOR_ENABLED", "module": "automation.job-discovery.scripts.source_glassdoor_adapter", "func": "fetch_glassdoor_jobs"},
+        {"enable_key": "CRAIGSLIST_ENABLED", "module": "automation.job-discovery.scripts.source_craigslist_adapter", "func": "fetch_craigslist_jobs"},
+        {"enable_key": "GOREMOTE_ENABLED", "module": "automation.job-discovery.scripts.source_goremote_adapter", "func": "fetch_goremote_jobs"},
+    ]
+
+    all_jobs: List[Dict[str, Any]] = []
+    for entry in registry:
+        key = entry["enable_key"]
+        if not bool(cfg.get(key, False)):
+            continue
+        module = importlib.import_module(entry["module"])  # type: ignore
+        fetch_fn = getattr(module, entry["func"])  # type: ignore
+        out = fetch_fn(cfg)
+        if isinstance(out, list):
+            all_jobs.extend(out)
+
+    # De-duplicate by job_id
+    dedup: Dict[str, Dict[str, Any]] = {}
+    for job in all_jobs:
+        jid = str(job.get("job_id", ""))
+        if not jid:
+            # Skip entries missing canonical id
+            continue
+        if jid not in dedup:
+            dedup[jid] = job
+
+    result = list(dedup.values())
+    result.sort(key=lambda x: str(x.get("job_id", "")))
+    return result

@@ -29,6 +29,17 @@
 - Retry/backoff with bounded jitter; structured logging
 - Type-safe mappings with validation; discard malformed entries deterministically
 
+## Orchestrator Contract (Phase 3D)
+- Function: `fetch_all_sources(cfg)` in `automation/job-discovery/scripts/sources.py`.
+- Behavior:
+	- Config‑gated activation per source (e.g., `LEVER_ENABLED`, `GREENHOUSE_ENABLED`, etc.).
+	- Cross‑source de‑duplication by canonical `job_id`.
+	- Deterministic ordering by `job_id`.
+	- Returns a single canonical list with fields: `job_id`, `title`, `company`, `location`, `url`, `source`, `posted_at`.
+
+### Adapter Registry
+Orchestrator maintains a stable registry mapping enable keys to adapter fetch functions. New adapters can be added without changing orchestrator semantics if they follow the canonical mapping and opt‑in gating.
+
 ## Enrichment Transform Expansions
 - Role taxonomy expansion: synonyms and seniority refinements
 - Stack detection: language/framework/cloud providers; aliases normalized
