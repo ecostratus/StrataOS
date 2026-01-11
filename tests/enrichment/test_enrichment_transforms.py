@@ -30,12 +30,25 @@ def test_infer_stack_title_keywords():
     assert set(["Python", "AWS", "Docker", "Kubernetes"]).issubset(set(stack))
 
 
+def test_infer_stack_extended_keywords():
+    title = "ML Engineer (TensorFlow, PyTorch, Kafka, BigQuery, Jenkins, Terraform)"
+    stack = infer_stack(title)
+    expected = {"TensorFlow", "PyTorch", "Kafka", "BigQuery", "Jenkins", "Terraform"}
+    assert expected.issubset(set(stack))
+
+
 def test_extract_skills_includes_soft():
     title = "Lead Python Engineer (Agile)"
     skills = extract_skills(title)
     assert "Leadership" in skills
     assert "Agile" in skills
     assert "Python" in skills
+
+
+def test_extract_skills_includes_cicd():
+    title = "DevOps Engineer (GitHub Actions, Jenkins)"
+    skills = extract_skills(title)
+    assert "CI/CD" in skills
 
 
 def test_enrich_job_deterministic_and_safe():

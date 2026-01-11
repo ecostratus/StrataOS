@@ -36,6 +36,9 @@ class Config:
             "SMTP_USERNAME": "outreach.platforms.email.smtp_username",
             "SMTP_PASSWORD": "outreach.platforms.email.smtp_password",
             "SMTP_FROM_EMAIL": "outreach.platforms.email.from_email",
+            # Outreach prompt rendering
+            "OUTREACH_USER_CONTEXT_PATH": "outreach.user_context_path",
+            "OUTREACH_OUTPUT_DIRECTORY": "outreach.output_directory",
 
             "LINKEDIN_API_KEY": "job_discovery.sources.linkedin.api_key",
             "LOG_TO_FILE": "system.log_to_file",
@@ -45,6 +48,9 @@ class Config:
             "RESUME_MASTER_RESUME_PATH": "resume.master_resume_path",
             "RESUME_TAILORED_RESUME_DIRECTORY": "resume.tailored_resume_directory",
             "RESUME_FORMAT": "resume.format",
+            # Resume prompt rendering
+            "RESUME_USER_CONTEXT_PATH": "resume.user_context_path",
+            "RESUME_OUTPUT_DIRECTORY": "resume.output_directory",
 
             "CONSULTING_PROPOSAL_TEMPLATE_PATH": "consulting.proposal_template_path",
             "CONSULTING_PROPOSAL_OUTPUT_DIRECTORY": "consulting.proposal_output_directory",
@@ -81,6 +87,8 @@ class Config:
             "AUTOMATION_WEEKLY_REVIEW_TIME": "automation.weekly_review_time",
             "AUTOMATION_AUTO_SCORE_JOBS": "automation.auto_score_jobs",
             "AUTOMATION_REQUIRE_MANUAL_APPROVAL": "automation.require_manual_approval",
+            # Enrichment toggle
+            "ENRICHMENT_ENABLED": "ENRICHMENT_ENABLED",
             # Resume
             "RESUME_BACKUP_ON_TAILOR": "resume.backup_on_tailor",
             # Excel

@@ -5,6 +5,7 @@
 [![Phase 3D](https://img.shields.io/badge/release-v0.3.2--Phase3D--Lever-blue)](https://github.com/ecostratus/personal-operating-system-60d/releases/tag/v0.3.2-Phase3D-Lever)
 [![Phase 3D](https://img.shields.io/badge/release-v0.3.3--Phase3D--ExtendedSources-blue)](https://github.com/ecostratus/personal-operating-system-60d/releases/tag/v0.3.3-Phase3D-ExtendedSources)
 [![Phase 3E](https://img.shields.io/badge/release-v0.3.4--Phase3E--Enrichment-blue)](https://github.com/ecostratus/personal-operating-system-60d/releases/tag/v0.3.4-Phase3E-Enrichment)
+[![Phase 3E](https://img.shields.io/badge/release-v0.3.5--Phase3E--CLI-blue)](https://github.com/ecostratus/personal-operating-system-60d/releases/tag/v0.3.5-Phase3E-CLI-PromptRendering)
 
 A comprehensive, auditable system for executing a 60-day career development plan integrating job search, networking, and consulting opportunities through Microsoft 365, Copilot Studio, and Python automation.
 
@@ -168,6 +169,7 @@ python automation/job-discovery/scripts/job_scraper_v1.py
 - **[Excel Schema](excel-templates/system-of-record-schema.md)** - Data structure
 - **[API Endpoints](config/endpoints.md)** - External service integration
 - **[Testing Guide](tests/README.md)** - How to test the system
+ - **[Progress‑to‑Launch Checklist & Timeline](docs/progress_to_launch_checklist_timeline.md)** - PM‑friendly summary and run steps
 
 ### Specifications
 Each automation module includes detailed specifications:
@@ -298,7 +300,7 @@ This is a personal operating system, but the structure can be adapted for your u
 
 ## Changelog
 
-See [changelog.md](changelog.md) for version history and updates. Latest release: [v0.3.4-Phase3E-Enrichment](https://github.com/ecostratus/personal-operating-system-60d/releases/tag/v0.3.4-Phase3E-Enrichment).
+See [changelog.md](changelog.md) for version history and updates. Latest release: [v0.3.5-Phase3E-CLI-PromptRendering](https://github.com/ecostratus/personal-operating-system-60d/releases/tag/v0.3.5-Phase3E-CLI-PromptRendering).
 
 ## License
 

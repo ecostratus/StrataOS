@@ -21,5 +21,8 @@ The docs folder serves as the central knowledge base for:
 
 This documentation supports the 60-day operating system by providing clear, accessible information for understanding and using the system effectively.
 
+## Quick Links
+- Progress-to-Launch Checklist & Timeline: [progress_to_launch_checklist_timeline.md](progress_to_launch_checklist_timeline.md)
+
 ## Releases
-Latest release: [v0.3.0-Phase3C-Normalization](https://github.com/ecostratus/personal-operating-system-60d/releases/tag/v0.3.0-Phase3C-Normalization). See the top-level [changelog.md](../changelog.md) for detailed history.
+Latest release: [v0.3.5-Phase3E-CLI-PromptRendering](https://github.com/ecostratus/personal-operating-system-60d/releases/tag/v0.3.5-Phase3E-CLI-PromptRendering). See the top-level [changelog.md](../changelog.md) for detailed history.

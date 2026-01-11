@@ -1,0 +1,10 @@
+{
+  "recipient_name": "Hiring Team",
+  "recipient_role": "Senior Python Developer",
+  "recipient_company": "Example Corp",
+  "recipient_background": "Leads backend platform initiatives",
+  "connection_points": "Built microservices on Kubernetes; interested in cloud-native ops",
+  "your_background": "Senior engineer with production Python, Kubernetes, and CI/CD experience",
+  "message_type": "cold_outreach",
+  "purpose": "Introduce myself and express interest in the role"
+}
