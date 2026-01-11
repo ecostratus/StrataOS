@@ -18,6 +18,7 @@ if _ROOT not in sys.path:
     sys.path.insert(0, _ROOT)
 
 from config.config_loader import config
+from automation.job-discovery.scripts.enrichment_transforms import enrich_job
 
 def main():
     """Main entry point for outreach generator."""
@@ -32,6 +33,22 @@ def main():
     print(
         f"Env: {environment} | From: {from_email} | SMTP port: {smtp_port} | "
         f"LinkedIn Outreach: {linkedin_enabled} (limit/day: {linkedin_daily_limit})"
+    )
+
+    # Demo: build outreach context from enriched job fields
+    sample_job = {
+        "job_id": "demo1",
+        "title": "Senior Python Developer",
+        "company": "Example Corp",
+        "location": "Remote",
+        "url": "https://jobs.example/demo1",
+        "source": "demo",
+        "posted_at": "2026-01-10",
+    }
+    enriched = enrich_job(sample_job)
+    print(
+        f"Enriched fields → seniority: {enriched.get('seniority')}, "
+        f"tags: {enriched.get('domain_tags')}, stack: {enriched.get('stack')}"
     )
 
 if __name__ == "__main__":

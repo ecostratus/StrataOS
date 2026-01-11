@@ -267,4 +267,20 @@ def fetch_all_sources(cfg: Dict[str, Any]) -> List[Dict[str, Any]]:
 
     result = list(dedup.values())
     result.sort(key=lambda x: str(x.get("job_id", "")))
+
+    # Apply enrichment transforms deterministically
+    try:
+        import importlib.util
+        import pathlib
+        _p = pathlib.Path(__file__).resolve().parent / 'enrichment_transforms.py'
+        spec = importlib.util.spec_from_file_location("enrichment_transforms", str(_p))
+        if spec and spec.loader:
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)  # type: ignore
+            enrich_job = getattr(mod, 'enrich_job', None)
+            if callable(enrich_job):
+                result = [enrich_job(job) for job in result]  # type: ignore
+    except Exception:
+        # If enrichment not available, return canonical jobs
+        pass
     return result

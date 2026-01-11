@@ -19,6 +19,7 @@ if _ROOT not in sys.path:
     sys.path.insert(0, _ROOT)
 
 from config.config_loader import config
+from automation.job-discovery.scripts.enrichment_transforms import enrich_job
 
 def main():
     """Main entry point for resume tailoring."""
@@ -32,6 +33,22 @@ def main():
     print(
         f"Env: {environment} | Master Resume: {resume_path} | "
         f"BackupOnTailor: {backup_on_tailor} | ExcelAutoBackup: {excel_auto_backup}"
+    )
+
+    # Demo: use enriched job fields to inform tailoring focus
+    job = {
+        "job_id": "demo2",
+        "title": "Lead Data Engineer (AWS)",
+        "company": "Example Corp",
+        "location": "Remote",
+        "url": "https://jobs.example/demo2",
+        "source": "demo",
+        "posted_at": "2026-01-10",
+    }
+    enriched = enrich_job(job)
+    print(
+        f"Tailoring focus → seniority: {enriched.get('seniority')}, "
+        f"tags: {enriched.get('domain_tags')}, stack: {enriched.get('stack')}"
     )
 
 if __name__ == "__main__":
