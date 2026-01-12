@@ -130,6 +130,20 @@ logger = logging.getLogger(__name__)
 # Lazily initialized metrics to avoid module-level import failures
 _METRICS = None  # type: ignore
 
+# Backward-compatible module-level config for tests and orchestrator shims
+# Uses hardened loader to avoid PYTHONPATH dependence.
+try:
+    config = _load_config()  # type: ignore
+except Exception:  # pragma: no cover
+    config = {}  # type: ignore
+
+# Expose scrape utilities at module level for test monkeypatching
+try:
+    RateLimiter, with_retry = _load_scrape_utils()  # type: ignore
+except Exception:  # pragma: no cover
+    RateLimiter = None  # type: ignore
+    with_retry = None  # type: ignore
+
 def _ensure_metrics() -> None:
     global _METRICS
     if _METRICS is None:
@@ -184,15 +198,15 @@ def fetch_linkedin_jobs() -> List[Dict[str, str]]:
     """
     today = datetime.now(UTC).strftime("%Y-%m-%d")
     ensure_int, ensure_float, ensure_str = _load_normalization()
-    config = _load_config()
-    url = ensure_str(config.get("LINKEDIN_API_URL", ""))
-    token = ensure_str(config.get("LINKEDIN_API_TOKEN", config.get("LINKEDIN_API_KEY", "")))
-    rpm = ensure_int(config.get_int("SCRAPER_RPM", 30), 30)
-    timeout = ensure_int(config.get_int("SCRAPER_TIMEOUT", 10), 10)
-    max_retries = ensure_int(config.get_int("SCRAPER_MAX_RETRIES", 3), 3)
-    backoff_base = ensure_float(config.get_float("SCRAPER_BACKOFF_BASE", 0.5), 0.5)
-    backoff_max = ensure_float(config.get_float("SCRAPER_BACKOFF_MAX", 4.0), 4.0)
-    jitter_ms = ensure_int(config.get_int("SCRAPER_JITTER_MS", 100), 100)
+    cfg = config if hasattr(config, "get") else _load_config()  # prefer module-level patched config
+    url = ensure_str(cfg.get("LINKEDIN_API_URL", ""))
+    token = ensure_str(cfg.get("LINKEDIN_API_TOKEN", cfg.get("LINKEDIN_API_KEY", "")))
+    rpm = ensure_int(cfg.get_int("SCRAPER_RPM", 30), 30)
+    timeout = ensure_int(cfg.get_int("SCRAPER_TIMEOUT", 10), 10)
+    max_retries = ensure_int(cfg.get_int("SCRAPER_MAX_RETRIES", 3), 3)
+    backoff_base = ensure_float(cfg.get_float("SCRAPER_BACKOFF_BASE", 0.5), 0.5)
+    backoff_max = ensure_float(cfg.get_float("SCRAPER_BACKOFF_MAX", 4.0), 4.0)
+    jitter_ms = ensure_int(cfg.get_int("SCRAPER_JITTER_MS", 100), 100)
 
     # Safe fallback when no configured endpoint
     if not url:
@@ -207,12 +221,14 @@ def fetch_linkedin_jobs() -> List[Dict[str, str]]:
             }
         ]
 
-    RateLimiter, with_retry = _load_scrape_utils()
+    # Prefer module-level proxies (for tests), fallback to loader
+    rl_cls = RateLimiter if RateLimiter is not None else _load_scrape_utils()[0]
+    retry_fn = with_retry if with_retry is not None else _load_scrape_utils()[1]
     structured_log = _load_logging_utils()
     map_linkedin_item, _ = _load_mapping()
     _ensure_metrics()
 
-    limiter = RateLimiter(rpm=rpm)
+    limiter = rl_cls(rpm=rpm)
 
     def _fetch() -> List[Dict[str, Any]]:
         limiter.acquire()
@@ -229,7 +245,7 @@ def fetch_linkedin_jobs() -> List[Dict[str, str]]:
         _METRICS.retries_attempted += 1
         structured_log(logger, "error", "scraper_retry_error", source="linkedin", attempt=attempt, delay=round(delay, 3))
 
-    result = with_retry(
+    result = retry_fn(
         _fetch,
         max_retries=max_retries,
         backoff_base=backoff_base,
@@ -265,15 +281,15 @@ def fetch_indeed_jobs() -> List[Dict[str, str]]:
     """
     today = datetime.now(UTC).strftime("%Y-%m-%d")
     ensure_int, ensure_float, ensure_str = _load_normalization()
-    config = _load_config()
-    url = ensure_str(config.get("INDEED_API_URL", ""))
-    token = ensure_str(config.get("INDEED_API_TOKEN", config.get("INDEED_PUBLISHER_KEY", "")))
-    rpm = ensure_int(config.get_int("SCRAPER_RPM", 30), 30)
-    timeout = ensure_int(config.get_int("SCRAPER_TIMEOUT", 10), 10)
-    max_retries = ensure_int(config.get_int("SCRAPER_MAX_RETRIES", 3), 3)
-    backoff_base = ensure_float(config.get_float("SCRAPER_BACKOFF_BASE", 0.5), 0.5)
-    backoff_max = ensure_float(config.get_float("SCRAPER_BACKOFF_MAX", 4.0), 4.0)
-    jitter_ms = ensure_int(config.get_int("SCRAPER_JITTER_MS", 100), 100)
+    cfg = config if hasattr(config, "get") else _load_config()
+    url = ensure_str(cfg.get("INDEED_API_URL", ""))
+    token = ensure_str(cfg.get("INDEED_API_TOKEN", cfg.get("INDEED_PUBLISHER_KEY", "")))
+    rpm = ensure_int(cfg.get_int("SCRAPER_RPM", 30), 30)
+    timeout = ensure_int(cfg.get_int("SCRAPER_TIMEOUT", 10), 10)
+    max_retries = ensure_int(cfg.get_int("SCRAPER_MAX_RETRIES", 3), 3)
+    backoff_base = ensure_float(cfg.get_float("SCRAPER_BACKOFF_BASE", 0.5), 0.5)
+    backoff_max = ensure_float(cfg.get_float("SCRAPER_BACKOFF_MAX", 4.0), 4.0)
+    jitter_ms = ensure_int(cfg.get_int("SCRAPER_JITTER_MS", 100), 100)
 
     if not url:
         return [
@@ -287,12 +303,13 @@ def fetch_indeed_jobs() -> List[Dict[str, str]]:
             }
         ]
 
-    RateLimiter, with_retry = _load_scrape_utils()
+    rl_cls = RateLimiter if RateLimiter is not None else _load_scrape_utils()[0]
+    retry_fn = with_retry if with_retry is not None else _load_scrape_utils()[1]
     structured_log = _load_logging_utils()
     _, map_indeed_item = _load_mapping()
     _ensure_metrics()
 
-    limiter = RateLimiter(rpm=rpm)
+    limiter = rl_cls(rpm=rpm)
 
     def _fetch() -> List[Dict[str, Any]]:
         limiter.acquire()
@@ -308,7 +325,7 @@ def fetch_indeed_jobs() -> List[Dict[str, str]]:
         _METRICS.retries_attempted += 1
         structured_log(logger, "error", "scraper_retry_error", source="indeed", attempt=attempt, delay=round(delay, 3))
 
-    result = with_retry(
+    result = retry_fn(
         _fetch,
         max_retries=max_retries,
         backoff_base=backoff_base,

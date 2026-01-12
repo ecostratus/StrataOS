@@ -5,7 +5,7 @@ Two-stage import hardening:
 - Replace module-level import of normalization with function-scoped loader.
 """
 
-from typing import List, Iterable, Any
+from typing import List, Iterable, Any, Optional
 
 def _load_normalize_terms():
     try:
@@ -52,3 +52,12 @@ def filter_jobs(jobs: Iterable[dict[str, Any]], config: dict[str, Any]) -> List[
         _ = normalize_terms(job.get("title", ""))
         results.append(job)
     return results
+
+
+def normalize_terms(items: Optional[List[str]]) -> List[str]:
+    """Module-level wrapper to preserve public API while using hardened loader.
+
+    Delegates to `automation.common.normalization.normalize_terms` via two-stage import.
+    """
+    loader = _load_normalize_terms()
+    return loader(items)

@@ -11,3 +11,6 @@ Date: January 11, 2026
 - Preserve Phase 3C normalization boundaries across all modules.
 - FUTURE-only features for 3D/3E remain gated until post-Phase 3C.
 - Continue increasing test coverage and operational polish without changing public surfaces.
+
+## References
+- Progress-to-Launch checklist timeline: [docs/progress_to_launch_checklist_timeline.md](progress_to_launch_checklist_timeline.md)

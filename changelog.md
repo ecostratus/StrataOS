@@ -54,7 +54,7 @@ This project follows Semantic Versioning.
 ### Fixed
 - `normalize_terms()` in `automation/job-discovery/scripts/filters.py` to skip `None`/empty values.
 
-[Unreleased]: https://github.com/ecostratus/personal-operating-system-60d/compare/v0.3.4-Phase3E-Enrichment...HEAD
+[Unreleased]: https://github.com/ecostratus/personal-operating-system-60d/compare/v0.3.6-Phase3F-ImportHardening...HEAD
 [v0.3.0-Phase3C-Normalization]: https://github.com/ecostratus/personal-operating-system-60d/releases/tag/v0.3.0-Phase3C-Normalization
 [v0.3.2-Phase3D-Lever]: https://github.com/ecostratus/personal-operating-system-60d/releases/tag/v0.3.2-Phase3D-Lever
 [v0.1.0]: https://github.com/ecostratus/personal-operating-system-60d/releases/tag/v0.1.0
@@ -107,3 +107,21 @@ This project follows Semantic Versioning.
 - Added unit tests for enrichment transforms; full suite passing.
 
 [v0.3.4-Phase3E-Enrichment]: https://github.com/ecostratus/personal-operating-system-60d/releases/tag/v0.3.4-Phase3E-Enrichment
+
+## [v0.3.6-Phase3F-ImportHardening] - 2026-01-12
+
+"Phase 3F: Sources + Dynamic Adapters — Import Hardening"
+
+### Changed
+- Hardened imports across job discovery modules to run in full sources mode without requiring PYTHONPATH.
+- Added two-stage loaders (dotted import with repo-root-relative fallback) for `sources`, `scrape_utils`, `filters`, and dynamic source adapters.
+- Exposed module-level proxies (`config`, `RateLimiter`, `with_retry`) to preserve test monkeypatching compatibility.
+
+### Added
+- Dynamic import tests validating orchestrator, scrapers, filters, and adapter loading.
+- CI workflows for docs and dynamic import validation.
+
+### Fixed
+- Docs CI failure due to missing canonical reference from `docs/master_roadmap.md` to `docs/progress_to_launch_checklist_timeline.md`.
+
+[v0.3.6-Phase3F-ImportHardening]: https://github.com/ecostratus/personal-operating-system-60d/releases/tag/v0.3.6-Phase3F-ImportHardening
