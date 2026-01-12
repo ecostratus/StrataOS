@@ -1,5 +1,11 @@
 """
 Scraper utilities: rate limiting and retry wrappers.
+
+Two-stage import hardening:
+- Avoid module-level imports of local modules so dynamic loading works
+    without relying on PYTHONPATH or package context.
+- Use dotted import first when available; fallback to repo-root-relative
+    dynamic loading via import_helpers.load_module_from_path.
 """
 from __future__ import annotations
 
@@ -7,7 +13,18 @@ import time
 import random
 import logging
 from typing import Callable, TypeVar, Optional
-from logging_utils import structured_log  # type: ignore
+
+def _load_logging_utils():
+    try:
+        from automation.job_discovery.scripts.logging_utils import structured_log  # type: ignore
+        return structured_log
+    except ModuleNotFoundError:
+        from automation.common.import_helpers import load_module_from_path
+        mod = load_module_from_path(
+            "automation/job-discovery/scripts/logging_utils.py",
+            "job_discovery_logging_utils",
+        )
+        return mod.structured_log
 
 T = TypeVar("T")
 logger = logging.getLogger(__name__)
@@ -45,6 +62,7 @@ class RateLimiter:
         if self._count >= self.rpm:
             wait = max(0.0, 60.0 - elapsed)
             if wait > 0:
+                structured_log = _load_logging_utils()
                 structured_log(logger, "info", "rate_limit_sleep", wait_seconds=round(wait, 3))
                 if self._on_sleep:
                     try:
@@ -79,6 +97,7 @@ def with_retry(
             return func()
         except BaseException as e:  # noqa: BLE001
             attempts += 1
+            structured_log = _load_logging_utils()
             if on_error:
                 on_error(attempts, e)
             structured_log(logger, "error", "scraper_retry_error", attempt=attempts, message=str(e))

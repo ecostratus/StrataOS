@@ -1,25 +1,16 @@
-# Phase 3D → Phase 3E Release Plan
+# Overview
 
-## Phase 3D Completion Criteria
-- Lever, Greenhouse, Ashby, Indeed adapters implemented (opt-in by config)
-- Optional adapters scaffolded (JobSpy, ZipRecruiter, Google Jobs, Glassdoor, Craigslist, GoRemote)
-- Multi-source ingestion deterministic (canonical `job_id`, sorted, de-duplicated)
-- Transform expansion complete; normalization boundaries upheld
-- Config surfaces stable; structured logging consistent across sources
-- v0.3.x release series complete
+FUTURE (post-Phase 3C; not active)
 
-## Phase 3E Goals
-- Outreach generation v1
-- Resume tailoring v1
-- Interview prep prompt engine
-- Cross-behavior enrichment reuse
-- Behavior-level metrics
-- Behavior-level structured logging
-- v0.4.0 release milestone
+This document is a placeholder for forward-phase references.
 
-## Phase 3E Entry Conditions
-- Canonical job objects stable
-- Deterministic tags (stack, domain, seniority)
-- Multi-source ingestion validated
-- No normalization drift
-- No orchestrator drift
+## Constraints
+- Forward phases are non-editable prior to activation.
+- No implementation details, acceptance criteria, or test plans are maintained here.
+
+## References
+- Canonical source: [docs/progress_to_launch_checklist_timeline.md](progress_to_launch_checklist_timeline.md)
+- Historical context archived: [archived_artifacts.md](archived_artifacts.md) (Archived)
+
+## Superseded By
+- Phase 3C normalization boundary

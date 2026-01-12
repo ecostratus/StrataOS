@@ -5,19 +5,19 @@ Consolidates the data normalization boundary and introduces shared helpers to en
 
 ## Technical Changes
 - Shared utilities: Introduced a normalization module:
-  - [automation/common/normalization.py](automation/common/normalization.py)
+  - [automation/common/normalization.py](../../automation/common/normalization.py)
   - Helpers: `normalize_terms(items)`, `ensure_int(val, default)`, `ensure_float(val, default)`, `ensure_str(val, default="")`
 - Filters & Sources: Refactored to consume shared helpers for consistent input handling and type-safety.
-  - [automation/job-discovery/scripts/filters.py](automation/job-discovery/scripts/filters.py)
-  - [automation/job-discovery/scripts/sources.py](automation/job-discovery/scripts/sources.py)
+  - [automation/job-discovery/scripts/filters.py](../../automation/job-discovery/scripts/filters.py)
+  - [automation/job-discovery/scripts/sources.py](../../automation/job-discovery/scripts/sources.py)
 - Enrichment Pipeline: Normalization applied at function boundaries; removed inline `.lower()`/`.strip()` loops and enforced deterministic ordering.
-  - [automation/enrichment/scripts/enrichment.py](automation/enrichment/scripts/enrichment.py)
+  - [automation/enrichment/scripts/enrichment.py](../../automation/enrichment/scripts/enrichment.py)
   - Key functions reviewed: `normalize_title`, `infer_seniority`, `detect_stack`, `detect_role_tags`, `is_remote_friendly`, `extract_features`
 
 ## Testing
 - Added focused tests for normalization determinism and enrichment boundary behavior:
-  - [tests/common/test_normalization_terms.py](tests/common/test_normalization_terms.py)
-  - [tests/enrichment/test_enrichment_normalization.py](tests/enrichment/test_enrichment_normalization.py)
+  - [tests/common/test_normalization_terms.py](../../tests/common/test_normalization_terms.py)
+  - [tests/enrichment/test_enrichment_normalization.py](../../tests/enrichment/test_enrichment_normalization.py)
 - Validates:
   - Edge-case handling (mixed case, punctuation, whitespace, None inputs)
   - Deterministic, repeatable outputs across runs

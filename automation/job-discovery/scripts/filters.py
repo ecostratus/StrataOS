@@ -1,9 +1,23 @@
 """
 Filter helpers for job discovery.
+
+Two-stage import hardening:
+- Replace module-level import of normalization with function-scoped loader.
 """
 
-from typing import List
-from automation.common.normalization import normalize_terms
+from typing import List, Iterable, Any
+
+def _load_normalize_terms():
+    try:
+        from automation.common.normalization import normalize_terms  # type: ignore
+        return normalize_terms
+    except ModuleNotFoundError:
+        from automation.common.import_helpers import load_module_from_path
+        mod = load_module_from_path(
+            "automation/common/normalization.py",
+            "automation_common_normalization",
+        )
+        return mod.normalize_terms
 
 
 def matches_filters(title: str, location: str, keywords: List[str], locations: List[str], exclude_keywords: List[str]) -> bool:
@@ -24,3 +38,17 @@ def matches_filters(title: str, location: str, keywords: List[str], locations: L
         return False
 
     return True
+
+
+def filter_jobs(jobs: Iterable[dict[str, Any]], config: dict[str, Any]) -> List[dict[str, Any]]:
+    """
+    Example filter function using normalize_terms.
+    """
+    normalize_terms = _load_normalize_terms()
+    results: List[dict[str, Any]] = []
+    for job in jobs:
+        # Placeholder: real logic should apply normalize_terms to relevant fields
+        # and use config-driven criteria.
+        _ = normalize_terms(job.get("title", ""))
+        results.append(job)
+    return results
