@@ -25,26 +25,7 @@ from config.config_loader import config
 from automation.common.prompt_renderer import render_prompt
 from automation.common.logging import log_event
 from automation.common.metrics import inc
-try:
-    # Use orchestrator when available
-    from automation.job-discovery.scripts.sources import fetch_all_sources
-except Exception:
-    fetch_all_sources = None  # type: ignore
-try:
-    from automation.job_discovery.scripts.enrichment_transforms import enrich_job  # type: ignore
-except Exception:
-    # Fallback: load enrichment by file path to handle hyphenated package name
-    import importlib.util
-    import pathlib
-    _p = pathlib.Path(__file__).resolve().parents[2] / 'automation' / 'job-discovery' / 'scripts' / 'enrichment_transforms.py'
-    spec = importlib.util.spec_from_file_location("enrichment_transforms", str(_p))
-    if spec and spec.loader:
-        mod = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(mod)  # type: ignore
-        enrich_job = getattr(mod, 'enrich_job', lambda x: x)  # type: ignore
-    else:
-        def enrich_job(x):  # type: ignore
-            return x
+from automation.common.import_helpers import load_module_from_path
 
 def main():
     """Main entry point for outreach generator."""
@@ -70,10 +51,24 @@ def main():
     parser.add_argument("--no-sources", dest="no_sources", action="store_true", help="Skip source fetch and use context only")
     args = parser.parse_args()
 
+    # Resolve sources import only if not in no-sources mode
+    fetch_all_sources = None
+    if not args.no_sources:
+        try:
+            from automation.job_discovery.scripts.sources import fetch_all_sources  # type: ignore
+        except Exception:
+            import importlib.util
+            _sp = os.path.join(_ROOT, 'automation', 'job-discovery', 'scripts', 'sources.py')
+            spec = importlib.util.spec_from_file_location("job_discovery_sources", _sp)
+            if spec and spec.loader:
+                _mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(_mod)  # type: ignore
+                fetch_all_sources = getattr(_mod, 'fetch_all_sources', None)  # type: ignore
+
     # Try orchestrator for real jobs; fallback to sample
     jobs = []
     try:
-        if fetch_all_sources and not args.no_sources:
+        if fetch_all_sources:
             # Build a minimal cfg dict from config for gating
             cfg = {
                 "LEVER_ENABLED": config.get_bool("LEVER_ENABLED", False),
@@ -90,6 +85,17 @@ def main():
             jobs = fetch_all_sources(cfg)
     except Exception:
         jobs = []
+
+    # Resolve enrichment two-stage import
+    try:
+        from automation.job_discovery.scripts.enrichment_transforms import enrich_job  # type: ignore
+    except Exception:
+        mod = load_module_from_path("automation/job-discovery/scripts/enrichment_transforms.py", "enrichment_transforms")
+        if mod:
+            enrich_job = getattr(mod, "enrich_job", lambda x: x)  # type: ignore
+        else:
+            def enrich_job(x):  # type: ignore
+                return x
 
     if not jobs:
         sample_job = {

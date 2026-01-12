@@ -1,107 +1,56 @@
-# Progress‑to‑Launch Checklist & Timeline (Phase 3E)
+# Progress‑to‑Launch Checklist & Timeline (Updated, PM-Friendly)
 
-Date: January 10, 2026
+Date: January 11, 2026
 
 ## Overview
-Phase 3E delivers enrichment transforms, prompt wiring, a minimal deterministic renderer, CLI scripts for outreach/resume, a combined runner, and docs/tasks for discoverability. This document summarizes what’s done, what’s next, and how to run the flows.
+This is the single source of truth for status, phase boundaries, artifacts, and run steps. It reflects canonical normalization boundaries and current version tags.
 
-## Objectives
-- Expand enrichment (seniority, domain tags, stack, skills) with cloud, CI/CD, NoSQL, ML libraries coverage.
-- Wire enriched context into outreach and resume prompts with deterministic rendering.
-- Provide CLI scripts and a combined runner to generate timestamped outputs.
-- Add config toggles and sample env keys for user context paths and output directories.
-- Improve discoverability via docs and VS Code tasks.
+Canonical source: Progress‑to‑Launch Checklist & Timeline (Updated, PM‑Friendly)
 
-## Completed
-- Enrichment transforms expanded and applied post-dedup/order (toggle-aware).
-- Prompt templates updated to consume enriched fields.
-- Minimal prompt renderer implemented for `{{var}}` replacement and list joining.
-- Outreach and resume CLI scripts render templates and save timestamped outputs.
-- Combined runner orchestrates both flows with overrides.
-- Config mappings and `env.sample.json` updated for user context and output directories.
-- Docs updated; VS Code tasks added for common runs.
-- Snapshot tests (base + enriched) added; deterministic outputs verified; full test suite green.
-- Behavior-level JSONL logging (logs/events.jsonl) and metrics counters (logs/metrics.json) integrated; combined runner prints per-script timing and a metrics summary.
-- Metrics CLI and tasks added (show/reset/open); Makefile utilities for logs-open-events, metrics-summary/reset, clean-cache, next-changelog draft.
+## Phase Status & Versions
+- Phase 1 — Foundations: Done — v0.1.0
+- Phase 2A — Early Pipeline: Done — v0.1.1
+- Phase 2C — Discovery/Filters: Done — v0.2.0
+- Phase 3 — Active: Current = Phase 3C (Normalization) — v0.3.0-Phase3C-Normalization
+- Phase 4 — Future: Not Started
 
-## Pending
-- Resume tailoring v1 full behavior and variants.
-- Interview prep v1; consulting funnel ingestion; weekly review automation.
-- Metrics aggregation/dashboarding and broader end-to-end validations.
+## Phase Boundaries (Canonical)
+- Phase 3C (Normalization) defines stable boundaries and defensive normalization for config and inputs. All downstream features must respect these boundaries.
+- Phase 3A (Enrichment + Scoring) and Phase 3B (Scheduling + Storage) remain in-scope for Phase 3, aligned to the 3C normalization contract.
+- Phase 3D/3E features are FUTURE-only (post-Phase 3C); see Archived Artifacts for superseded narratives and plans.
+
+## Current Artifacts (Phase 3C)
+- Normalization helpers: [automation/common/normalization.py](../automation/common/normalization.py)
+- Config loader and samples: [config/config_loader.py](../config/config_loader.py), [config/env.sample.json](../config/env.sample.json)
+- Field mapping reference: [docs/field_mapping_reference.md](field_mapping_reference.md)
+- Job discovery orchestrator: [automation/job-discovery/scripts/job_discovery_v1.py](../automation/job-discovery/scripts/job_discovery_v1.py)
+
+## Run Steps (Stable)
+Use the job discovery script with deterministic outputs:
+
+```bash
+python3 automation/job-discovery/scripts/job_discovery_v1.py --out-dir ./output
+```
+
+Optional flags:
+- `--summary-only`: export only the run summary
+- `--enrich`: opt-in enrichment/scoring when available under Phase 3A
 
 ## Timeline (Target)
-- Week of Jan 12–16: Snapshot tests; behavior-level logging; metrics scaffolding.
-- Week of Jan 19–23: Resume tailoring v1 behavior; prompt variants; integration validations.
-- Week of Jan 26–30: Interview prep v1; consulting funnel ingestion; weekly review automation kickoff.
-- Ongoing: Expand enrichment coverage; refine prompts; operational polish.
+- Week of Jan 12–16: Validation of normalization boundaries across modules; summary-only flows.
+- Week of Jan 19–23: Phase 3A scaffolding alignment to normalization; initial tests.
+- Week of Jan 26–30: Phase 3B scheduling/storage helpers; retention policy drafts.
+- Ongoing: Preserve determinism; expand coverage under normalization; operational polish.
 
-## How to Run
-Use the combined runner to generate both prompts or run each individually.
+## Version & Tags
+- v0.1.0 (Phase 1)
+- v0.1.1 (Phase 2A)
+- v0.2.0 (Phase 2C)
+- v0.3.0-Phase3C-Normalization (current)
 
-### Combined runner
-```bash
-python3 automation/common/run_prompts.py \
-  --outreach-context config/user/outreach_context.json \
-  --outreach-output-dir out/outreach \
-  --resume-context config/user/resume_context.json \
-  --resume-output-dir out/resume
-```
+## Recent Completions
+- v0.3.6: Import Hardening (sources.py, dynamic adapters) — Combined runner and job-discovery now work without PYTHONPATH.
 
-### Individual scripts
-```bash
-# Outreach
-python3 automation/outreach/scripts/outreach_generator_v1.py \
-  --context config/user/outreach_context.json \
-  --output-dir out/outreach \
-  --prompt prompts/outreach/outreach_prompt_v1.md
-
-# Resume
-python3 automation/resume-tailoring/scripts/resume_tailor_v1.py \
-  --context config/user/resume_context.json \
-  --output-dir out/resume \
-  --prompt prompts/resume/resume_tailor_prompt_v1.md
-```
-
-### VS Code tasks
-Open the tasks in the command palette: `Tasks: Run Task`.
-
-- Prompts: Outreach (venv) / Resume (venv) / Combined (venv)
-- Tests: Run All / Snapshot Tests
-- Metrics: Show summary / Reset counters / Open JSON
-- Logs: Open events (or run `make logs-open-events`)
-
-## Logging & Metrics
-- Events log: logs/events.jsonl (one JSON object per event). Open via task "Logs: Open events" or:
-
-```bash
-make logs-open-events
-```
-
-- Metrics counters: logs/metrics.json. View or reset via tasks or CLI:
-
-```bash
-./.venv/bin/python automation/common/metrics_cli.py --summary
-./.venv/bin/python automation/common/metrics_cli.py --reset
-```
-
-## Key Artifacts & Quick Links
-- Combined runner: [automation/common/run_prompts.py](automation/common/run_prompts.py)
-- Prompt renderer: [automation/common/prompt_renderer.py](automation/common/prompt_renderer.py)
-- Enrichment transforms: [automation/job-discovery/scripts/enrichment_transforms.py](automation/job-discovery/scripts/enrichment_transforms.py)
-- Outreach script: [automation/outreach/scripts/outreach_generator_v1.py](automation/outreach/scripts/outreach_generator_v1.py)
-- Resume script: [automation/resume-tailoring/scripts/resume_tailor_v1.py](automation/resume-tailoring/scripts/resume_tailor_v1.py)
-- Outreach prompt: [prompts/outreach/outreach_prompt_v1.md](prompts/outreach/outreach_prompt_v1.md)
-- Resume prompt: [prompts/resume/resume_tailor_prompt_v1.md](prompts/resume/resume_tailor_prompt_v1.md)
-- VS Code tasks: [.vscode/tasks.json](.vscode/tasks.json)
-- Sample env config: [config/env.sample.json](config/env.sample.json)
-- Logging utility: [automation/common/logging.py](automation/common/logging.py)
-- Metrics module: [automation/common/metrics.py](automation/common/metrics.py)
-- Metrics CLI: [automation/common/metrics_cli.py](automation/common/metrics_cli.py)
-- Makefile utilities: [Makefile](Makefile)
-
-## Environment Notes
-- Enrichment import path issues in direct Python REPL can occur when running outside the package layout; scripts use dynamic, file-based import fallbacks.
-- Local pytest may require environment setup; CI should validate tests when dependencies are present.
-
-## Release Context
-- Phase 3E finalized in v0.3.5: deterministic renderer, enrichment wiring, CLI/runner, snapshot tests, and telemetry. See [docs/releases/v0.3.5-Phase3E-CLI-PromptRendering.md](docs/releases/v0.3.5-Phase3E-CLI-PromptRendering.md) for details and the Verification Checklist.
+## Notes
+- All features must uphold Phase 3C normalization boundaries.
+- Superseded Phase 3D/3E narratives are preserved under [Archived Artifacts](archived_artifacts.md) (Archived).

@@ -12,12 +12,23 @@ import sys
 import argparse
 import subprocess
 import time
-from automation.common.metrics import get_summary
 
 # Ensure repo root on path
 _ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 if _ROOT not in sys.path:
     sys.path.insert(0, _ROOT)
+
+# Two-stage import for metrics
+try:
+    from automation.common.metrics import get_summary  # type: ignore
+except Exception:
+    from automation.common.import_helpers import load_module_from_path
+    _mod = load_module_from_path("automation/common/metrics.py", "automation_common_metrics")
+    if _mod:
+        get_summary = getattr(_mod, "get_summary", lambda: {})  # type: ignore
+    else:
+        def get_summary():  # type: ignore
+            return {}
 
 from config.config_loader import config  # type: ignore
 

@@ -352,6 +352,20 @@
         "${workspaceFolder}/output"
       ],
       "problemMatcher": []
+    },
+    {
+      "label": "Release Manager: Full Workflow",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "scripts/post_release_validation.sh"
+      ],
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "problemMatcher": []
     }
   ]
 }

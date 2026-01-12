@@ -1,7 +1,12 @@
 """
 Source fetchers for job discovery.
 
-Replace placeholder implementations with real scrapers per scraper-spec.md.
+Two-stage import hardening:
+- Avoid module-level imports of local modules so dynamic loading works
+    without relying on PYTHONPATH or package context.
+- Use dotted import first when available; fallback to repo-root-relative
+    dynamic loading via import_helpers.load_module_from_path.
+
 Each function returns a list of jobs with keys:
 - title, location, company, source, url, posted_date (YYYY-MM-DD)
 """
@@ -23,12 +28,97 @@ _ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."
 if _ROOT not in sys.path:
     sys.path.insert(0, _ROOT)
 
-from config.config_loader import config  # type: ignore
-from automation.common.normalization import ensure_int, ensure_float, ensure_str
-from scrape_utils import RateLimiter, with_retry  # type: ignore
-from metrics import Metrics  # type: ignore
-from logging_utils import structured_log  # type: ignore
-from mapping import map_linkedin_item, map_indeed_item  # type: ignore
+import importlib
+
+# Two-stage import helpers for local modules
+def _load_import_helpers():
+    try:
+        from automation.common.import_helpers import load_module_from_path  # type: ignore
+        return load_module_from_path
+    except ModuleNotFoundError:
+        # Best-effort dynamic load of import_helpers itself
+        import importlib.util
+        import os as _os
+        _root = _os.path.abspath(_os.path.join(_os.path.dirname(__file__), "..", "..", ".."))
+        _p = _os.path.join(_root, "automation", "common", "import_helpers.py")
+        spec = importlib.util.spec_from_file_location("automation_common_import_helpers", _p)
+        if spec and spec.loader:
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)  # type: ignore
+            return getattr(mod, "load_module_from_path")
+        raise
+
+
+def _load_config():
+    try:
+        from config.config_loader import config  # type: ignore
+        return config
+    except ModuleNotFoundError:
+        load_module_from_path = _load_import_helpers()
+        mod = load_module_from_path("config/config_loader.py", "config_loader")
+        return mod.config
+
+
+def _load_normalization():
+    try:
+        from automation.common.normalization import ensure_int, ensure_float, ensure_str  # type: ignore
+        return ensure_int, ensure_float, ensure_str
+    except ModuleNotFoundError:
+        load_module_from_path = _load_import_helpers()
+        mod = load_module_from_path("automation/common/normalization.py", "automation_common_normalization")
+        return mod.ensure_int, mod.ensure_float, mod.ensure_str
+
+
+def _load_scrape_utils():
+    try:
+        from automation.job_discovery.scripts.scrape_utils import RateLimiter, with_retry  # type: ignore
+        return RateLimiter, with_retry
+    except ModuleNotFoundError:
+        load_module_from_path = _load_import_helpers()
+        mod = load_module_from_path(
+            "automation/job-discovery/scripts/scrape_utils.py",
+            "job_discovery_scrape_utils",
+        )
+        return mod.RateLimiter, mod.with_retry
+
+
+def _load_metrics_cls():
+    try:
+        from automation.job_discovery.scripts.metrics import Metrics  # type: ignore
+        return Metrics
+    except ModuleNotFoundError:
+        load_module_from_path = _load_import_helpers()
+        mod = load_module_from_path(
+            "automation/job-discovery/scripts/metrics.py",
+            "job_discovery_metrics",
+        )
+        return mod.Metrics
+
+
+def _load_logging_utils():
+    try:
+        from automation.job_discovery.scripts.logging_utils import structured_log  # type: ignore
+        return structured_log
+    except ModuleNotFoundError:
+        load_module_from_path = _load_import_helpers()
+        mod = load_module_from_path(
+            "automation/job-discovery/scripts/logging_utils.py",
+            "job_discovery_logging_utils",
+        )
+        return mod.structured_log
+
+
+def _load_mapping():
+    try:
+        from automation.job_discovery.scripts.mapping import map_linkedin_item, map_indeed_item  # type: ignore
+        return map_linkedin_item, map_indeed_item
+    except ModuleNotFoundError:
+        load_module_from_path = _load_import_helpers()
+        mod = load_module_from_path(
+            "automation/job-discovery/scripts/mapping.py",
+            "job_discovery_mapping",
+        )
+        return mod.map_linkedin_item, mod.map_indeed_item
 import logging
 try:
     import requests  # type: ignore
@@ -37,18 +127,26 @@ except Exception:  # pragma: no cover - allow tests to run without requests inst
 
 logger = logging.getLogger(__name__)
 
-# Module-level metrics to keep orchestrator simple
-_METRICS = Metrics()
+# Lazily initialized metrics to avoid module-level import failures
+_METRICS = None  # type: ignore
+
+def _ensure_metrics() -> None:
+    global _METRICS
+    if _METRICS is None:
+        Metrics = _load_metrics_cls()
+        _METRICS = Metrics()
 
 
 
 
 def reset_metrics() -> None:
     global _METRICS
+    Metrics = _load_metrics_cls()
     _METRICS = Metrics()
 
 
-def get_metrics() -> Metrics:
+def get_metrics() -> Any:
+    _ensure_metrics()
     return _METRICS
 
 
@@ -85,6 +183,8 @@ def fetch_linkedin_jobs() -> List[Dict[str, str]]:
     Expects the API to return a JSON list of items with at least title, company, location, url, posted_date.
     """
     today = datetime.now(UTC).strftime("%Y-%m-%d")
+    ensure_int, ensure_float, ensure_str = _load_normalization()
+    config = _load_config()
     url = ensure_str(config.get("LINKEDIN_API_URL", ""))
     token = ensure_str(config.get("LINKEDIN_API_TOKEN", config.get("LINKEDIN_API_KEY", "")))
     rpm = ensure_int(config.get_int("SCRAPER_RPM", 30), 30)
@@ -106,6 +206,11 @@ def fetch_linkedin_jobs() -> List[Dict[str, str]]:
                 "posted_date": today,
             }
         ]
+
+    RateLimiter, with_retry = _load_scrape_utils()
+    structured_log = _load_logging_utils()
+    map_linkedin_item, _ = _load_mapping()
+    _ensure_metrics()
 
     limiter = RateLimiter(rpm=rpm)
 
@@ -159,6 +264,8 @@ def fetch_indeed_jobs() -> List[Dict[str, str]]:
     Expects the API to return a JSON list of items with at least title, company, location, url, posted_date.
     """
     today = datetime.now(UTC).strftime("%Y-%m-%d")
+    ensure_int, ensure_float, ensure_str = _load_normalization()
+    config = _load_config()
     url = ensure_str(config.get("INDEED_API_URL", ""))
     token = ensure_str(config.get("INDEED_API_TOKEN", config.get("INDEED_PUBLISHER_KEY", "")))
     rpm = ensure_int(config.get_int("SCRAPER_RPM", 30), 30)
@@ -179,6 +286,11 @@ def fetch_indeed_jobs() -> List[Dict[str, str]]:
                 "posted_date": today,
             }
         ]
+
+    RateLimiter, with_retry = _load_scrape_utils()
+    structured_log = _load_logging_utils()
+    _, map_indeed_item = _load_mapping()
+    _ensure_metrics()
 
     limiter = RateLimiter(rpm=rpm)
 
@@ -230,26 +342,33 @@ def fetch_all_sources(cfg: Dict[str, Any]) -> List[Dict[str, Any]]:
     - De-duplication by job_id across sources
     - Deterministic ordering by job_id
     """
-    import importlib
-
+    # Adapter registry mapping enable keys to adapter names
     registry: List[Dict[str, str]] = [
-        {"enable_key": "LEVER_ENABLED", "module": "automation.job-discovery.scripts.source_lever_adapter", "func": "fetch_lever_jobs"},
-        {"enable_key": "GREENHOUSE_ENABLED", "module": "automation.job-discovery.scripts.source_greenhouse_adapter", "func": "fetch_greenhouse_jobs"},
-        {"enable_key": "ASHBY_ENABLED", "module": "automation.job-discovery.scripts.source_ashby_adapter", "func": "fetch_ashby_jobs"},
-        {"enable_key": "INDEED_ENABLED", "module": "automation.job-discovery.scripts.source_indeed_adapter", "func": "fetch_indeed_jobs"},
-        {"enable_key": "ZIPRECRUITER_ENABLED", "module": "automation.job-discovery.scripts.source_ziprecruiter_adapter", "func": "fetch_ziprecruiter_jobs"},
-        {"enable_key": "GOOGLEJOBS_ENABLED", "module": "automation.job-discovery.scripts.source_google_jobs_adapter", "func": "fetch_google_jobs"},
-        {"enable_key": "GLASSDOOR_ENABLED", "module": "automation.job-discovery.scripts.source_glassdoor_adapter", "func": "fetch_glassdoor_jobs"},
-        {"enable_key": "CRAIGSLIST_ENABLED", "module": "automation.job-discovery.scripts.source_craigslist_adapter", "func": "fetch_craigslist_jobs"},
-        {"enable_key": "GOREMOTE_ENABLED", "module": "automation.job-discovery.scripts.source_goremote_adapter", "func": "fetch_goremote_jobs"},
+        {"enable_key": "LEVER_ENABLED", "adapter": "lever", "func": "fetch_lever_jobs"},
+        {"enable_key": "GREENHOUSE_ENABLED", "adapter": "greenhouse", "func": "fetch_greenhouse_jobs"},
+        {"enable_key": "ASHBY_ENABLED", "adapter": "ashby", "func": "fetch_ashby_jobs"},
+        {"enable_key": "INDEED_ENABLED", "adapter": "indeed", "func": "fetch_indeed_jobs"},
+        {"enable_key": "ZIPRECRUITER_ENABLED", "adapter": "ziprecruiter", "func": "fetch_ziprecruiter_jobs"},
+        {"enable_key": "GOOGLEJOBS_ENABLED", "adapter": "google_jobs", "func": "fetch_google_jobs"},
+        {"enable_key": "GLASSDOOR_ENABLED", "adapter": "glassdoor", "func": "fetch_glassdoor_jobs"},
+        {"enable_key": "CRAIGSLIST_ENABLED", "adapter": "craigslist", "func": "fetch_craigslist_jobs"},
+        {"enable_key": "GOREMOTE_ENABLED", "adapter": "goremote", "func": "fetch_goremote_jobs"},
     ]
 
+    load_module_from_path = _load_import_helpers()
     all_jobs: List[Dict[str, Any]] = []
     for entry in registry:
         key = entry["enable_key"]
         if not bool(cfg.get(key, False)):
             continue
-        module = importlib.import_module(entry["module"])  # type: ignore
+        adapter = entry["adapter"]
+        dotted = f"automation.job_discovery.scripts.source_{adapter}_adapter"
+        try:
+            module = importlib.import_module(dotted)  # type: ignore
+        except ModuleNotFoundError:
+            path = f"automation/job-discovery/scripts/source_{adapter}_adapter.py"
+            module = load_module_from_path(path, f"job_discovery_source_{adapter}_adapter")
+
         fetch_fn = getattr(module, entry["func"])  # type: ignore
         out = fetch_fn(cfg)
         if isinstance(out, list):

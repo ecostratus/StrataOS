@@ -22,10 +22,24 @@ The docs folder serves as the central knowledge base for:
 This documentation supports the 60-day operating system by providing clear, accessible information for understanding and using the system effectively.
 
 ## Quick Links
-- Progress-to-Launch Checklist & Timeline: [progress_to_launch_checklist_timeline.md](progress_to_launch_checklist_timeline.md)
+- Progress‑to‑Launch Checklist & Timeline (Updated, PM‑Friendly): [progress_to_launch_checklist_timeline.md](progress_to_launch_checklist_timeline.md)
+- Archived Artifacts: [archived_artifacts.md](archived_artifacts.md) (Archived)
 
 ## Releases
-Latest release: [v0.3.5-Phase3E-CLI-PromptRendering](https://github.com/ecostratus/personal-operating-system-60d/releases/tag/v0.3.5-Phase3E-CLI-PromptRendering). See the top-level [changelog.md](../changelog.md) for detailed history.
+Current: [v0.3.0-Phase3C-Normalization](https://github.com/ecostratus/personal-operating-system-60d/releases/tag/v0.3.0-Phase3C-Normalization)
+
+Historical releases:
+- [v0.1.0 (Phase 1)](https://github.com/ecostratus/personal-operating-system-60d/releases/tag/v0.1.0)
+- [v0.1.1 (Phase 2A)](https://github.com/ecostratus/personal-operating-system-60d/releases/tag/v0.1.1)
+- [v0.2.0 (Phase 2C)](https://github.com/ecostratus/personal-operating-system-60d/releases/tag/v0.2.0)
+- [v0.3.2 (Phase 3D – Lever)](https://github.com/ecostratus/personal-operating-system-60d/releases/tag/v0.3.2-Phase3D-Lever)
+- [v0.3.3 (Phase 3D – Extended Sources)](https://github.com/ecostratus/personal-operating-system-60d/releases/tag/v0.3.3-Phase3D-ExtendedSources)
+- [v0.3.4 (Phase 3E – Enrichment)](https://github.com/ecostratus/personal-operating-system-60d/releases/tag/v0.3.4-Phase3E-Enrichment)
+- [v0.3.5 (Phase 3E – CLI/Prompt Rendering)](https://github.com/ecostratus/personal-operating-system-60d/releases/tag/v0.3.5-Phase3E-CLI-PromptRendering)
+
+See the top-level [changelog.md](../changelog.md) for detailed history.
+
+<!-- TODO: External link validation required for GitHub release tag URLs; validate in CI with network access. -->
 
 ## Logging & Metrics
 - Events log: `logs/events.jsonl` — JSON Lines of prompt render events (category, timing, output path). Emitted by `outreach_generator_v1.py` and `resume_tailor_v1.py`.
