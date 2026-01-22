@@ -29,6 +29,9 @@ jobs:
           python -m pip install -r automation/resume-tailoring/scripts/requirements.txt || true
           python -m pip install -r automation/job-discovery/scripts/requirements.txt || true
 
+      - name: Set PYTHONPATH to workspace
+        run: echo "PYTHONPATH=$PWD" >> $GITHUB_ENV
+
       - name: Run docs CI
         run: |
           python3 scripts/ci/check_docs.py

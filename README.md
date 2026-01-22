@@ -73,7 +73,20 @@ This repository provides a structured framework designed to be:
 
 ## Quick Start
 
-### 1. Review Core Documentation
+### 1. Developer Setup & Authentication
+
+For complete setup instructions including GitHub CLI authentication, see **[Developer Setup Guide](docs/developer-setup.md)**.
+
+Quick authentication:
+```bash
+# Authenticate with GitHub CLI
+./scripts/setup_github_auth.sh
+
+# Or manually
+gh auth login
+```
+
+### 2. Review Core Documentation
 Start by understanding the system:
 ```bash
 # Read the master brief to understand objectives
@@ -86,7 +99,7 @@ cat docs/operating-constraints.md
 cat docs/governance-model.md
 ```
 
-### 2. Configure Your Environment
+### 3. Configure Your Environment
 ```bash
 # Copy the sample configuration
 cp config/env.sample.json config/env.json
@@ -95,12 +108,12 @@ cp config/env.sample.json config/env.json
 # IMPORTANT: Never commit env.json (it's in .gitignore)
 ```
 
-### 3. Set Up Excel System of Record
+### 4. Set Up Excel System of Record
 1. Review the schema: `excel-templates/system-of-record-schema.md`
 2. Copy the template: `excel-templates/system-of-record-template.xlsx`
 3. Customize for your needs
 
-### 4. Install Dependencies
+### 5. Install Dependencies
 ```bash
 # For job discovery
 pip install -r automation/job-discovery/scripts/requirements.txt
@@ -112,10 +125,10 @@ pip install -r automation/resume-tailoring/scripts/requirements.txt
 pip install -r automation/outreach/scripts/requirements.txt
 ```
 
-### 5. Run Your First Automation
+### 6. Run Your First Automation
 ```bash
 # Example: Run job discovery
-python automation/job-discovery/scripts/job_scraper_v1.py
+python automation/job-discovery/scripts/job_discovery_v1.py --out-dir ./output
 ```
 
 ## Key Features
@@ -159,6 +172,7 @@ python automation/job-discovery/scripts/job_scraper_v1.py
 ## Documentation
 
 ### Essential Reading
+- **[Developer Setup Guide](docs/developer-setup.md)** - Complete setup instructions including GitHub CLI authentication
 
 ### Technical Documentation
 - **[Copilot Flows Architecture](copilot-flows/high-level-architecture.md)** - System design
