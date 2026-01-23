@@ -4,6 +4,67 @@
 
 This governance model establishes clear decision-making authority, approval processes, and accountability mechanisms for the personal operating system.
 
+## Canonical Authority & Sealed Boundaries
+
+Canonical Authority, Sealed Artifacts, and Phase Governance
+DRAFT — NOT ACTIVE
+
+This repository operates under an explicit governance model designed to preserve determinism, auditability, and controlled evolution across phases.
+
+Canonical Authority
+The governance model defined in this document is authoritative across all phases, timelines, and planning artifacts.
+Where conflicts arise, this document supersedes phase checklists, timelines, PR descriptions, and roadmap narratives.
+
+Sealed Artifacts
+The following artifacts are sealed and must not be modified, reinterpreted, or extended without explicit governance approval:
+
+Phase 3C Normalization boundary and contracts
+
+Job Discovery SOP v1.0
+
+Adapter Design Contract v1.0
+
+REPO_NORMALIZATION.md
+
+Deterministic job_id hashing contract
+
+JSONL logging contract
+
+Phase 3F Import Hardening baseline (v0.3.6)
+
+Sealed artifacts may be referenced but not altered. Any proposal to change a sealed artifact must be surfaced as a governance exception and approved explicitly.
+
+Phase Authority
+Phase completion is declared by governance, not by timeline progression.
+
+Phase 3C (Normalization) is sealed and complete.
+
+Phase 3A (Enrichment + Scoring) and Phase 3B (Scheduling + Storage) are active only insofar as they comply with the sealed Phase 3C contract.
+
+Phase 3D / 3E and Phase 4 are future‑only and may not introduce implementation artifacts unless explicitly authorized.
+
+Drift Rules
+The following constitute governance drift and are not permitted:
+
+Modifying sealed artifacts indirectly through documentation reinterpretation
+
+Introducing runtime behavior changes via documentation‑only PRs
+
+Expanding scope based on timelines rather than explicit phase authority
+
+Reframing normalization, adapter, or import contracts without approval
+
+Any detected drift must be treated as a governance issue, not a delivery issue.
+
+CI Activation Rules
+CI guardrails may exist in draft or presence‑only form.
+
+No CI guardrail may be activated, enforced, or wired into workflows without explicit approval.
+
+CI guardrails must not perform content validation or runtime enforcement unless authorized.
+
+Documentation‑only PRs must not change execution behavior, CI state, or runtime configuration.
+
 ## Decision Framework
 
 ### Authority Levels
