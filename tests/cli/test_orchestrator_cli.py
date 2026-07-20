@@ -1,9 +1,18 @@
 import os
+import sys
 from pathlib import Path
 
 import pytest
 
-from automation.job-discovery.scripts import job_discovery_v1 as orchestrator
+# Ensure repo root and scripts dir are importable for hyphenated module paths
+_REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+_SCRIPTS_DIR = os.path.join(_REPO_ROOT, "automation", "job-discovery", "scripts")
+if _REPO_ROOT not in sys.path:
+    sys.path.insert(0, _REPO_ROOT)
+if _SCRIPTS_DIR not in sys.path:
+    sys.path.insert(0, _SCRIPTS_DIR)
+
+import job_discovery_v1 as orchestrator  # type: ignore
 
 
 class FakeConfig:
