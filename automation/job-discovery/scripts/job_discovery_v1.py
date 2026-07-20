@@ -243,7 +243,7 @@ def main(argv: List[str] | None = None) -> None:
 
             now_utc = datetime.now(UTC)
             last_run_ts = None  # TODO: load from storage backend when available
-            cfg_map = config.to_dict() if hasattr(config, "to_dict") else {}
+            cfg_map = config.to_dict()
             try:
                 should = scheduler.should_run(now_utc, last_run_ts, cfg_map)  # type: ignore[attr-defined]
             except NotImplementedError:
@@ -284,14 +284,14 @@ def main(argv: List[str] | None = None) -> None:
             }
             # Attempt to read weights/thresholds from config if available
             try:
-                cfg_scoring = config.get("SCORING", {})
+                cfg_scoring = config.to_dict().get("scoring", {})
                 if isinstance(cfg_scoring, dict):
                     weights = cfg_scoring.get("weights", {}) or weights
                     thresholds = cfg_scoring.get("thresholds", {}) or thresholds
             except Exception:
                 pass
 
-            enriched_rows: List[Dict[str, Any]] = [enrichment.extract_features(j, config.to_dict() if hasattr(config, "to_dict") else {}) for j in matched]
+            enriched_rows: List[Dict[str, Any]] = [enrichment.extract_features(j, config.to_dict()) for j in matched]
             enriched_json_path = export_enriched_json_with_ts(enriched_rows, out_dir, ts)
 
             scored_rows: List[Dict[str, Any]] = []
@@ -346,21 +346,21 @@ def main(argv: List[str] | None = None) -> None:
     try:
         retention_cfg = {}
         try:
-            retention_cfg = (config.get("RETENTION", {}) or {})
+            retention_cfg = (config.to_dict().get("retention", {}) or {})
         except Exception:
             retention_cfg = {}
         enabled = bool(retention_cfg.get("enabled", False))
         if enabled:
-            storage_cfg = (config.get("STORAGE", {}) or {})
+            storage_cfg = (config.to_dict().get("storage", {}) or {})
             backend = str(storage_cfg.get("backend", "sqlite")).lower()
             if backend == "json":
                 from automation.storage import json_store  # type: ignore
 
-                _ = json_store.prune(config.to_dict() if hasattr(config, "to_dict") else {})
+                _ = json_store.prune(config.to_dict())
             else:
                 from automation.storage import sqlite_store  # type: ignore
 
-                _ = sqlite_store.prune(config.to_dict() if hasattr(config, "to_dict") else {})
+                _ = sqlite_store.prune(config.to_dict())
     except Exception:
         logger.info("Retention prune skipped due to missing backend or config")
 

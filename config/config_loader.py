@@ -159,6 +159,9 @@ class Config:
             return self.get_json(path, default)
         return default
 
+    def to_dict(self):
+        return self._json
+
     # Convenience typed getters
     def get_bool(self, key: str, default: bool = False) -> bool:
         v = self.get(key)

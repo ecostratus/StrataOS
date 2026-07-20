@@ -13,7 +13,7 @@ import shutil
 from typing import Any, Dict, List
 
 # Resolve repo root to locate default data directory and config
-_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 try:
     from config.config_loader import config  # type: ignore
 except Exception:
@@ -26,7 +26,7 @@ def _base_dir() -> str:
     cfg = {}
     if config and hasattr(config, "get"):
         try:
-            cfg = config.get("STORAGE", {}) or {}
+            cfg = config.to_dict().get("storage", {}) or {}
         except Exception:
             cfg = {}
     return str(cfg.get("json_dir", default_dir))
@@ -97,7 +97,7 @@ def prune(config: Dict[str, Any]) -> Dict[str, Any]:
     Returns:
         A summary dict (e.g., {"deleted_runs": [...], "kept_runs": [...]}).
     """
-    retention = (config.get("RETENTION") or {})
+    retention = (config.get("retention") or {})
     days = retention.get("days")
     keep_n = int(retention.get("keep_latest_n_runs", 1) or 1)
     base = _base_dir()

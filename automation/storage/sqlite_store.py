@@ -15,7 +15,7 @@ from datetime import datetime, timezone, timedelta
 from typing import Any, Dict, List, Tuple
 
 # Resolve repo root to locate default data directory and config
-_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 try:
     from config.config_loader import config  # type: ignore
 except Exception:
@@ -28,7 +28,7 @@ def _db_path() -> str:
     cfg = {}
     if config and hasattr(config, "get"):
         try:
-            cfg = config.get("STORAGE", {}) or {}
+            cfg = config.to_dict().get("storage", {}) or {}
         except Exception:
             cfg = {}
     return str(cfg.get("sqlite_path", default_path))
@@ -192,7 +192,7 @@ def prune(config: Dict[str, Any]) -> Dict[str, Any]:
     latest `keep_latest_n_runs`. Always protect at least the latest run.
     Purge order is ascending by run timestamp.
     """
-    retention = (config.get("RETENTION") or {})
+    retention = (config.get("retention") or {})
     days = retention.get("days")
     keep_n = int(retention.get("keep_latest_n_runs", 1) or 1)
     if days is None:
