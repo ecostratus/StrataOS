@@ -173,6 +173,8 @@ python automation/job-discovery/scripts/job_discovery_v1.py --out-dir ./output
 
 ### Essential Reading
 - **[Developer Setup Guide](docs/developer-setup.md)** - Complete setup instructions including GitHub CLI authentication
+- **[Knowledge Hub](docs/knowledge-hub.md)** - Where results/findings live, dashboard status, and weekly strategy launch
+- **[Monday-Friday Playbook](docs/monday-friday-strataos-playbook.md)** - 20-30 minute daily execution loop
 
 ### Technical Documentation
 - **[Copilot Flows Architecture](copilot-flows/high-level-architecture.md)** - System design

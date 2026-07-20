@@ -22,6 +22,8 @@ The docs folder serves as the central knowledge base for:
 This documentation supports the 60-day operating system by providing clear, accessible information for understanding and using the system effectively.
 
 ## Quick Links
+- Knowledge Hub: [knowledge-hub.md](knowledge-hub.md)
+- Monday-Friday Playbook: [monday-friday-strataos-playbook.md](monday-friday-strataos-playbook.md)
 - Progress‑to‑Launch Checklist & Timeline (Updated, PM‑Friendly): [progress_to_launch_checklist_timeline.md](progress_to_launch_checklist_timeline.md)
 - Archived Artifacts: [archived_artifacts.md](archived_artifacts.md) (Archived)
 
