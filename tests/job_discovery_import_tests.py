@@ -83,17 +83,16 @@ def test_run_prompts_full_sources_smoke(tmp_path):
     outreach_outdir.mkdir(parents=True, exist_ok=True)
     resume_outdir.mkdir(parents=True, exist_ok=True)
 
-run_prompts_mod = load_module_from_path(
-    "automation/common/run_prompts.py",
-    "automation_common_run_prompts",
-)
-assert run_prompts_mod is not None
+    assert run_prompts_mod is not None
 
-rc = run_prompts_mod.run(
-    outreach_ctx=str(outreach_ctx),
-    outreach_outdir=str(outreach_outdir),
-    resume_ctx=str(resume_ctx),
-    resume_outdir=str(resume_outdir),
-    outreach_prompt=None,
-    resume_prompt=None,
-    no_sources=False,
+    rc = run_prompts_mod.run(
+        outreach_ctx=str(outreach_ctx),
+        outreach_outdir=str(outreach_outdir),
+        resume_ctx=str(resume_ctx),
+        resume_outdir=str(resume_outdir),
+        outreach_prompt=None,
+        resume_prompt=None,
+        no_sources=False,
+    )
+
+    assert rc == 0
