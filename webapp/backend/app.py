@@ -17,13 +17,20 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
+
+from . import generation as generation_module
+from .generation import generate_artifact
+from .schemas import ArtifactResult, PromptArtifact, PromptError, PromptGenerationResponse, PromptRequest, SetupOpenAIKeyRequest
 
 
 ROOT = Path(__file__).resolve().parents[2]
 OUTPUT_DIR = ROOT / "output"
 LOG_PATH = ROOT / "logs" / "events.jsonl"
 DB_PATH = Path(os.environ.get("STRATAOS_DB_PATH", str(ROOT / "data" / "jobs.db")))
+CONFIG_DIR = ROOT / "config"
+ENV_SAMPLE_PATH = CONFIG_DIR / "env.sample.json"
+ENV_JSON_PATH = CONFIG_DIR / "env.json"
+OPENAI_KEY_PLACEHOLDER = "YOUR_OPENAI_API_KEY_HERE"
 
 DISCOVERY_SCRIPT = ROOT / "automation" / "job-discovery" / "scripts" / "job_discovery_v1.py"
 RESUME_SCRIPT = ROOT / "automation" / "resume-tailoring" / "scripts" / "resume_tailor_v1.py"
@@ -131,6 +138,72 @@ def _extract_saved_prompt_path(stdout: str) -> str | None:
 def _read_json(path: Path) -> Any:
 	with path.open("r", encoding="utf-8") as f:
 		return json.load(f)
+
+
+def _read_json_object(path: Path) -> dict[str, Any]:
+	if not path.exists():
+		return {}
+	try:
+		loaded = _read_json(path)
+		if isinstance(loaded, dict):
+			return loaded
+	except Exception:
+		return {}
+	return {}
+
+
+def _write_json_object(path: Path, payload: dict[str, Any]) -> None:
+	path.parent.mkdir(parents=True, exist_ok=True)
+	with path.open("w", encoding="utf-8") as f:
+		json.dump(payload, f, ensure_ascii=False, indent=2)
+		f.write("\n")
+
+
+def _get_nested_value(source: dict[str, Any], parts: list[str], default: Any = None) -> Any:
+	current: Any = source
+	for part in parts:
+		if isinstance(current, dict) and part in current:
+			current = current[part]
+		else:
+			return default
+	return current
+
+
+def _set_nested_value(target: dict[str, Any], parts: list[str], value: Any) -> None:
+	if not parts:
+		return
+	current: dict[str, Any] = target
+	for part in parts[:-1]:
+		next_value = current.get(part)
+		if not isinstance(next_value, dict):
+			next_value = {}
+			current[part] = next_value
+		current = next_value
+	current[parts[-1]] = value
+
+
+def _normalize_text(value: Any) -> str:
+	if value is None:
+		return ""
+	return str(value).strip()
+
+
+def _is_openai_configured(provider: str, api_key: str) -> bool:
+	return provider == "openai" and bool(api_key) and api_key != OPENAI_KEY_PLACEHOLDER
+
+
+def _build_setup_status() -> dict[str, Any]:
+	has_env_json = ENV_JSON_PATH.exists()
+	active_path = ENV_JSON_PATH if has_env_json else ENV_SAMPLE_PATH
+	config_doc = _read_json_object(active_path)
+	provider = _normalize_text(_get_nested_value(config_doc, ["ai_services", "provider"], "")).lower()
+	api_key = _normalize_text(_get_nested_value(config_doc, ["ai_services", "openai", "api_key"], ""))
+	configured = has_env_json and _is_openai_configured(provider, api_key)
+	return {
+		"configured": configured,
+		"has_env_json": has_env_json,
+		"provider": provider or None,
+	}
 
 
 def _discover_artifacts() -> dict[str, Path | None]:
@@ -282,15 +355,6 @@ def _get_job(job_id: int) -> dict[str, Any]:
 		return payload
 	finally:
 		conn.close()
-
-
-class PromptRequest(BaseModel):
-	job_id: int | None = None
-	job_json: dict[str, Any] | None = None
-	context_path: str | None = None
-	no_sources: bool = True
-
-
 app = FastAPI(title="StrataOS Control Center API", version="1.0.0")
 
 app.add_middleware(
@@ -315,6 +379,39 @@ def health() -> dict[str, Any]:
 @app.get("/api/metadata/scoring")
 def scoring_metadata() -> dict[str, Any]:
 	return {"thresholds": SCORING_THRESHOLDS, "bucketColors": BUCKET_COLORS}
+
+
+@app.get("/api/setup/status")
+def setup_status() -> dict[str, Any]:
+	return _build_setup_status()
+
+
+@app.post("/api/setup/openai-key")
+def save_openai_key(request: SetupOpenAIKeyRequest) -> dict[str, Any]:
+	api_key = _normalize_text(request.api_key)
+	if not api_key:
+		raise HTTPException(status_code=400, detail="Please provide an OpenAI API key.")
+	if api_key == OPENAI_KEY_PLACEHOLDER:
+		raise HTTPException(status_code=400, detail="Please provide a real OpenAI API key.")
+
+	if ENV_JSON_PATH.exists():
+		target_doc = _read_json_object(ENV_JSON_PATH)
+	else:
+		target_doc = _read_json_object(ENV_SAMPLE_PATH)
+
+	_set_nested_value(target_doc, ["ai_services", "provider"], "openai")
+	_set_nested_value(target_doc, ["ai_services", "openai", "api_key"], api_key)
+	_write_json_object(ENV_JSON_PATH, target_doc)
+
+	generation_module.config.initialize(
+		env_path=str(ROOT / ".env"),
+		json_path=str(ENV_JSON_PATH),
+	)
+
+	return {
+		"saved": True,
+		"configured": _build_setup_status().get("configured", False),
+	}
 
 
 @app.post("/api/runs/job-discovery")
@@ -389,7 +486,7 @@ def get_job(job_id: int) -> dict[str, Any]:
 	return _get_job(job_id)
 
 
-def _create_prompt(prompt_type: str, request: PromptRequest) -> dict[str, Any]:
+def _create_prompt(prompt_type: str, request: PromptRequest) -> PromptGenerationResponse:
 	if prompt_type not in {"resume", "outreach"}:
 		raise HTTPException(status_code=400, detail="Unsupported prompt type")
 
@@ -458,26 +555,52 @@ def _create_prompt(prompt_type: str, request: PromptRequest) -> dict[str, Any]:
 		conn.close()
 
 	if proc.returncode != 0:
-		raise HTTPException(
-			status_code=500,
-			detail={"prompt_run_id": prompt_run_id, "stdout": proc.stdout, "stderr": proc.stderr},
+		return PromptGenerationResponse(
+			status="error",
+			prompt_run_id=prompt_run_id,
+			prompt_type=prompt_type,
+			artifact=None,
+			prompt_text=prompt_text,
+			output_path=saved_path,
+			error=PromptError(
+				message="The prompt preparation step failed. Please try again.",
+				code="prompt_build_failed",
+			),
 		)
 
-	return {
-		"prompt_run_id": prompt_run_id,
-		"prompt_type": prompt_type,
-		"output_path": saved_path,
-		"prompt_text": prompt_text,
-	}
+	artifact_result: ArtifactResult = generate_artifact(prompt_text, prompt_type)
+	if not artifact_result.ok:
+		return PromptGenerationResponse(
+			status="error",
+			prompt_run_id=prompt_run_id,
+			prompt_type=prompt_type,
+			artifact=None,
+			prompt_text=prompt_text,
+			output_path=saved_path,
+			error=PromptError(
+				message=artifact_result.error_message or "The content could not be generated right now. Please try again.",
+				code=artifact_result.error_code or "generation_failed",
+			),
+		)
+
+	return PromptGenerationResponse(
+		status="ok",
+		prompt_run_id=prompt_run_id,
+		prompt_type=prompt_type,
+		artifact=PromptArtifact(type=prompt_type, content=artifact_result.content or ""),
+		prompt_text=prompt_text,
+		output_path=saved_path,
+		error=None,
+	)
 
 
-@app.post("/api/prompts/resume")
-def create_resume_prompt(request: PromptRequest) -> dict[str, Any]:
+@app.post("/api/prompts/resume", response_model=PromptGenerationResponse)
+def create_resume_prompt(request: PromptRequest) -> PromptGenerationResponse:
 	return _create_prompt("resume", request)
 
 
-@app.post("/api/prompts/outreach")
-def create_outreach_prompt(request: PromptRequest) -> dict[str, Any]:
+@app.post("/api/prompts/outreach", response_model=PromptGenerationResponse)
+def create_outreach_prompt(request: PromptRequest) -> PromptGenerationResponse:
 	return _create_prompt("outreach", request)
 
 
