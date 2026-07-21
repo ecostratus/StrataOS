@@ -116,11 +116,11 @@ Evaluate career development potential.
 
 **Total Score Formula**:
 ```
-Total = (Role Fit × 0.35) + 
-        (Company Fit × 0.20) + 
-        (Compensation × 0.20) + 
-        (Location × 0.15) + 
-        (Growth × 0.10)
+Total = (Role Fit  0.35) + 
+        (Company Fit  0.20) + 
+        (Compensation  0.20) + 
+        (Location  0.15) + 
+        (Growth  0.10)
 ```
 
 **Result**: 0-10 (weighted average)
@@ -224,7 +224,7 @@ Before providing output, verify:
 - Leadership opportunity mentioned
 - Growing team
 
-**Total**: (9×0.35)+(8×0.20)+(8×0.20)+(9×0.15)+(7×0.10) = 8.5
+**Total**: (90.35)+(80.20)+(80.20)+(90.15)+(70.10) = 8.5
 
 **Recommendation**: Strong match - Apply within 48 hours with tailored resume
 
@@ -260,7 +260,7 @@ Before providing output, verify:
 - Team size unclear
 - Incremental skill development
 
-**Total**: (7×0.35)+(6×0.20)+(5×0.20)+(7×0.15)+(5×0.10) = 6.0
+**Total**: (70.35)+(60.20)+(50.20)+(70.15)+(50.10) = 6.0
 
 **Recommendation**: Moderate match - Consider if capacity allows, not top priority
 

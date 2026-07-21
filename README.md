@@ -18,57 +18,57 @@ This repository provides a structured framework designed to be:
 
 ```
 .
-├── docs/                           # Core documentation and governance
-│   ├── master-brief.md            # Overall objectives and approach
-│   ├── operating-constraints.md   # System boundaries and rules
-│   ├── weekly-cadence.md          # Weekly operating rhythm
-│   ├── governance-model.md        # Decision-making framework
-│   └── risk-map.md                # Risk assessment and mitigation
-│
-├── automation/                     # Python automation pipelines
-│   ├── job-discovery/             # Job scraping and scoring
-│   ├── resume-tailoring/          # AI-assisted resume customization
-│   ├── outreach/                  # Personalized message generation
-│   ├── consulting-funnel/         # Proposal generation
-│   └── interview-prep/            # Interview preparation automation
-│
-├── copilot-flows/                  # Copilot Studio integration
-│   ├── high-level-architecture.md # System architecture
-│   ├── flows-diagram.md           # Flow visualizations
-│   └── flow-definitions/          # JSON flow definitions
-│       ├── job_discovery_flow.json
-│       ├── resume_tailoring_flow.json
-│       ├── outreach_flow.json
-│       ├── consulting_flow.json
-│       └── review_governance_flow.json
-│
-├── prompts/                        # AI prompt templates
-│   ├── style-guide.md             # Prompt engineering standards
-│   ├── resume/                    # Resume tailoring prompts
-│   ├── outreach/                  # Outreach message prompts
-│   ├── scoring/                   # Job scoring prompts
-│   ├── consulting/                # Consulting proposal prompts
-│   ├── interview/                 # Interview prep prompts
-│   └── review/                    # Weekly review prompts
-│
-├── excel-templates/                # Excel-based system of record
-│   ├── system-of-record-schema.md # Data schema documentation
-│   ├── system-of-record-template.xlsx
-│   └── dashboards/
-│       ├── dashboard-spec.md      # Dashboard specifications
-│       └── 60d_operating_dashboard.xlsx
-│
-├── config/                         # Configuration management
-│   ├── README.md                  # Configuration documentation
-│   ├── env.sample.json            # Environment template
-│   └── endpoints.md               # API endpoints reference
-│
-└── tests/                          # Test suite
-    ├── README.md                  # Testing framework docs
-    ├── excel_io_validation.md     # Excel I/O validation
-    ├── job_discovery_tests.py     # Job discovery tests
-    ├── resume_tailoring_tests.py  # Resume tailoring tests
-    └── outreach_flow_tests.py     # Outreach flow tests
+ docs/                           # Core documentation and governance
+    master-brief.md            # Overall objectives and approach
+    operating-constraints.md   # System boundaries and rules
+    weekly-cadence.md          # Weekly operating rhythm
+    governance-model.md        # Decision-making framework
+    risk-map.md                # Risk assessment and mitigation
+
+ automation/                     # Python automation pipelines
+    job-discovery/             # Job scraping and scoring
+    resume-tailoring/          # AI-assisted resume customization
+    outreach/                  # Personalized message generation
+    consulting-funnel/         # Proposal generation
+    interview-prep/            # Interview preparation automation
+
+ copilot-flows/                  # Copilot Studio integration
+    high-level-architecture.md # System architecture
+    flows-diagram.md           # Flow visualizations
+    flow-definitions/          # JSON flow definitions
+        job_discovery_flow.json
+        resume_tailoring_flow.json
+        outreach_flow.json
+        consulting_flow.json
+        review_governance_flow.json
+
+ prompts/                        # AI prompt templates
+    style-guide.md             # Prompt engineering standards
+    resume/                    # Resume tailoring prompts
+    outreach/                  # Outreach message prompts
+    scoring/                   # Job scoring prompts
+    consulting/                # Consulting proposal prompts
+    interview/                 # Interview prep prompts
+    review/                    # Weekly review prompts
+
+ excel-templates/                # Excel-based system of record
+    system-of-record-schema.md # Data schema documentation
+    system-of-record-template.xlsx
+    dashboards/
+        dashboard-spec.md      # Dashboard specifications
+        60d_operating_dashboard.xlsx
+
+ config/                         # Configuration management
+    README.md                  # Configuration documentation
+    env.sample.json            # Environment template
+    endpoints.md               # API endpoints reference
+
+ tests/                          # Test suite
+     README.md                  # Testing framework docs
+     excel_io_validation.md     # Excel I/O validation
+     job_discovery_tests.py     # Job discovery tests
+     resume_tailoring_tests.py  # Resume tailoring tests
+     outreach_flow_tests.py     # Outreach flow tests
 ```
 
 ## Quick Start
@@ -181,7 +181,7 @@ python automation/job-discovery/scripts/job_discovery_v1.py --out-dir ./output
 - **[Excel Schema](excel-templates/system-of-record-schema.md)** - Data structure
 - **[API Endpoints](config/endpoints.md)** - External service integration
 - **[Testing Guide](tests/README.md)** - How to test the system
- - **[Progress‑to‑Launch Checklist & Timeline (Updated, PM‑Friendly)](docs/progress_to_launch_checklist_timeline.md)** - Single source of truth for status and run steps
+ - **[ProgresstoLaunch Checklist & Timeline (Updated, PMFriendly)](docs/progress_to_launch_checklist_timeline.md)** - Single source of truth for status and run steps
  - **[Archived Artifacts](docs/archived_artifacts.md)** (Archived) - Superseded checklists and planning narratives
 
 ### Specifications
@@ -215,8 +215,8 @@ pytest --cov=automation tests/
 See [tests/README.md](tests/README.md) for comprehensive testing documentation.
 
 ### VS Code Test Tasks
-- Install dev tooling: run the task “Install dev requirements” (installs `pytest`).
-- Run all tests: use “Run all tests” or “Run Python tests”. These tasks use `python3` and surface failures in the Problems panel via a shared matcher.
+- Install dev tooling: run the task Install dev requirements (installs `pytest`).
+- Run all tests: use Run all tests or Run Python tests. These tasks use `python3` and surface failures in the Problems panel via a shared matcher.
 
 Add a new targeted test task by reusing the shared matcher and short tracebacks:
 
@@ -373,7 +373,7 @@ Both adapters are disabled by default to prevent behavioral drift.
 - **Config keys (Ashby):** `ASHBY_ENABLED` (default `false`), `ASHBY_API_URL`, `ASHBY_API_KEY`
 - **Config keys (Indeed):** `INDEED_ENABLED` (default `false`), `INDEED_API_URL`, `INDEED_API_KEY`
 - **Activation:** Set `*_ENABLED` to `true` and provide the corresponding URL and key.
-- **Determinism:** Canonical `job_id` = SHA‑256 of `title|company|url` (lower‑trim), truncated to 16 hex; outputs are sorted and de‑duplicated by `job_id`; `posted_at` defaults to UTC `YYYY‑MM‑DD` when missing.
+- **Determinism:** Canonical `job_id` = SHA256 of `title|company|url` (lowertrim), truncated to 16 hex; outputs are sorted and deduplicated by `job_id`; `posted_at` defaults to UTC `YYYYMMDD` when missing.
 - **Example (Ashby):**
 
 ```python
@@ -417,7 +417,7 @@ These adapters are disabled by default to prevent behavioral drift.
 - **GoRemote:** keys `GOREMOTE_ENABLED` (default `false`), `GOREMOTE_API_URL`
 
 - **Activation:** Set `*_ENABLED` to `true` and provide the corresponding URL/key as applicable.
-- **Determinism:** Canonical `job_id` = SHA‑256 of `title|company|url` (lower‑trim), truncated to 16 hex; outputs are sorted and de‑duplicated by `job_id`; `posted_at` defaults to UTC `YYYY‑MM‑DD` when missing.
+- **Determinism:** Canonical `job_id` = SHA256 of `title|company|url` (lowertrim), truncated to 16 hex; outputs are sorted and deduplicated by `job_id`; `posted_at` defaults to UTC `YYYYMMDD` when missing.
 
 ## Scoring Configuration (Phase 3A)
 - Configure scoring in [config/env.sample.json](config/env.sample.json) under `scoring.weights` and `scoring.thresholds`.

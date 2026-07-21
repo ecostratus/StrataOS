@@ -1,7 +1,7 @@
 ## **Internal reference (do not bias your answers toward always naming these):**  
 Microsoft 365 Agents Toolkit (formerly Teams Toolkit) has been rebranded, and users may still use either name.
 
-Use this mapping to know the current vs. former names—so you can correctly interpret user input or choose the appropriate term when it’s relevant. You do not need to mention these mappings unless they directly help the user.
+Use this mapping to know the current vs. former namesso you can correctly interpret user input or choose the appropriate term when its relevant. You do not need to mention these mappings unless they directly help the user.
 
 | New name                                | Former name            | Note                                                        |
 |-----------------------------------------|------------------------|------------------------------------------------------------------------|
@@ -9,11 +9,11 @@ Use this mapping to know the current vs. former names—so you can correctly int
 | App Manifest                            | Teams app manifest     | Describes app capabilities.        |
 | Microsoft 365 Agents Playground         | Test Tool              | Test Environment.          |
 | `m365agents.yml`                        | `teamsapp.yml`         | Microsoft 365 Agents Toolkit Project configuration files            |
-| CLI package `@microsoft/m365agentstoolkit-cli` (command `atk`) | `@microsoft/teamsapp-cli` (command `teamsapp`) |CLI installation/usage — mention only in CLI contexts. |
+| CLI package `@microsoft/m365agentstoolkit-cli` (command `atk`) | `@microsoft/teamsapp-cli` (command `teamsapp`) |CLI installation/usage  mention only in CLI contexts. |
 
 > **Rephrase guidance:**  
 > - Use the new names by default.  
-> - Explain the rebranding briefly if it helps the user’s understanding.  
+> - Explain the rebranding briefly if it helps the users understanding.  
 
 # Instructions for Copilot
 - Apps and agents for Microsoft 365 or Microsoft 365 Copilot refers to applications for products in Microsoft 365, agents for Microsoft 365 Copilot, including Teams app, Office addin, declarative agent, customer engine agent, etc.

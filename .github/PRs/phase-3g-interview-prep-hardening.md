@@ -1,7 +1,7 @@
-## Phase 3G: Interview Prep Hardening — Import Robustness + Determinism
+## Phase 3G: Interview Prep Hardening  Import Robustness + Determinism
 
 ### Summary
-Ensures interview-prep modules run deterministically without requiring PYTHONPATH. Applies two-stage imports (dotted → dynamic fallback), function-scoped loaders, and repo-root-relative dynamic loading. Adds logging/metrics and tests (dynamic import + snapshots).
+Ensures interview-prep modules run deterministically without requiring PYTHONPATH. Applies two-stage imports (dotted  dynamic fallback), function-scoped loaders, and repo-root-relative dynamic loading. Adds logging/metrics and tests (dynamic import + snapshots).
 
 ### Technical Changes (Planned)
 - Two-stage imports across interview-prep scripts and shared utilities.

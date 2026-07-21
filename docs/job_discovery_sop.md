@@ -1,4 +1,4 @@
-# Job Discovery Standard Operating Procedure (SOP) — v1.0
+# Job Discovery Standard Operating Procedure (SOP)  v1.0
 
 1. Purpose and Scope
 --------------------
@@ -38,13 +38,13 @@ Discovery shall start only when all entry criteria are met: (a) configuration va
 
 6. Risk Classification and Control Mapping
 -----------------------------------------
-Controls are mapped to risks in `docs/risk-map.md` as follows (control → risk):
-- Configuration validation and schema checks → Automation Failure, Quality Degradation
-- Environment-only secrets and SCO approval → Privacy Breach, Compliance Violation
-- Per-adapter healthchecks and continued-run-on-failure policy → Over-Automation, Time Management
-- Rate limiting configuration and shared throttling → API Rate Limiting
-- Raw + mapped output retention and backups → Data Loss
-- Human review gate for high-impact outputs → Quality Degradation, Wrong Focus
+Controls are mapped to risks in `docs/risk-map.md` as follows (control  risk):
+- Configuration validation and schema checks  Automation Failure, Quality Degradation
+- Environment-only secrets and SCO approval  Privacy Breach, Compliance Violation
+- Per-adapter healthchecks and continued-run-on-failure policy  Over-Automation, Time Management
+- Rate limiting configuration and shared throttling  API Rate Limiting
+- Raw + mapped output retention and backups  Data Loss
+- Human review gate for high-impact outputs  Quality Degradation, Wrong Focus
 
 All controls shall be implemented such that evidence is produced (logs, metrics, artifacts) and traceable to the risk category.
 
@@ -57,10 +57,10 @@ All controls shall be implemented such that evidence is produced (logs, metrics,
 8. Evidence, Artifacts, and Auditability
 ---------------------------------------
 Each run shall produce the following artifacts and retain them for the configured retention period:
-- `output/run-<id>/raw/<adapter>.jsonl` — raw adapter output
-- `output/run-<id>/mapped/<adapter>.jsonl` — mapped records
-- `output/run-<id>/jobs_discovered_<timestamp>.summary.json` — per-run summary
-- Structured log file `output/run-<id>/run.jsonl` — includes `ts`, `level`, `event`, `run_id`, and metrics
+- `output/run-<id>/raw/<adapter>.jsonl`  raw adapter output
+- `output/run-<id>/mapped/<adapter>.jsonl`  mapped records
+- `output/run-<id>/jobs_discovered_<timestamp>.summary.json`  per-run summary
+- Structured log file `output/run-<id>/run.jsonl`  includes `ts`, `level`, `event`, `run_id`, and metrics
 - `FlowErrors` entries for all adapter-level failures and notable exceptions
 
 9. Change Management and Versioning

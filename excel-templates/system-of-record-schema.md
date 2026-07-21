@@ -1,8 +1,8 @@
-# **📘 Canonical System of Record (SoR) Schema**  
+# ** Canonical System of Record (SoR) Schema**  
 **Version:** 1.0  
 **Status:** Authoritative  
 **Owner:** James  
-**Purpose:** Defines the complete, governed data model for the 60‑Day Personal Operating System.
+**Purpose:** Defines the complete, governed data model for the 60Day Personal Operating System.
 
 ---
 
@@ -43,15 +43,15 @@ This schema is the **single source of truth** for:
 Tracks all target roles under consideration.
 
 **Columns**
-- `RoleID` — string, required, unique  
-- `Title` — string, required  
-- `Seniority` — string, dropdown  
-- `Function` — string  
-- `Source` — string  
-- `FitScore` — number (0–100)  
-- `Status` — dropdown: *Identified, Applied, Interviewing, Closed*  
-- `CompanyID` — string, FK → Companies.CompanyID  
-- `LastUpdated` — date, required  
+- `RoleID`  string, required, unique  
+- `Title`  string, required  
+- `Seniority`  string, dropdown  
+- `Function`  string  
+- `Source`  string  
+- `FitScore`  number (0100)  
+- `Status`  dropdown: *Identified, Applied, Interviewing, Closed*  
+- `CompanyID`  string, FK  Companies.CompanyID  
+- `LastUpdated`  date, required  
 
 ---
 
@@ -59,13 +59,13 @@ Tracks all target roles under consideration.
 Tracks companies associated with roles, outreach, or consulting.
 
 **Columns**
-- `CompanyID` — string, required, unique  
-- `Name` — string, required  
-- `Industry` — string  
-- `Location` — string  
-- `Size` — string  
-- `Website` — string  
-- `Notes` — string  
+- `CompanyID`  string, required, unique  
+- `Name`  string, required  
+- `Industry`  string  
+- `Location`  string  
+- `Size`  string  
+- `Website`  string  
+- `Notes`  string  
 
 ---
 
@@ -73,32 +73,32 @@ Tracks companies associated with roles, outreach, or consulting.
 Tracks people associated with companies, outreach, or referrals.
 
 **Columns**
-- `ContactID` — string, required, unique  
-- `Name` — string, required  
-- `Role` — string  
-- `CompanyID` — string, FK → Companies.CompanyID  
-- `Email` — string  
-- `LinkedIn` — string  
-- `RelationshipStrength` — dropdown: *Weak, Warm, Strong*  
-- `Notes` — string  
+- `ContactID`  string, required, unique  
+- `Name`  string, required  
+- `Role`  string  
+- `CompanyID`  string, FK  Companies.CompanyID  
+- `Email`  string  
+- `LinkedIn`  string  
+- `RelationshipStrength`  dropdown: *Weak, Warm, Strong*  
+- `Notes`  string  
 
 ---
 
 ## **4. Outreach**
-Tracks all outbound messages and follow‑ups.
+Tracks all outbound messages and followups.
 
 **Columns**
-- `OutreachID` — string, required, unique  
-- `ContactID` — string, FK → Contacts.ContactID  
-- `CompanyID` — string, FK → Companies.CompanyID  
-- `RoleID` — string, FK → Roles.RoleID  
-- `Channel` — dropdown: *Email, LinkedIn, Referral, Other*  
-- `MessageType` — dropdown: *Intro, Follow‑Up, Thank‑You, Referral Ask*  
-- `SentDate` — date  
-- `ResponseDate` — date  
-- `ResponseType` — dropdown: *Positive, Neutral, Negative, None*  
-- `NextActionDate` — date  
-- `Notes` — string  
+- `OutreachID`  string, required, unique  
+- `ContactID`  string, FK  Contacts.ContactID  
+- `CompanyID`  string, FK  Companies.CompanyID  
+- `RoleID`  string, FK  Roles.RoleID  
+- `Channel`  dropdown: *Email, LinkedIn, Referral, Other*  
+- `MessageType`  dropdown: *Intro, FollowUp, ThankYou, Referral Ask*  
+- `SentDate`  date  
+- `ResponseDate`  date  
+- `ResponseType`  dropdown: *Positive, Neutral, Negative, None*  
+- `NextActionDate`  date  
+- `Notes`  string  
 
 ---
 
@@ -106,14 +106,14 @@ Tracks all outbound messages and follow‑ups.
 Tracks interview stages and preparation.
 
 **Columns**
-- `InterviewID` — string, required, unique  
-- `RoleID` — string, FK → Roles.RoleID  
-- `CompanyID` — string, FK → Companies.CompanyID  
-- `Stage` — dropdown: *Screen, Hiring Manager, Panel, Final, Offer*  
-- `ScheduledDate` — date  
-- `CompletedDate` — date  
-- `Outcome` — dropdown: *Pass, Fail, Pending*  
-- `Notes` — string  
+- `InterviewID`  string, required, unique  
+- `RoleID`  string, FK  Roles.RoleID  
+- `CompanyID`  string, FK  Companies.CompanyID  
+- `Stage`  dropdown: *Screen, Hiring Manager, Panel, Final, Offer*  
+- `ScheduledDate`  date  
+- `CompletedDate`  date  
+- `Outcome`  dropdown: *Pass, Fail, Pending*  
+- `Notes`  string  
 
 ---
 
@@ -121,13 +121,13 @@ Tracks interview stages and preparation.
 Tracks consulting opportunities and engagements.
 
 **Columns**
-- `ConsultingID` — string, required, unique  
-- `CompanyID` — string, FK → Companies.CompanyID  
-- `Type` — dropdown: *Discovery, Proposal, Implementation, Retainer, Training*  
-- `Status` — dropdown: *Open, In Progress, Closed Won, Closed Lost*  
-- `ValueEstimate` — number  
-- `NextActionDate` — date  
-- `Notes` — string  
+- `ConsultingID`  string, required, unique  
+- `CompanyID`  string, FK  Companies.CompanyID  
+- `Type`  dropdown: *Discovery, Proposal, Implementation, Retainer, Training*  
+- `Status`  dropdown: *Open, In Progress, Closed Won, Closed Lost*  
+- `ValueEstimate`  number  
+- `NextActionDate`  date  
+- `Notes`  string  
 
 ---
 
@@ -135,9 +135,9 @@ Tracks consulting opportunities and engagements.
 Stores computed KPIs and summary metrics.
 
 **Columns**
-- `MetricName` — string, required  
-- `MetricValue` — number or string  
-- `LastUpdated` — date  
+- `MetricName`  string, required  
+- `MetricValue`  number or string  
+- `LastUpdated`  date  
 
 **Notes:**  
 This sheet is populated by automation and dashboards, not manually.
@@ -148,13 +148,13 @@ This sheet is populated by automation and dashboards, not manually.
 Tracks every status change across Roles, Outreach, Interviews, and Consulting.
 
 **Columns**
-- `HistoryID` — string, required, unique  
-- `EntityType` — dropdown: *Role, Outreach, Interview, Consulting*  
-- `EntityID` — string, required  
-- `OldStatus` — string  
-- `NewStatus` — string  
-- `ChangedBy` — string  
-- `ChangedAt` — datetime, required  
+- `HistoryID`  string, required, unique  
+- `EntityType`  dropdown: *Role, Outreach, Interview, Consulting*  
+- `EntityID`  string, required  
+- `OldStatus`  string  
+- `NewStatus`  string  
+- `ChangedBy`  string  
+- `ChangedAt`  datetime, required  
 
 ---
 
@@ -162,12 +162,12 @@ Tracks every status change across Roles, Outreach, Interviews, and Consulting.
 Captures automation and Copilot Studio flow errors.
 
 **Columns**
-- `ErrorID` — string, required, unique  
-- `FlowName` — string, required  
-- `Timestamp` — datetime, required  
-- `ErrorMessage` — string, required  
-- `Payload` — string  
-- `Resolved` — dropdown: *Yes, No*  
+- `ErrorID`  string, required, unique  
+- `FlowName`  string, required  
+- `Timestamp`  datetime, required  
+- `ErrorMessage`  string, required  
+- `Payload`  string  
+- `Resolved`  dropdown: *Yes, No*  
 
 ---
 
@@ -175,13 +175,13 @@ Captures automation and Copilot Studio flow errors.
 Tracks structural changes to the SoR.
 
 **Columns**
-- `ChangeID` — string, required, unique  
-- `SheetName` — string, required  
-- `FieldName` — string  
-- `OldValue` — string  
-- `NewValue` — string  
-- `ChangedBy` — string  
-- `ChangedAt` — datetime, required  
+- `ChangeID`  string, required, unique  
+- `SheetName`  string, required  
+- `FieldName`  string  
+- `OldValue`  string  
+- `NewValue`  string  
+- `ChangedBy`  string  
+- `ChangedAt`  datetime, required  
 
 ---
 

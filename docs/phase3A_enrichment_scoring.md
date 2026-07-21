@@ -9,7 +9,7 @@ Version: v0.3.0-Phase3C-Normalization
 - No active work beyond this phase
 - Downstream phases are FUTURE and out of scope
 
-Canonical source: [Progress‑to‑Launch Checklist & Timeline](progress_to_launch_checklist_timeline.md)
+Canonical source: [ProgresstoLaunch Checklist & Timeline](progress_to_launch_checklist_timeline.md)
 
 Quick Links:
 - Top-level overview: [docs/README.md](README.md)
@@ -22,7 +22,7 @@ Quick Links:
 - Keep orchestrators thin and scrapers safe; be fully config-driven.
 
 ## Architecture Sketch
-- Flow: discovery → canonical jobs → enrichment transforms → scoring → export.
+- Flow: discovery  canonical jobs  enrichment transforms  scoring  export.
 - Modules:
   - `enrichment`: pure transforms that take canonical job dicts and return enriched dicts.
   - `scoring`: compute numeric score from enriched dicts using config weights and thresholds.

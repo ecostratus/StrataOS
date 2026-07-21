@@ -1,10 +1,10 @@
-# Phase X: <Component> Hardening — Import Robustness + Dynamic Loading
+# Phase X: <Component> Hardening  Import Robustness + Dynamic Loading
 
 ## Summary
 Describe the purpose of this hardening phase and the modules affected.
 
 ## Technical Changes
-- Two-stage imports applied (dotted → dynamic fallback)
+- Two-stage imports applied (dotted  dynamic fallback)
 - Function-scoped imports added
 - Dynamic loader integrated (repo-root-relative)
 - Hyphenated importlib calls removed

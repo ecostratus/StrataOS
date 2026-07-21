@@ -11,7 +11,7 @@ echo ""
 
 # Check if gh is installed
 if ! command -v gh &> /dev/null; then
-    echo "❌ GitHub CLI (gh) is not installed."
+    echo " GitHub CLI (gh) is not installed."
     echo ""
     echo "Please install it first:"
     echo "  macOS:    brew install gh"
@@ -21,13 +21,13 @@ if ! command -v gh &> /dev/null; then
     exit 1
 fi
 
-echo "✓ GitHub CLI (gh) is installed"
+echo " GitHub CLI (gh) is installed"
 echo ""
 
 # Check current authentication status
 echo "Checking current authentication status..."
 if gh auth status &> /dev/null; then
-    echo "✓ You are already authenticated with GitHub"
+    echo " You are already authenticated with GitHub"
     echo ""
     gh auth status
     echo ""
@@ -38,7 +38,7 @@ if gh auth status &> /dev/null; then
         exit 0
     fi
 else
-    echo "⚠ Not currently authenticated with GitHub"
+    echo "  Not currently authenticated with GitHub"
     echo ""
 fi
 
@@ -58,7 +58,7 @@ gh auth login
 echo ""
 echo "Verifying authentication..."
 if gh auth status &> /dev/null; then
-    echo "✓ Successfully authenticated!"
+    echo " Successfully authenticated!"
     echo ""
     gh auth status
     echo ""
@@ -72,6 +72,6 @@ if gh auth status &> /dev/null; then
     echo "  gh issue list"
     echo ""
 else
-    echo "❌ Authentication failed. Please try again."
+    echo " Authentication failed. Please try again."
     exit 1
 fi

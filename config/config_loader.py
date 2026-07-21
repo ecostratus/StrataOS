@@ -2,7 +2,7 @@
 Configuration loader for the personal operating system.
 
 Loads environment variables from a .env file and falls back to values
-from a JSON configuration file using a simple key→path mapping.
+from a JSON configuration file using a simple keypath mapping.
 """
 
 import os

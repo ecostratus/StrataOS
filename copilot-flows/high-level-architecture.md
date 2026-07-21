@@ -84,10 +84,10 @@ The Copilot Studio flows integrate with the personal operating system to provide
 
 #### Data Flow
 ```
-User Input → Flow Logic → Script/API → Processing → Excel Update → Notification
-     ↓
+User Input  Flow Logic  Script/API  Processing  Excel Update  Notification
+     
  Approval Gates (as needed)
-     ↓
+     
  Audit Logging
 ```
 

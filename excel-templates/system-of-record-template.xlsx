@@ -16,15 +16,15 @@ Tracks all target roles under consideration.
 **Excel Table Name**: `Roles`
 
 **Columns**:
-- `RoleID` — Text, Required, Unique
-- `Title` — Text, Required
-- `Seniority` — Text, Dropdown (e.g., Entry, Mid, Senior, Principal, Executive)
-- `Function` — Text
-- `Source` — Text
-- `FitScore` — Number (0-100)
-- `Status` — Dropdown: *Identified, Applied, Interviewing, Closed*
-- `CompanyID` — Text, FK → Companies.CompanyID
-- `LastUpdated` — Date, Required
+- `RoleID`  Text, Required, Unique
+- `Title`  Text, Required
+- `Seniority`  Text, Dropdown (e.g., Entry, Mid, Senior, Principal, Executive)
+- `Function`  Text
+- `Source`  Text
+- `FitScore`  Number (0-100)
+- `Status`  Dropdown: *Identified, Applied, Interviewing, Closed*
+- `CompanyID`  Text, FK  Companies.CompanyID
+- `LastUpdated`  Date, Required
 
 **Data Validation**: Status dropdown with controlled list
 
@@ -36,13 +36,13 @@ Tracks companies associated with roles, outreach, or consulting.
 **Excel Table Name**: `Companies`
 
 **Columns**:
-- `CompanyID` — Text, Required, Unique
-- `Name` — Text, Required
-- `Industry` — Text
-- `Location` — Text
-- `Size` — Text (e.g., Startup, Small, Medium, Large, Enterprise)
-- `Website` — Text
-- `Notes` — Text
+- `CompanyID`  Text, Required, Unique
+- `Name`  Text, Required
+- `Industry`  Text
+- `Location`  Text
+- `Size`  Text (e.g., Startup, Small, Medium, Large, Enterprise)
+- `Website`  Text
+- `Notes`  Text
 
 ---
 
@@ -52,14 +52,14 @@ Tracks people associated with companies, outreach, or referrals.
 **Excel Table Name**: `Contacts`
 
 **Columns**:
-- `ContactID` — Text, Required, Unique
-- `Name` — Text, Required
-- `Role` — Text
-- `CompanyID` — Text, FK → Companies.CompanyID
-- `Email` — Text
-- `LinkedIn` — Text
-- `RelationshipStrength` — Dropdown: *Weak, Warm, Strong*
-- `Notes` — Text
+- `ContactID`  Text, Required, Unique
+- `Name`  Text, Required
+- `Role`  Text
+- `CompanyID`  Text, FK  Companies.CompanyID
+- `Email`  Text
+- `LinkedIn`  Text
+- `RelationshipStrength`  Dropdown: *Weak, Warm, Strong*
+- `Notes`  Text
 
 **Data Validation**: RelationshipStrength dropdown with controlled list
 
@@ -71,17 +71,17 @@ Tracks all outbound messages and follow-ups.
 **Excel Table Name**: `Outreach`
 
 **Columns**:
-- `OutreachID` — Text, Required, Unique
-- `ContactID` — Text, FK → Contacts.ContactID
-- `CompanyID` — Text, FK → Companies.CompanyID
-- `RoleID` — Text, FK → Roles.RoleID
-- `Channel` — Dropdown: *Email, LinkedIn, Referral, Other*
-- `MessageType` — Dropdown: *Intro, Follow-Up, Thank-You, Referral Ask*
-- `SentDate` — Date
-- `ResponseDate` — Date
-- `ResponseType` — Dropdown: *Positive, Neutral, Negative, None*
-- `NextActionDate` — Date
-- `Notes` — Text
+- `OutreachID`  Text, Required, Unique
+- `ContactID`  Text, FK  Contacts.ContactID
+- `CompanyID`  Text, FK  Companies.CompanyID
+- `RoleID`  Text, FK  Roles.RoleID
+- `Channel`  Dropdown: *Email, LinkedIn, Referral, Other*
+- `MessageType`  Dropdown: *Intro, Follow-Up, Thank-You, Referral Ask*
+- `SentDate`  Date
+- `ResponseDate`  Date
+- `ResponseType`  Dropdown: *Positive, Neutral, Negative, None*
+- `NextActionDate`  Date
+- `Notes`  Text
 
 **Data Validation**: Channel, MessageType, ResponseType dropdowns with controlled lists
 
@@ -93,14 +93,14 @@ Tracks interview stages and preparation.
 **Excel Table Name**: `Interviews`
 
 **Columns**:
-- `InterviewID` — Text, Required, Unique
-- `RoleID` — Text, FK → Roles.RoleID
-- `CompanyID` — Text, FK → Companies.CompanyID
-- `Stage` — Dropdown: *Screen, Hiring Manager, Panel, Final, Offer*
-- `ScheduledDate` — Date
-- `CompletedDate` — Date
-- `Outcome` — Dropdown: *Pass, Fail, Pending*
-- `Notes` — Text
+- `InterviewID`  Text, Required, Unique
+- `RoleID`  Text, FK  Roles.RoleID
+- `CompanyID`  Text, FK  Companies.CompanyID
+- `Stage`  Dropdown: *Screen, Hiring Manager, Panel, Final, Offer*
+- `ScheduledDate`  Date
+- `CompletedDate`  Date
+- `Outcome`  Dropdown: *Pass, Fail, Pending*
+- `Notes`  Text
 
 **Data Validation**: Stage and Outcome dropdowns with controlled lists
 
@@ -112,13 +112,13 @@ Tracks consulting opportunities and engagements.
 **Excel Table Name**: `Consulting`
 
 **Columns**:
-- `ConsultingID` — Text, Required, Unique
-- `CompanyID` — Text, FK → Companies.CompanyID
-- `Type` — Dropdown: *Discovery, Proposal, Implementation, Retainer, Training*
-- `Status` — Dropdown: *Open, In Progress, Closed Won, Closed Lost*
-- `ValueEstimate` — Number (Currency format)
-- `NextActionDate` — Date
-- `Notes` — Text
+- `ConsultingID`  Text, Required, Unique
+- `CompanyID`  Text, FK  Companies.CompanyID
+- `Type`  Dropdown: *Discovery, Proposal, Implementation, Retainer, Training*
+- `Status`  Dropdown: *Open, In Progress, Closed Won, Closed Lost*
+- `ValueEstimate`  Number (Currency format)
+- `NextActionDate`  Date
+- `Notes`  Text
 
 **Data Validation**: Type and Status dropdowns with controlled lists
 
@@ -130,9 +130,9 @@ Stores computed KPIs and summary metrics.
 **Excel Table Name**: `Metrics`
 
 **Columns**:
-- `MetricName` — Text, Required
-- `MetricValue` — Number or Text
-- `LastUpdated` — Date
+- `MetricName`  Text, Required
+- `MetricValue`  Number or Text
+- `LastUpdated`  Date
 
 **Note**: This sheet is **populated by automation and dashboards**, not manually edited.
 
@@ -151,13 +151,13 @@ Tracks every status change across Roles, Outreach, Interviews, and Consulting.
 **Excel Table Name**: `StatusHistory`
 
 **Columns**:
-- `HistoryID` — Text, Required, Unique
-- `EntityType` — Dropdown: *Role, Outreach, Interview, Consulting*
-- `EntityID` — Text, Required
-- `OldStatus` — Text
-- `NewStatus` — Text
-- `ChangedBy` — Text (e.g., "Automation", "Manual", "User")
-- `ChangedAt` — DateTime, Required
+- `HistoryID`  Text, Required, Unique
+- `EntityType`  Dropdown: *Role, Outreach, Interview, Consulting*
+- `EntityID`  Text, Required
+- `OldStatus`  Text
+- `NewStatus`  Text
+- `ChangedBy`  Text (e.g., "Automation", "Manual", "User")
+- `ChangedAt`  DateTime, Required
 
 **Data Validation**: EntityType dropdown with controlled list
 
@@ -171,12 +171,12 @@ Captures automation and Copilot Studio flow errors.
 **Excel Table Name**: `FlowErrors`
 
 **Columns**:
-- `ErrorID` — Text, Required, Unique
-- `FlowName` — Text, Required
-- `Timestamp` — DateTime, Required
-- `ErrorMessage` — Text, Required
-- `Payload` — Text (JSON or error details)
-- `Resolved` — Dropdown: *Yes, No*
+- `ErrorID`  Text, Required, Unique
+- `FlowName`  Text, Required
+- `Timestamp`  DateTime, Required
+- `ErrorMessage`  Text, Required
+- `Payload`  Text (JSON or error details)
+- `Resolved`  Dropdown: *Yes, No*
 
 **Data Validation**: Resolved dropdown with controlled list
 
@@ -190,13 +190,13 @@ Tracks structural changes to the SoR schema.
 **Excel Table Name**: `ChangeLog`
 
 **Columns**:
-- `ChangeID` — Text, Required, Unique
-- `SheetName` — Text, Required
-- `FieldName` — Text
-- `OldValue` — Text
-- `NewValue` — Text
-- `ChangedBy` — Text
-- `ChangedAt` — DateTime, Required
+- `ChangeID`  Text, Required, Unique
+- `SheetName`  Text, Required
+- `FieldName`  Text
+- `OldValue`  Text
+- `NewValue`  Text
+- `ChangedBy`  Text
+- `ChangedAt`  DateTime, Required
 
 **Note**: This sheet logs **schema changes** for governance and compliance.
 
@@ -213,8 +213,8 @@ Tracks structural changes to the SoR schema.
 For each sheet:
 1. Add column headers according to the schema above
 2. Select the data range including headers
-3. Insert → Table (or Ctrl+T)
-4. Name the table **exactly** after the sheet name (e.g., sheet `Roles` → table named `Roles`)
+3. Insert  Table (or Ctrl+T)
+4. Name the table **exactly** after the sheet name (e.g., sheet `Roles`  table named `Roles`)
 5. Enable "My table has headers"
 
 ### 3. Configure Data Validation
@@ -236,14 +236,14 @@ Set up dropdown lists for:
 
 ### 5. Set Up Foreign Key Relationships
 Document and validate FK relationships:
-- **Roles.CompanyID** → Companies.CompanyID
-- **Contacts.CompanyID** → Companies.CompanyID
-- **Outreach.ContactID** → Contacts.ContactID
-- **Outreach.CompanyID** → Companies.CompanyID
-- **Outreach.RoleID** → Roles.RoleID
-- **Interviews.RoleID** → Roles.RoleID
-- **Interviews.CompanyID** → Companies.CompanyID
-- **Consulting.CompanyID** → Companies.CompanyID
+- **Roles.CompanyID**  Companies.CompanyID
+- **Contacts.CompanyID**  Companies.CompanyID
+- **Outreach.ContactID**  Contacts.ContactID
+- **Outreach.CompanyID**  Companies.CompanyID
+- **Outreach.RoleID**  Roles.RoleID
+- **Interviews.RoleID**  Roles.RoleID
+- **Interviews.CompanyID**  Companies.CompanyID
+- **Consulting.CompanyID**  Companies.CompanyID
 
 Use Excel formulas (e.g., VLOOKUP, XLOOKUP) to validate FK references.
 
@@ -278,7 +278,7 @@ The Metrics sheet should contain formulas that compute:
 ## Required Excel Features
 
 ### Excel Tables
-- All sheets must use Excel Tables (Insert → Table)
+- All sheets must use Excel Tables (Insert  Table)
 - Table names must match sheet names exactly
 - Enables auto-expansion and structured references
 
@@ -339,11 +339,11 @@ This Excel template integrates with:
 ## Migration from Legacy Sheets
 
 If migrating from legacy schema:
-- **Jobs** → **Roles** (map fields, enhance with FitScore)
-- **Applications** → **Roles** Status field + **StatusHistory** (split application data)
-- **Weekly_Goals** → **Metrics** (convert goals to computed metrics)
-- **Audit_Log** → **FlowErrors** + **ChangeLog** (split by error type)
-- **Dashboard** → Remove (dashboards are separate files in `dashboards/` folder)
+- **Jobs**  **Roles** (map fields, enhance with FitScore)
+- **Applications**  **Roles** Status field + **StatusHistory** (split application data)
+- **Weekly_Goals**  **Metrics** (convert goals to computed metrics)
+- **Audit_Log**  **FlowErrors** + **ChangeLog** (split by error type)
+- **Dashboard**  Remove (dashboards are separate files in `dashboards/` folder)
 
 ---
 

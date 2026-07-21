@@ -16,26 +16,26 @@ This document records the normalization of the personal-operating-system-60d rep
 
 The authoritative Excel/database schema consists of **10 sheets**:
 
-1. **Roles** — Target job roles and position definitions
-2. **Companies** — Organizations of interest
-3. **Contacts** — Professional network and relationships
-4. **Outreach** — Communication tracking and follow-ups
-5. **Interviews** — Interview pipeline and scheduling
-6. **Consulting** — Consulting opportunities and engagements
-7. **Metrics** — KPIs and performance indicators
-8. **StatusHistory** — Historical state tracking
-9. **FlowErrors** — Automation error logging
-10. **ChangeLog** — Audit trail of system modifications
+1. **Roles**  Target job roles and position definitions
+2. **Companies**  Organizations of interest
+3. **Contacts**  Professional network and relationships
+4. **Outreach**  Communication tracking and follow-ups
+5. **Interviews**  Interview pipeline and scheduling
+6. **Consulting**  Consulting opportunities and engagements
+7. **Metrics**  KPIs and performance indicators
+8. **StatusHistory**  Historical state tracking
+9. **FlowErrors**  Automation error logging
+10. **ChangeLog**  Audit trail of system modifications
 
 ### Prohibited Sheet Names
 
 The following legacy sheet names are **NOT** part of the canonical SoR and must not exist:
 
-- ❌ Jobs
-- ❌ Applications
-- ❌ Weekly_Goals
-- ❌ Audit_Log
-- ❌ Dashboard
+-  Jobs
+-  Applications
+-  Weekly_Goals
+-  Audit_Log
+-  Dashboard
 
 ---
 
@@ -45,17 +45,17 @@ The repository must maintain the following top-level structure:
 
 ```
 personal-operating-system-60d/
-├── docs/                    # Documentation and architecture guides
-├── automation/              # Python/Node automation modules
-├── copilot-flows/           # GitHub Copilot workflow definitions
-├── prompts/                 # AI prompt templates and instructions
-├── excel-templates/         # Template files for the SoR
-├── dashboards/              # Visualization and reporting configs
-├── config/                  # System configuration files
-├── tests/                   # Validation and test suites
-├── LICENSE
-├── README.md
-└── REPO_NORMALIZATION.md    # This file
+ docs/                    # Documentation and architecture guides
+ automation/              # Python/Node automation modules
+ copilot-flows/           # GitHub Copilot workflow definitions
+ prompts/                 # AI prompt templates and instructions
+ excel-templates/         # Template files for the SoR
+ dashboards/              # Visualization and reporting configs
+ config/                  # System configuration files
+ tests/                   # Validation and test suites
+ LICENSE
+ README.md
+ REPO_NORMALIZATION.md    # This file
 ```
 
 ---
@@ -99,12 +99,12 @@ personal-operating-system-60d/
 
 ### Issues Identified
 
-1. ✅ **No deprecated schemas detected** (repository is new)
-2. ✅ **No conflicting sheet names** (no existing structure)
-3. ⚠️  **Missing canonical folder structure**
-4. ⚠️  **Missing documentation framework**
-5. ⚠️  **Missing automation modules**
-6. ⚠️  **Missing test suite**
+1.  **No deprecated schemas detected** (repository is new)
+2.  **No conflicting sheet names** (no existing structure)
+3.    **Missing canonical folder structure**
+4.    **Missing documentation framework**
+5.    **Missing automation modules**
+6.    **Missing test suite**
 
 ---
 
@@ -198,7 +198,7 @@ personal-operating-system-60d/
 
 ## Normalization Status
 
-**Overall Compliance:** 🟡 In Progress  
+**Overall Compliance:**  In Progress  
 **Last Updated:** 2026-01-07  
 **Next Review:** After Phase 1-8 completion
 

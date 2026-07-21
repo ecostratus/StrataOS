@@ -33,17 +33,17 @@ Provide at-a-glance visibility into:
 **Key Metrics Summary**
 | Metric | This Week | Last Week | Total | Target | On Track? |
 |--------|-----------|-----------|-------|--------|-----------|
-| Applications | X | Y | Total | Goal | ✓/✗ |
-| Interviews | X | Y | Total | Goal | ✓/✗ |
-| Outreach | X | Y | Total | Goal | ✓/✗ |
-| Offers | X | Y | Total | Goal | ✓/✗ |
+| Applications | X | Y | Total | Goal | / |
+| Interviews | X | Y | Total | Goal | / |
+| Outreach | X | Y | Total | Goal | / |
+| Offers | X | Y | Total | Goal | / |
 
 ### Section 2: Activity Funnel
 
 **Role Search Funnel**
 ```
-Roles Identified (500) ───→ High FitScore (50) ───→ Applied (25) ───→ 
-Response (10) ───→ Interview (5) ───→ Offer (1)
+Roles Identified (500)  High FitScore (50)  Applied (25)  
+Response (10)  Interview (5)  Offer (1)
 ```
 
 With conversion rates at each stage:
@@ -156,10 +156,10 @@ Metrics are calculated from the Metrics sheet, which stores computed KPIs:
 ### Section 9: System Health
 
 **Automation Status**
-- Role discovery flow: ✓ Working / ⚠ Issues / ✗ Down
-- Resume tailoring flow: ✓ Working / ⚠ Issues / ✗ Down
-- Outreach generation flow: ✓ Working / ⚠ Issues / ✗ Down
-- FitScore calculation: ✓ Working / ⚠ Issues / ✗ Down
+- Role discovery flow:  Working /   Issues /  Down
+- Resume tailoring flow:  Working /   Issues /  Down
+- Outreach generation flow:  Working /   Issues /  Down
+- FitScore calculation:  Working /   Issues /  Down
 
 **Data Source**: FlowErrors sheet (check for unresolved errors)
 

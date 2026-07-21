@@ -11,7 +11,7 @@ DEFAULT_THRESHOLDS = {
 def bucket_score(score: float, thresholds: Dict[str, float] | None = None) -> str:
     """
     Map a numeric score into buckets using inclusive thresholds.
-    Order of evaluation: exceptional → strong → moderate → weak.
+    Order of evaluation: exceptional  strong  moderate  weak.
     """
     th = thresholds or DEFAULT_THRESHOLDS
     if score >= th.get("exceptional", 0.8):
@@ -26,8 +26,8 @@ def bucket_score(score: float, thresholds: Dict[str, float] | None = None) -> st
 def _feature_value(enriched: Dict[str, Any], key: str) -> float:
     """
     Convert common boolean/list features into numeric contributions [0,1].
-    - For booleans: True→1.0, False→0.0
-    - For lists: non-empty→1.0, empty/missing→0.0
+    - For booleans: True1.0, False0.0
+    - For lists: non-empty1.0, empty/missing0.0
     - For numeric: clamp into [0,1]
     - Fallback: 0.0
     """
@@ -51,9 +51,9 @@ def score_job(
     Example feature keys: 'role_fit' (or derived from 'role_tags'), 'stack', 'remote'.
     Generic behavior:
       - If weight exists for a key, try direct key; else try derived mapping:
-        - 'role_fit' → feature from 'role_tags'
-        - 'stack' → feature from 'stack_tags'
-        - 'remote' → feature from 'remote_friendly'
+        - 'role_fit'  feature from 'role_tags'
+        - 'stack'  feature from 'stack_tags'
+        - 'remote'  feature from 'remote_friendly'
       - Otherwise, if a weight key matches an enriched boolean/list field, use it directly.
     Returns dict with 'score' and 'bucket'.
     """

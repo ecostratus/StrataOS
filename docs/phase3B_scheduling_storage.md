@@ -9,7 +9,7 @@ Version: v0.3.0-Phase3C-Normalization
 - No active work beyond this phase
 - Downstream phases are FUTURE and out of scope
 
-Canonical source: [Progress‑to‑Launch Checklist & Timeline](progress_to_launch_checklist_timeline.md)
+Canonical source: [ProgresstoLaunch Checklist & Timeline](progress_to_launch_checklist_timeline.md)
 
 ## Goals
 - Deterministic, config-driven scheduling with no external cron.
@@ -20,7 +20,7 @@ Canonical source: [Progress‑to‑Launch Checklist & Timeline](progress_to_laun
 ## Architecture Outline
 - Scheduler: In-process cadence, computed from UTC via pure helpers.
 - Storage: Pluggable backend (SQLite preferred; JSON alternative), keyed by a single UTC run timestamp reused across artifacts.
-- Pipeline: discovery → enrichment (opt-in) → scoring (opt-in) → persist → export → retention.
+- Pipeline: discovery  enrichment (opt-in)  scoring (opt-in)  persist  export  retention.
 - Observability: Run summary with per-source metrics; deterministic filenames; persistence keyed by run timestamp.
 
 ## Scheduling Model
@@ -30,7 +30,7 @@ Canonical source: [Progress‑to‑Launch Checklist & Timeline](progress_to_laun
 - Rules
   - Pure helpers: `compute_next_run(now_utc, config)`, `should_run(now_utc, last_run_ts, config)`
   - No jitter; no local timezone conversions; determinism under frozen time
-  - Missing `last_run_ts` → run immediately
+  - Missing `last_run_ts`  run immediately
 
 ## Storage Model
 - SQLite (Preferred)

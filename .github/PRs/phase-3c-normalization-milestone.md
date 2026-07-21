@@ -1,7 +1,7 @@
 # Phase 3C: Data Normalization Milestone
 
 ## Summary
-Consolidates the data normalization boundary and introduces shared helpers to ensure clean, deterministic inputs across the pipeline. Refactors enrichment functions to normalize configuration lists at boundaries (module load and function entry), removes ad-hoc inline normalization, and enforces deterministic sorting of outputs—preserving behavior while improving type-safety and clarity.
+Consolidates the data normalization boundary and introduces shared helpers to ensure clean, deterministic inputs across the pipeline. Refactors enrichment functions to normalize configuration lists at boundaries (module load and function entry), removes ad-hoc inline normalization, and enforces deterministic sorting of outputspreserving behavior while improving type-safety and clarity.
 
 ## Technical Changes
 - Shared utilities: Introduced a normalization module:

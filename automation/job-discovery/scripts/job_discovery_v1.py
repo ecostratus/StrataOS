@@ -217,7 +217,7 @@ def main(argv: List[str] | None = None) -> None:
     locations = normalize_terms(config.get_list("JOB_FILTER_LOCATIONS", ["Remote"]) or [])
     exclude = normalize_terms(config.get_list("JOB_FILTER_EXCLUDE_KEYWORDS", ["volunteer"]) or [])
 
-    print("Job discovery v1 — starting")
+    print("Job discovery v1  starting")
     print(
         f"Env: {environment} | Log: {log_level} | "
         f"Keywords: {', '.join(keywords) or '-'} | Locations: {', '.join(locations) or '-'} | Exclude: {', '.join(exclude) or '-'}"

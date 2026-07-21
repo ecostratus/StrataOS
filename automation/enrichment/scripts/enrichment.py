@@ -18,7 +18,7 @@ def normalize_title(title: Optional[str]) -> str:
 
 def infer_seniority(title: Optional[str], patterns: Optional[Dict[str, str]] = None) -> str:
     """
-    Infer seniority label using provided regex→label patterns.
+    Infer seniority label using provided regexlabel patterns.
     Defaults to 'Mid' when no pattern matches or title is empty.
     """
     if not title:

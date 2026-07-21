@@ -7,7 +7,7 @@ This governance model establishes clear decision-making authority, approval proc
 ## Canonical Authority & Sealed Boundaries
 
 Canonical Authority, Sealed Artifacts, and Phase Governance
-DRAFT — NOT ACTIVE
+DRAFT  NOT ACTIVE
 
 This repository operates under an explicit governance model designed to preserve determinism, auditability, and controlled evolution across phases.
 
@@ -41,14 +41,14 @@ Phase 3C (Normalization) is sealed and complete.
 
 Phase 3A (Enrichment + Scoring) and Phase 3B (Scheduling + Storage) are active only insofar as they comply with the sealed Phase 3C contract.
 
-Phase 3D / 3E and Phase 4 are future‑only and may not introduce implementation artifacts unless explicitly authorized.
+Phase 3D / 3E and Phase 4 are futureonly and may not introduce implementation artifacts unless explicitly authorized.
 
 Drift Rules
 The following constitute governance drift and are not permitted:
 
 Modifying sealed artifacts indirectly through documentation reinterpretation
 
-Introducing runtime behavior changes via documentation‑only PRs
+Introducing runtime behavior changes via documentationonly PRs
 
 Expanding scope based on timelines rather than explicit phase authority
 
@@ -57,13 +57,13 @@ Reframing normalization, adapter, or import contracts without approval
 Any detected drift must be treated as a governance issue, not a delivery issue.
 
 CI Activation Rules
-CI guardrails may exist in draft or presence‑only form.
+CI guardrails may exist in draft or presenceonly form.
 
 No CI guardrail may be activated, enforced, or wired into workflows without explicit approval.
 
 CI guardrails must not perform content validation or runtime enforcement unless authorized.
 
-Documentation‑only PRs must not change execution behavior, CI state, or runtime configuration.
+Documentationonly PRs must not change execution behavior, CI state, or runtime configuration.
 
 ## Decision Framework
 

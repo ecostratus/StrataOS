@@ -1,4 +1,4 @@
-# Phase 3G — Interview Prep Hardening Kickoff
+# Phase 3G  Interview Prep Hardening Kickoff
 
 Date: January 11, 2026
 
@@ -20,4 +20,4 @@ Harden interview-prep modules for import robustness, deterministic behavior, and
 - PR Title, Commit Message, Release Notes, Audit Entry, Diff Summary, Verification Checklist.
 
 ## Next Steps
-- Execute Phase 3G hardening per the super‑prompt.
+- Execute Phase 3G hardening per the superprompt.

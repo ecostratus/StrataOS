@@ -1,6 +1,6 @@
 # Release Manager Checklist
 
-## 1. Pre‑Release Validation
+## 1. PreRelease Validation
 - [ ] All tests pass (`pytest -q --tb=short`)
 - [ ] Docs CI passes (`scripts/ci/check_docs.py`)
 - [ ] Combined runner works (full-sources mode)
@@ -23,7 +23,7 @@
 
 ## 4. PR Preparation
 - [ ] PR title follows pattern:
-      Phase X: vY.Z Import Hardening — <Component>
+      Phase X: vY.Z Import Hardening  <Component>
 - [ ] Commit message follows release discipline
 - [ ] Diff summary included
 - [ ] Verification checklist included
@@ -35,7 +35,7 @@
       git push origin vY.Z
 - [ ] Release published on GitHub
 
-## 6. Post‑Release
+## 6. PostRelease
 - [ ] Validate release artifacts
 - [ ] Update master roadmap
 - [ ] Create next milestone issue

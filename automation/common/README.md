@@ -1,4 +1,4 @@
-# Phase 3E — Combined Prompt Runner
+# Phase 3E  Combined Prompt Runner
 
 Note: Downstream phases (3D/3E) are FUTURE and not current. See the canonical checklist for the current state: [docs/progress_to_launch_checklist_timeline.md](../../docs/progress_to_launch_checklist_timeline.md).
 

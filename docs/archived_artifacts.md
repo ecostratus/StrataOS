@@ -2,19 +2,19 @@
 
 This section preserves superseded documents verbatim to maintain historical accuracy. Each entry includes a header with metadata.
 
-## Progress‑to‑Launch Checklist & Timeline (Phase 3E)
-- Original title: Progress‑to‑Launch Checklist & Timeline (Phase 3E)
-- Superseded by: Progress‑to‑Launch Checklist & Timeline (Updated, PM-Friendly)
+## ProgresstoLaunch Checklist & Timeline (Phase 3E)
+- Original title: ProgresstoLaunch Checklist & Timeline (Phase 3E)
+- Superseded by: ProgresstoLaunch Checklist & Timeline (Updated, PM-Friendly)
 - Date archived: January 11, 2026
 
 ### Original Content (verbatim)
 
-#### Progress‑to‑Launch Checklist & Timeline (Phase 3E)
+#### ProgresstoLaunch Checklist & Timeline (Phase 3E)
 
 Date: January 10, 2026
 
 ## Overview
-Phase 3E delivers enrichment transforms, prompt wiring, a minimal deterministic renderer, CLI scripts for outreach/resume, a combined runner, and docs/tasks for discoverability. This document summarizes what’s done, what’s next, and how to run the flows.
+Phase 3E delivers enrichment transforms, prompt wiring, a minimal deterministic renderer, CLI scripts for outreach/resume, a combined runner, and docs/tasks for discoverability. This document summarizes whats done, whats next, and how to run the flows.
 
 ## Objectives
 - Expand enrichment (seniority, domain tags, stack, skills) with cloud, CI/CD, NoSQL, ML libraries coverage.
@@ -41,9 +41,9 @@ Phase 3E delivers enrichment transforms, prompt wiring, a minimal deterministic 
 - Metrics aggregation/dashboarding and broader end-to-end validations.
 
 ## Timeline (Target)
-- Week of Jan 12–16: Snapshot tests; behavior-level logging; metrics scaffolding.
-- Week of Jan 19–23: Resume tailoring v1 behavior; prompt variants; integration validations.
-- Week of Jan 26–30: Interview prep v1; consulting funnel ingestion; weekly review automation kickoff.
+- Week of Jan 1216: Snapshot tests; behavior-level logging; metrics scaffolding.
+- Week of Jan 1923: Resume tailoring v1 behavior; prompt variants; integration validations.
+- Week of Jan 2630: Interview prep v1; consulting funnel ingestion; weekly review automation kickoff.
 - Ongoing: Expand enrichment coverage; refine prompts; operational polish.
 
 ## How to Run
@@ -119,14 +119,14 @@ make logs-open-events
 
 ---
 
-## Phase 3D → Phase 3E Release Plan
-- Original title: Phase 3D → Phase 3E Release Plan
-- Superseded by: Progress‑to‑Launch Checklist & Timeline (Updated, PM-Friendly)
+## Phase 3D  Phase 3E Release Plan
+- Original title: Phase 3D  Phase 3E Release Plan
+- Superseded by: ProgresstoLaunch Checklist & Timeline (Updated, PM-Friendly)
 - Date archived: January 11, 2026
 
 ### Original Content (verbatim)
 
-#### Phase 3D → Phase 3E Release Plan
+#### Phase 3D  Phase 3E Release Plan
 
 ## Phase 3D Completion Criteria
 - Lever, Greenhouse, Ashby, Indeed adapters implemented (opt-in by config)
@@ -149,7 +149,7 @@ make logs-open-events
 
 ---
 
-## Phase 3A: Enrichment + Scoring — Archived Sections
+## Phase 3A: Enrichment + Scoring  Archived Sections
 - Original document name: docs/phase3A_enrichment_scoring.md (Archived Sections)
 - Context: Phase 3A reference
 - Superseded by: Phase 3C normalization boundary
@@ -170,12 +170,12 @@ make logs-open-events
   - `tests/phase3A_enrichment_tests.py`
     - Unit tests: feature extraction and normalization
     - Scoring tests: weight application, bucket thresholds
-    - Integration tests: discovery → enrichment → scoring determinism
+    - Integration tests: discovery  enrichment  scoring determinism
 - Config Extensions (future):
   - `enrichment.keywords.role` (e.g., ["engineer", "developer"]) 
   - `enrichment.keywords.stack` (e.g., ["python", "javascript", "aws"]) 
   - `enrichment.remote_aliases` (e.g., ["remote", "hybrid"]) 
-  - `enrichment.seniority_patterns` (map of regex → level)
+  - `enrichment.seniority_patterns` (map of regex  level)
 
 #### Test Plan
 - Unit tests:
@@ -218,7 +218,7 @@ Tasks:
 3. Add tests `tests/phase3A_enrichment_tests.py`:
    - Unit tests for normalization, seniority inference, and stack detection.
    - Scoring tests for weight application and bucketing.
-   - Integration test that takes a small canonical job list → enriched → scored; asserts deterministic outputs and UTC-safe timestamps.
+   - Integration test that takes a small canonical job list  enriched  scored; asserts deterministic outputs and UTC-safe timestamps.
 4. Optional: Add an `--enrich` flag to orchestrator to run enrichment + scoring before export; default OFF to preserve backward compatibility.
 5. Verify full test suite passes via venv:
    - `${PWD}/.venv/bin/python -m pytest -q --tb=short`
@@ -261,7 +261,7 @@ Add Phase 3A scoring configuration in [config/env.sample.json](../config/env.sam
 
 Notes:
 - Weights are proportions; sum can be 1.0 but does not need to be.
-- Thresholds and scores operate in [0,1]. Buckets evaluate in order: Exceptional → Strong → Moderate → Weak.
+- Thresholds and scores operate in [0,1]. Buckets evaluate in order: Exceptional  Strong  Moderate  Weak.
 - `enrichment.*` keys are optional; transforms default safely when absent.
 
 #### CLI Usage
@@ -278,7 +278,7 @@ Artifacts (deterministic filenames using the run timestamp):
 
 ---
 
-## Phase 3B: Scheduling + Storage — Archived Sections
+## Phase 3B: Scheduling + Storage  Archived Sections
 - Original document name: docs/phase3B_scheduling_storage.md (Archived Sections)
 - Context: Phase 3B reference
 - Superseded by: Phase 3C normalization boundary
@@ -318,7 +318,7 @@ Artifacts (deterministic filenames using the run timestamp):
 #### Test Plan
 - Unit: scheduler helpers (interval/window), SQLite init idempotency, retention computation ordering
 - Integration: freeze UTC time; end-to-end pipeline; single run timestamp reused; retention deletes expected runs
-- Determinism: identical inputs → identical outputs; UTC-only calculations
+- Determinism: identical inputs  identical outputs; UTC-only calculations
 
 #### Acceptance Criteria
 - Deterministic scheduling cadence; storage reads/writes validated
@@ -338,7 +338,7 @@ Artifacts (deterministic filenames using the run timestamp):
 
 ---
 
-## Phase 3D: Extended Sources & Enrichment Transforms — Archived Sections
+## Phase 3D: Extended Sources & Enrichment Transforms  Archived Sections
 - Original document name: docs/phase3D_extended_sources_transforms.md (Archived Sections)
 - Context: Phase 3D reference
 - Superseded by: Phase 3C normalization boundary
@@ -390,8 +390,8 @@ Note: Downstream phases (3D/3E) are FUTURE-only (post-Phase 3C). See the canonic
 ## Orchestrator Contract (Phase 3D)
 - Function: `fetch_all_sources(cfg)` in `automation/job-discovery/scripts/sources.py`.
 - Behavior:
-  - Config‑gated activation per source (e.g., `LEVER_ENABLED`, `GREENHOUSE_ENABLED`, etc.).
-  - Cross‑source de‑duplication by canonical `job_id`.
+  - Configgated activation per source (e.g., `LEVER_ENABLED`, `GREENHOUSE_ENABLED`, etc.).
+  - Crosssource deduplication by canonical `job_id`.
   - Deterministic ordering by `job_id`.
   - Returns a single canonical list with fields: `job_id`, `title`, `company`, `location`, `url`, `source`, `posted_at`.
 
@@ -403,9 +403,9 @@ Note: Downstream phases (3D/3E) are FUTURE-only (post-Phase 3C). See the canonic
     - `stack`: array of technologies/frameworks/cloud providers inferred from role text.
     - `skills`: array inclusive of `stack` plus soft skills like `Leadership`, `Agile` when present.
   - Inputs used: `title` and optional `description` when available; transforms are resilient to missing fields.
-  - Determinism: same inputs → same enriched outputs; ordering within arrays is stable and sorted.
+  - Determinism: same inputs  same enriched outputs; ordering within arrays is stable and sorted.
 
-## Phase 3E: Enrichment → Prompt Rendering Contract
+## Phase 3E: Enrichment  Prompt Rendering Contract
 
 Phase 3E introduces a contract between the enrichment layer and the prompt rendering layer.
 
@@ -470,7 +470,7 @@ Flags:
 Quick note: For a one-command workflow that runs both outreach and resume prompt generation, see the combined runner README at [automation/common/README.md](../automation/common/README.md).
 
 ### Adapter Registry
-Orchestrator maintains a stable registry mapping enable keys to adapter fetch functions. New adapters can be added without changing orchestrator semantics if they follow the canonical mapping and opt‑in gating.
+Orchestrator maintains a stable registry mapping enable keys to adapter fetch functions. New adapters can be added without changing orchestrator semantics if they follow the canonical mapping and optin gating.
 
 ## Enrichment Transform Expansions
 - Role taxonomy expansion: synonyms and seniority refinements
@@ -505,7 +505,7 @@ Orchestrator maintains a stable registry mapping enable keys to adapter fetch fu
 ## Rollout Plan
 - Feature-gate new sources and transforms via config (disabled by default)
 - Document usage in `config/README.md` with minimal examples
-- Prepare PR: “Phase 3D: Extended Sources & Transforms”
+- Prepare PR: Phase 3D: Extended Sources & Transforms
 - Canonical job objects stable
 - Deterministic tags (stack, domain, seniority)
 - Multi-source ingestion validated

@@ -33,7 +33,7 @@ Activates Phase 3E by adding deterministic enrichment transforms and integrating
 - Orchestrator behavior (gating, dedup, order) remains identical pre-enrichment.
 
 ### Docs
-- Enrichment contract documented in `docs/phase3D_extended_sources_transforms.md` under “Enrichment Contract (Phase 3E)”.
+- Enrichment contract documented in `docs/phase3D_extended_sources_transforms.md` under Enrichment Contract (Phase 3E).
 
 ### Checklist
 - [x] Add transforms module

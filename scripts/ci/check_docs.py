@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Documentation CI checks — fail build on forward-phase leakage and link hygiene.
+Documentation CI checks  fail build on forward-phase leakage and link hygiene.
 
 Checks:
-A. Forbidden “Current” Phase References (3D/3E + current/active/in progress/now/shipping) unless FUTURE or post-Phase 3C.
+A. Forbidden Current Phase References (3D/3E + current/active/in progress/now/shipping) unless FUTURE or post-Phase 3C.
 B. Canonical Source Enforcement (phase/planning docs must reference progress_to_launch_checklist_timeline.md).
 C. Archive Link Hygiene (links to archived_artifacts.md must include 'Archived' in link text).
 D. Version Tag Consistency (Phase 3A/3B must include v0.3.0-Phase3C-Normalization).
@@ -133,7 +133,7 @@ def check_links(md_file: str, failures: list[str]):
             # Archive hygiene
             if url.endswith("archived_artifacts.md") and not md_file.endswith("archived_artifacts.md"):
                 if "archived" not in text.lower():
-                    failures.append(f"[Archive Link Hygiene] {md_file}:{i} — Link to archived_artifacts.md must include 'Archived' in text")
+                    failures.append(f"[Archive Link Hygiene] {md_file}:{i}  Link to archived_artifacts.md must include 'Archived' in text")
             # Skip external
             if url.startswith("http://") or url.startswith("https://"):
                 continue
@@ -144,12 +144,12 @@ def check_links(md_file: str, failures: list[str]):
                 path, anchor = url.split("#", 1)
             target_path = resolve_path(md_file, path)
             if not os.path.exists(target_path):
-                failures.append(f"[Link Missing] {md_file}:{i} — Target file does not exist: {path}")
+                failures.append(f"[Link Missing] {md_file}:{i}  Target file does not exist: {path}")
                 continue
             if anchor:
                 slugs = collect_header_slugs(target_path)
                 if slugify_heading(anchor) not in slugs:
-                    failures.append(f"[Anchor Missing] {md_file}:{i} — Anchor '#{anchor}' not found in {path}")
+                    failures.append(f"[Anchor Missing] {md_file}:{i}  Anchor '#{anchor}' not found in {path}")
 
 def check_forbidden_phase_language(md_file: str, failures: list[str]):
     if md_file.endswith(ARCHIVE_DOC):
@@ -159,7 +159,7 @@ def check_forbidden_phase_language(md_file: str, failures: list[str]):
             if any(p in line for p in FORBIDDEN_PHASE_REFS):
                 if any(w in line.lower() for w in FORBIDDEN_CURRENT_WORDS):
                     if not any(ex in line for ex in EXCEPTION_WORDS):
-                        failures.append(f"[Forbidden Phase Language] {md_file}:{i} — Contains 3D/3E with current/active/in progress/now/shipping without FUTURE/post-Phase 3C")
+                        failures.append(f"[Forbidden Phase Language] {md_file}:{i}  Contains 3D/3E with current/active/in progress/now/shipping without FUTURE/post-Phase 3C")
 
 def check_canonical_source(md_file: str, failures: list[str]):
     # Only for planning/phase docs
@@ -173,7 +173,7 @@ def check_canonical_source(md_file: str, failures: list[str]):
         with open(md_file, "r", encoding="utf-8") as f:
             content = f.read()
         if CANONICAL_CHECKLIST.split("/", 1)[1] not in content and CANONICAL_CHECKLIST not in content:
-            failures.append(f"[Canonical Source Missing] {md_file} — Must reference {CANONICAL_CHECKLIST}")
+            failures.append(f"[Canonical Source Missing] {md_file}  Must reference {CANONICAL_CHECKLIST}")
 
 def is_future_phase_doc(md_file: str) -> bool:
     rel = os.path.relpath(md_file, REPO_ROOT)
@@ -199,14 +199,14 @@ def check_future_phase_headers(md_file: str, failures: list[str]):
         for ph in PROHIBITED_FUTURE_HEADERS:
             if h.lower() == ph.lower():
                 failures.append(
-                    f"[Future Phase Ban] {md_file}:{line_no} — Header '{h}' not allowed in FUTURE docs. "
+                    f"[Future Phase Ban] {md_file}:{line_no}  Header '{h}' not allowed in FUTURE docs. "
                     f"Move implementation-oriented content to archived_artifacts.md or defer until phase activation."
                 )
         # Whitelist enforcement
         normalized = h.strip()
         if normalized not in ALLOWED_FUTURE_HEADERS:
             failures.append(
-                f"[Future Header Whitelist] {md_file}:{line_no} — Header '{h}' not allowed in FUTURE docs. "
+                f"[Future Header Whitelist] {md_file}:{line_no}  Header '{h}' not allowed in FUTURE docs. "
                 f"Allowed headers: {', '.join(sorted(ALLOWED_FUTURE_HEADERS))}."
             )
 
@@ -214,12 +214,12 @@ def check_version_tags(failures: list[str]):
     for rel in ("docs/phase3A_enrichment_scoring.md", "docs/phase3B_scheduling_storage.md"):
         path = os.path.join(REPO_ROOT, rel)
         if not os.path.exists(path):
-            failures.append(f"[Version Tag Missing] {rel} — File not found")
+            failures.append(f"[Version Tag Missing] {rel}  File not found")
             continue
         with open(path, "r", encoding="utf-8") as f:
             content = f.read()
         if "v0.3.0-Phase3C-Normalization" not in content:
-            failures.append(f"[Version Tag Missing] {rel} — Must include v0.3.0-Phase3C-Normalization")
+            failures.append(f"[Version Tag Missing] {rel}  Must include v0.3.0-Phase3C-Normalization")
 
 def main():
     failures: list[str] = []

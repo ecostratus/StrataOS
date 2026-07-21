@@ -174,7 +174,7 @@ For automation scripts that need GitHub API access, you can use a personal acces
 
 ### Create a Personal Access Token
 
-1. Go to GitHub Settings → Developer settings → Personal access tokens → Tokens (classic)
+1. Go to GitHub Settings  Developer settings  Personal access tokens  Tokens (classic)
 2. Click "Generate new token (classic)"
 3. Give it a descriptive name (e.g., "personal-os-automation")
 4. Select appropriate scopes:

@@ -86,7 +86,7 @@ source ~/.zshrc
 
 ## Creating a Personal Access Token
 
-1. Go to [GitHub Settings → Personal access tokens → Tokens (classic)](https://github.com/settings/tokens)
+1. Go to [GitHub Settings  Personal access tokens  Tokens (classic)](https://github.com/settings/tokens)
 2. Click "Generate new token (classic)"
 3. Give it a descriptive name
 4. Select scopes based on your needs:

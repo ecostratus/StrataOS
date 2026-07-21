@@ -1,13 +1,13 @@
-# Progress‑to‑Launch Checklist & Timeline (Updated, PM-Friendly)
+# ProgresstoLaunch Checklist & Timeline (Updated, PM-Friendly)
 
 ```markdown
-# Progress‑to‑Launch Checklist & Timeline (Updated, PM‑Friendly)
+# ProgresstoLaunch Checklist & Timeline (Updated, PMFriendly)
 
 Date: January 22, 2026
-Status: Canonical Execution Reference (Governance‑Constrained)
+Status: Canonical Execution Reference (GovernanceConstrained)
 
 ## Overview
-This document provides a PM‑friendly execution view of the Personal Operating System. It reflects sealed phase boundaries, import‑hardened baselines, and governance‑constrained active scope.
+This document provides a PMfriendly execution view of the Personal Operating System. It reflects sealed phase boundaries, importhardened baselines, and governanceconstrained active scope.
 
 Governance Authority:
 All phase semantics, sealed artifacts, and drift rules are defined in docs/governance-model.md.
@@ -15,25 +15,25 @@ Where conflicts arise, the governance model supersedes this checklist.
 
 ## Phase Status & Versions
 Phase	Status	Notes
-Phase 1 — Foundations	Done	v0.1.0
-Phase 2A — Early Pipeline	Done	v0.1.1
-Phase 2C — Discovery / Filters	Done	v0.2.0
-Phase 3C — Normalization	Sealed	v0.3.0‑Phase3C‑Normalization
-Phase 3F — Import Hardening	Baseline	v0.3.6 (current operational baseline)
-Phase 3A — Enrichment + Scoring	Draft / Opt‑In	Exists; not default‑enabled
-Phase 3B — Scheduling + Storage	Draft / Opt‑In	Exists; not default‑enabled
+Phase 1  Foundations	Done	v0.1.0
+Phase 2A  Early Pipeline	Done	v0.1.1
+Phase 2C  Discovery / Filters	Done	v0.2.0
+Phase 3C  Normalization	Sealed	v0.3.0Phase3CNormalization
+Phase 3F  Import Hardening	Baseline	v0.3.6 (current operational baseline)
+Phase 3A  Enrichment + Scoring	Draft / OptIn	Exists; not defaultenabled
+Phase 3B  Scheduling + Storage	Draft / OptIn	Exists; not defaultenabled
 Phase 4	Future	Not started
 
-Important: Phase letters beyond 3C represent hardening sub‑phases, not feature expansion. See Governance Model for authoritative semantics.
+Important: Phase letters beyond 3C represent hardening subphases, not feature expansion. See Governance Model for authoritative semantics.
 
 ## Phase Boundaries (Canonical Summary)
 Phase 3C (Normalization) is sealed and defines the final feature boundary for normalization, adapters, and input contracts.
 
-Phase 3F (Import Hardening) establishes the current import‑safe, deterministic baseline.
+Phase 3F (Import Hardening) establishes the current importsafe, deterministic baseline.
 
-Phase 3A / 3B components may exist but are opt‑in only and must comply with sealed Phase 3C contracts.
+Phase 3A / 3B components may exist but are optin only and must comply with sealed Phase 3C contracts.
 
-Phase 3D / 3E / Phase 4 remain future‑only and may not introduce implementation artifacts without explicit authorization.
+Phase 3D / 3E / Phase 4 remain futureonly and may not introduce implementation artifacts without explicit authorization.
 
 ## Current Artifacts
 Normalization & Pipeline (Sealed / Baseline)
@@ -54,39 +54,39 @@ Adapter Design Contract v1.0
 
 REPO_NORMALIZATION.md
 
-CI Guardrail — Draft (Presence‑Only, Not Active)
+CI Guardrail  Draft (PresenceOnly, Not Active)
 
 ## Run Steps (Stable, Deterministic)
 ```bash
 python3 automation/job-discovery/scripts/job_discovery_v1.py --out-dir ./output
 ```
-Optional flags (opt‑in only):
+Optional flags (optin only):
 
 --summary-only
 
---enrich (Phase 3A; not default‑enabled)
+--enrich (Phase 3A; not defaultenabled)
 
-## Timeline (Execution View — Non‑Authoritative)
+## Timeline (Execution View  NonAuthoritative)
 Timelines do not confer phase authority. They reflect planning intent only.
 
-Week of Jan 22–26: Governance alignment, documentation normalization, CI guardrail drafts
+Week of Jan 2226: Governance alignment, documentation normalization, CI guardrail drafts
 
-Week of Jan 29–Feb 2: Phase 3A alignment review (enrichment/scoring)
+Week of Jan 29Feb 2: Phase 3A alignment review (enrichment/scoring)
 
-Week of Feb 3–7: Phase 3B alignment review (scheduling/storage)
+Week of Feb 37: Phase 3B alignment review (scheduling/storage)
 
 Ongoing: Determinism, normalization compliance, operational polish
 
 ## Version & Tags
-v0.1.0 — Phase 1
+v0.1.0  Phase 1
 
-v0.1.1 — Phase 2A
+v0.1.1  Phase 2A
 
-v0.2.0 — Phase 2C
+v0.2.0  Phase 2C
 
-v0.3.0‑Phase3C‑Normalization (sealed)
+v0.3.0Phase3CNormalization (sealed)
 
-v0.3.6 — Phase3F Import Hardening (current baseline)
+v0.3.6  Phase3F Import Hardening (current baseline)
 
 ## Recent Completions
 Phase 3C normalization sealed
@@ -101,7 +101,7 @@ Job Discovery SOP v1.0 finalized
 
 Adapter Design Contract v1.0 finalized
 
-CI guardrail drafted (presence‑only, not active)
+CI guardrail drafted (presenceonly, not active)
 
 Governance model updated to define sealed authority
 
@@ -112,18 +112,18 @@ docs/governance-model.md and supersede this checklist.
 ## Summary of Fixes Applied
 Removed ambiguity between Phase 3C vs 3F vs 3A/3B
 
-Clarified current baseline as v0.3.6 (Import‑Hardened)
+Clarified current baseline as v0.3.6 (ImportHardened)
 
-Distinguished implemented vs default‑enabled
+Distinguished implemented vs defaultenabled
 
 Aligned checklist with governance authority
 
-Eliminated timeline‑driven scope expansion
+Eliminated timelinedriven scope expansion
 
 Preserved historical tags without reinterpretation
 
 ## Status
-DRAFT — NOT ACTIVE  
+DRAFT  NOT ACTIVE  
 Governance text only.
 No implementation, activation, or commits implied.
 ``` 

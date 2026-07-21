@@ -38,7 +38,7 @@ cold_outreach
 ## Task
 Create a personalized, authentic outreach message that is professional yet warm, specific rather than generic, and includes a clear but low-pressure call-to-action.
 
-If enriched role context is provided, incorporate relevant items (seniority, domain_tags, stack, skills) to make the message concrete and aligned to the recipient’s interests or the target role. Do not force inclusion; only use items that naturally strengthen specificity.
+If enriched role context is provided, incorporate relevant items (seniority, domain_tags, stack, skills) to make the message concrete and aligned to the recipients interests or the target role. Do not force inclusion; only use items that naturally strengthen specificity.
 
 ## Requirements
 

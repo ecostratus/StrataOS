@@ -50,11 +50,11 @@ Provide objective scoring mechanism for prioritizing job opportunities based on 
 ## Total Score Calculation
 
 ```
-Total Score = (Role Fit × 0.35) + 
-              (Company Fit × 0.20) + 
-              (Compensation × 0.20) + 
-              (Location × 0.15) + 
-              (Growth × 0.10)
+Total Score = (Role Fit  0.35) + 
+              (Company Fit  0.20) + 
+              (Compensation  0.20) + 
+              (Location  0.15) + 
+              (Growth  0.10)
 ```
 
 **Range**: 0-10 (weighted average)

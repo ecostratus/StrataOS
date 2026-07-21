@@ -1,4 +1,4 @@
-# Phase 3G — Interview Prep Hardening Execution Checklist
+# Phase 3G  Interview Prep Hardening Execution Checklist
 
 ## 1. Scan & Identify
 - [ ] List interview-prep modules and templates

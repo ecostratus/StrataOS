@@ -21,16 +21,16 @@ Ensure that:
 
 The System of Record consists of exactly **10 sheets**:
 
-1. **Roles** — Tracks all target roles under consideration
-2. **Companies** — Tracks companies associated with roles, outreach, or consulting
-3. **Contacts** — Tracks people associated with companies, outreach, or referrals
-4. **Outreach** — Tracks all outbound messages and follow-ups
-5. **Interviews** — Tracks interview stages and preparation
-6. **Consulting** — Tracks consulting opportunities and engagements
-7. **Metrics** — Stores computed KPIs and summary metrics
-8. **StatusHistory** — Tracks every status change across all entities
-9. **FlowErrors** — Captures automation and Copilot Studio flow errors
-10. **ChangeLog** — Tracks structural changes to the SoR
+1. **Roles**  Tracks all target roles under consideration
+2. **Companies**  Tracks companies associated with roles, outreach, or consulting
+3. **Contacts**  Tracks people associated with companies, outreach, or referrals
+4. **Outreach**  Tracks all outbound messages and follow-ups
+5. **Interviews**  Tracks interview stages and preparation
+6. **Consulting**  Tracks consulting opportunities and engagements
+7. **Metrics**  Stores computed KPIs and summary metrics
+8. **StatusHistory**  Tracks every status change across all entities
+9. **FlowErrors**  Captures automation and Copilot Studio flow errors
+10. **ChangeLog**  Tracks structural changes to the SoR
 
 ## Tools Required
 
@@ -490,20 +490,20 @@ for row in roles_ws.iter_rows(min_row=2, values_only=True):
 **Objective**: Verify Outreach sheet FKs are valid
 
 **Foreign Keys to Validate**:
-- Outreach.ContactID → Contacts.ContactID
-- Outreach.CompanyID → Companies.CompanyID
-- Outreach.RoleID → Roles.RoleID
+- Outreach.ContactID  Contacts.ContactID
+- Outreach.CompanyID  Companies.CompanyID
+- Outreach.RoleID  Roles.RoleID
 
 **Expected**: All FK references are valid
 
 #### Test: Validate Interviews Foreign Keys
 **Foreign Keys**:
-- Interviews.RoleID → Roles.RoleID
-- Interviews.CompanyID → Companies.CompanyID
+- Interviews.RoleID  Roles.RoleID
+- Interviews.CompanyID  Companies.CompanyID
 
 #### Test: Validate Consulting.CompanyID FK
 **Foreign Key**:
-- Consulting.CompanyID → Companies.CompanyID
+- Consulting.CompanyID  Companies.CompanyID
 
 ### 8. Audit Sheet Validation
 
@@ -729,14 +729,14 @@ Use this checklist for comprehensive validation of the **Canonical 10-Sheet SoR*
 - [ ] FitScore values in range (0-100)
 
 ### Foreign Key Validation
-- [ ] Roles.CompanyID → Companies.CompanyID
-- [ ] Contacts.CompanyID → Companies.CompanyID
-- [ ] Outreach.ContactID → Contacts.ContactID
-- [ ] Outreach.CompanyID → Companies.CompanyID
-- [ ] Outreach.RoleID → Roles.RoleID
-- [ ] Interviews.RoleID → Roles.RoleID
-- [ ] Interviews.CompanyID → Companies.CompanyID
-- [ ] Consulting.CompanyID → Companies.CompanyID
+- [ ] Roles.CompanyID  Companies.CompanyID
+- [ ] Contacts.CompanyID  Companies.CompanyID
+- [ ] Outreach.ContactID  Contacts.ContactID
+- [ ] Outreach.CompanyID  Companies.CompanyID
+- [ ] Outreach.RoleID  Roles.RoleID
+- [ ] Interviews.RoleID  Roles.RoleID
+- [ ] Interviews.CompanyID  Companies.CompanyID
+- [ ] Consulting.CompanyID  Companies.CompanyID
 
 ### Dropdown Validation
 - [ ] Roles.Status dropdown works

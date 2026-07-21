@@ -23,7 +23,7 @@ def get_github_token():
     # Try environment variables first (GH_TOKEN, then GITHUB_TOKEN)
     token = os.environ.get('GH_TOKEN') or os.environ.get('GITHUB_TOKEN')
     if token:
-        print("✓ Found GitHub token in environment variables")
+        print(" Found GitHub token in environment variables")
         return token
     
     # Try to get token from gh CLI
@@ -35,7 +35,7 @@ def get_github_token():
             timeout=5
         )
         if result.returncode == 0 and result.stdout.strip():
-            print("✓ Found GitHub token from gh CLI")
+            print(" Found GitHub token from gh CLI")
             return result.stdout.strip()
     except (subprocess.TimeoutExpired, FileNotFoundError):
         pass
@@ -48,12 +48,12 @@ def get_github_token():
                 config = json.load(f)
                 token = config.get('github', {}).get('token', '').strip()
                 if token:
-                    print("✓ Found GitHub token in config/env.json")
+                    print(" Found GitHub token in config/env.json")
                     return token
         except (json.JSONDecodeError, IOError):
             pass
     
-    print("⚠ No GitHub token found")
+    print("  No GitHub token found")
     return None
 
 
@@ -101,10 +101,10 @@ def make_github_api_request(endpoint, token=None):
         with urllib.request.urlopen(req, timeout=10) as response:
             return json.loads(response.read().decode())
     except urllib.error.HTTPError as e:
-        print(f"❌ API request failed: {e.code} {e.reason}")
+        print(f" API request failed: {e.code} {e.reason}")
         return None
     except Exception as e:
-        print(f"❌ Error making API request: {e}")
+        print(f" Error making API request: {e}")
         return None
 
 
@@ -118,9 +118,9 @@ def main():
     # Check if gh CLI is authenticated
     print("Checking gh CLI authentication...")
     if check_github_auth():
-        print("✓ Authenticated with GitHub via gh CLI")
+        print(" Authenticated with GitHub via gh CLI")
     else:
-        print("⚠ Not authenticated with gh CLI")
+        print("  Not authenticated with gh CLI")
         print("  Run: gh auth login")
     print()
     
@@ -135,12 +135,12 @@ def main():
         user_data = make_github_api_request('user', token)
         
         if user_data:
-            print("✓ API access successful!")
+            print(" API access successful!")
             print(f"  Authenticated as: {user_data.get('login', 'Unknown')}")
             print(f"  Name: {user_data.get('name', 'Not set')}")
             print(f"  Public repos: {user_data.get('public_repos', 0)}")
         else:
-            print("❌ API access failed")
+            print(" API access failed")
         print()
         
         # Check rate limit
@@ -152,7 +152,7 @@ def main():
             limit = core.get('limit', 0)
             print(f"  Rate limit: {remaining}/{limit} remaining")
     else:
-        print("❌ No GitHub token available")
+        print(" No GitHub token available")
         print()
         print("To use GitHub API in your scripts, you can:")
         print("  1. Run: gh auth login")

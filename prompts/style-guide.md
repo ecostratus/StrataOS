@@ -103,24 +103,24 @@ This style guide defines standards for creating and using AI prompts across the 
 ## Writing Guidelines
 
 ### Do's
-- ✅ Be specific about desired output
-- ✅ Provide clear examples
-- ✅ Include constraints and boundaries
-- ✅ Define success criteria
-- ✅ Use consistent terminology
-- ✅ Structure complex prompts with sections
-- ✅ Test prompts before deployment
-- ✅ Version prompts for tracking changes
+-  Be specific about desired output
+-  Provide clear examples
+-  Include constraints and boundaries
+-  Define success criteria
+-  Use consistent terminology
+-  Structure complex prompts with sections
+-  Test prompts before deployment
+-  Version prompts for tracking changes
 
 ### Don'ts
-- ❌ Use vague or ambiguous language
-- ❌ Assume unstated context
-- ❌ Create overly complex prompts
-- ❌ Forget to specify format
-- ❌ Skip quality criteria
-- ❌ Use inconsistent terminology
-- ❌ Deploy untested prompts
-- ❌ Modify prompts without versioning
+-  Use vague or ambiguous language
+-  Assume unstated context
+-  Create overly complex prompts
+-  Forget to specify format
+-  Skip quality criteria
+-  Use inconsistent terminology
+-  Deploy untested prompts
+-  Modify prompts without versioning
 
 ## Variable Conventions
 

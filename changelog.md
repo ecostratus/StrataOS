@@ -36,8 +36,8 @@ This project follows Semantic Versioning.
 - Focused tests for normalization edge cases and deterministic enrichment behavior.
 
 ### Changed
-- Consolidated normalization boundary: enrichment config lists (seniority patterns, stack patterns, keyword lists, role‑fit heuristics) are normalized once at load time, with defensive normalization at function entry.
-- Removed ad‑hoc inline normalization and enforced type‑safe, pure functions at boundaries.
+- Consolidated normalization boundary: enrichment config lists (seniority patterns, stack patterns, keyword lists, rolefit heuristics) are normalized once at load time, with defensive normalization at function entry.
+- Removed adhoc inline normalization and enforced typesafe, pure functions at boundaries.
 
 ### Fixed
 - Eliminated Pylance warnings by using typed helpers for all normalization boundaries.
@@ -79,16 +79,16 @@ This project follows Semantic Versioning.
 "Phase 3D: Extended Sources"
 
 ### Added
-- Adapters added/scaffolded: Greenhouse, Ashby, Indeed, ZipRecruiter, Google Jobs, Glassdoor, Craigslist, GoRemote (pure functions; deterministic `job_id`; sorted, de‑duplicated outputs; UTC `posted_at` fallback).
-- Documentation updates: README enablement notes for new sources; expanded Field Mapping Reference to include all new source→canonical mappings.
+- Adapters added/scaffolded: Greenhouse, Ashby, Indeed, ZipRecruiter, Google Jobs, Glassdoor, Craigslist, GoRemote (pure functions; deterministic `job_id`; sorted, deduplicated outputs; UTC `posted_at` fallback).
+- Documentation updates: README enablement notes for new sources; expanded Field Mapping Reference to include all new sourcecanonical mappings.
 - Tests: Unit tests for Lever/Greenhouse/Ashby/Indeed covering mapping, gating, determinism, malformed handling; full suite passing.
 
 ### Configuration
-- Opt‑in flags and endpoints added to `config/env.sample.json` for each source. All adapters disabled by default to prevent behavioral drift.
+- Optin flags and endpoints added to `config/env.sample.json` for each source. All adapters disabled by default to prevent behavioral drift.
 
 ### Compatibility
-- No orchestrator changes; integration test remains skip‑based until orchestrator exists.
-- Cross‑source `job_id` compatibility maintained (canonical hash of lower‑trimmed `title|company|url`, truncated to 16 hex).
+- No orchestrator changes; integration test remains skipbased until orchestrator exists.
+- Crosssource `job_id` compatibility maintained (canonical hash of lowertrimmed `title|company|url`, truncated to 16 hex).
 
 ## [v0.3.4-Phase3E-Enrichment] - 2026-01-10
 
@@ -110,7 +110,7 @@ This project follows Semantic Versioning.
 
 ## [v0.3.6-Phase3F-ImportHardening] - 2026-01-12
 
-"Phase 3F: Sources + Dynamic Adapters — Import Hardening"
+"Phase 3F: Sources + Dynamic Adapters  Import Hardening"
 
 ### Changed
 - Hardened imports across job discovery modules to run in full sources mode without requiring PYTHONPATH.
