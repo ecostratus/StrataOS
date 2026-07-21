@@ -1,0 +1,31 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #f3f7fb;
+  --panel: #ffffff;
+  --ink: #112031;
+  --muted: #5d7287;
+  --accent: #0f766e;
+  --accent-2: #f59e0b;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(circle at 10% 0%, #d9f0ff 0%, transparent 30%),
+    radial-gradient(circle at 100% 10%, #fff3d9 0%, transparent 35%),
+    var(--bg);
+  color: var(--ink);
+  font-family: "DM Sans", "Segoe UI", sans-serif;
+}
+
+.card {
+  background: var(--panel);
+  border: 1px solid #d6e3ef;
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(9, 30, 66, 0.07);
+}

@@ -48,6 +48,7 @@ def main():
     parser.add_argument("--context", dest="context_path", default=default_context_path, help="Path to user context JSON")
     parser.add_argument("--output-dir", dest="output_dir", default=default_output_dir, help="Directory to save rendered prompt")
     parser.add_argument("--prompt", dest="prompt_path_override", default=None, help="Override prompt template path")
+    parser.add_argument("--job-json", dest="job_json", default=None, help="Path to a specific job JSON file")
     parser.add_argument("--no-sources", dest="no_sources", action="store_true", help="Skip source fetch and use context only")
     args = parser.parse_args()
 
@@ -96,6 +97,21 @@ def main():
         else:
             def enrich_job(x):  # type: ignore
                 return x
+
+    if args.job_json:
+        try:
+            with open(args.job_json, "r", encoding="utf-8") as f:
+                loaded_job = json.load(f)
+            if isinstance(loaded_job, list) and loaded_job:
+                job = loaded_job[0]
+            elif isinstance(loaded_job, dict):
+                job = loaded_job
+            else:
+                job = {}
+            if job:
+                jobs = [enrich_job(job)]
+        except Exception:
+            jobs = []
 
     if not jobs:
         sample_job = {

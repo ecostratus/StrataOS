@@ -21,3 +21,8 @@ __pycache__/
 # Backups and outputs
 backups/
 output/
+
+# Control center artifacts
+webapp/frontend/node_modules/
+webapp/frontend/dist/
+data/jobs.db

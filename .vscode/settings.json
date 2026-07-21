@@ -17,5 +17,6 @@
   "markdown.preview.fontSize": 14,
   "python.testing.pytestEnabled": true,
   "python.testing.unittestEnabled": false,
-  "python.analysis.typeCheckingMode": "basic"
+  "python.analysis.typeCheckingMode": "basic",
+  "sarif-viewer.connectToGithubCodeScanning": "on"
 }

@@ -233,6 +233,27 @@ Add a new targeted test task by reusing the shared matcher and short tracebacks:
 
 The matcher `"$pytest-short"` is defined once in [.vscode/tasks.json](.vscode/tasks.json) and can be referenced by any future test task.
 
+## Local Control Center (Web UI)
+
+The repository includes a local control center that runs your existing automation scripts behind a FastAPI API and a React dashboard.
+
+- Backend: `webapp/backend/app.py`
+- Frontend: `webapp/frontend/`
+- API smoke test: `tests/webapp/test_control_center_api.py`
+- Launcher: `run.sh`
+
+Run in single-port mode (builds frontend once, serves UI + API on `http://127.0.0.1:8811`):
+
+```bash
+./run.sh
+```
+
+Run in development mode (frontend hot reload at `http://127.0.0.1:5173`, backend API at `http://127.0.0.1:8811`):
+
+```bash
+./run.sh --dev
+```
+
 ## Job Discovery: Real Endpoints
 - Configure API URLs and tokens in `.env` or `config/env.sample.json`:
     - `LINKEDIN_API_URL`, `LINKEDIN_API_TOKEN` (or `LINKEDIN_API_KEY`)
