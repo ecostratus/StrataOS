@@ -1,0 +1,71 @@
+name: Monday-Friday Playbook Automation
+
+on:
+  schedule:
+    - cron: "0 14 * * 1-5"
+  workflow_dispatch:
+    inputs:
+      day:
+        description: "Day to run (auto uses current weekday)"
+        required: false
+        default: "auto"
+        type: choice
+        options:
+          - auto
+          - monday
+          - tuesday
+          - wednesday
+          - thursday
+          - friday
+          - week
+      no_sources:
+        description: "Use deterministic no-sources mode for Tuesday prompt generation"
+        required: false
+        default: true
+        type: boolean
+      reset_metrics:
+        description: "Reset metrics during Friday run"
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  run-playbook:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install -U pip
+          python -m pip install -r dev-requirements.txt
+          python -m pip install -r automation/job-discovery/scripts/requirements.txt
+          python -m pip install -r automation/resume-tailoring/scripts/requirements.txt
+          python -m pip install -r automation/outreach/scripts/requirements.txt
+
+      - name: Run Monday-Friday playbook
+        env:
+          STRATAOS_NO_SOURCES: ${{ inputs.no_sources || 'true' }}
+          STRATAOS_RESET_METRICS: ${{ inputs.reset_metrics || 'false' }}
+        run: |
+          chmod +x scripts/run_monday_friday_playbook.sh
+          scripts/run_monday_friday_playbook.sh "${{ inputs.day || 'auto' }}"
+
+      - name: Upload runtime artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: strataos-playbook-artifacts
+          path: |
+            output/**
+            logs/events.jsonl
+            logs/metrics.json
+          if-no-files-found: warn

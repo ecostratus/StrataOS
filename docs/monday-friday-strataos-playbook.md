@@ -2,6 +2,26 @@
 
 This playbook is a lightweight operating loop for consistent weekly execution.
 
+## Automation Option
+
+You can run the same loop through a single wrapper script:
+
+```bash
+scripts/run_monday_friday_playbook.sh auto
+```
+
+Explicit day selection:
+
+```bash
+scripts/run_monday_friday_playbook.sh monday
+scripts/run_monday_friday_playbook.sh tuesday
+scripts/run_monday_friday_playbook.sh week
+```
+
+Environment flags:
+- `STRATAOS_NO_SOURCES=true` for deterministic Tuesday prompt generation.
+- `STRATAOS_RESET_METRICS=true` to reset metrics during Friday run.
+
 ## Prerequisites (one-time)
 - Python environment exists at `.venv`
 - Base config loaded from `config/env.sample.json`
