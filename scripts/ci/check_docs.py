@@ -77,6 +77,9 @@ ALLOWED_FUTURE_HEADERS = {
 
 def iter_markdown_files(root: str):
     for dirpath, _, filenames in os.walk(root):
+        norm = os.path.normpath(dirpath)
+        if any(part in {".git", ".venv", "node_modules", "site-packages"} for part in norm.split(os.sep)):
+            continue
         for fn in filenames:
             if fn.lower().endswith(".md"):
                 yield os.path.join(dirpath, fn)
