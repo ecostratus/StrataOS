@@ -1,5 +1,7 @@
 # StrataOS Resume/Outreach Closure Implementation Plan v1
 
+Canonical source: docs/progress_to_launch_checklist_timeline.md
+
 ## Goal
 
 Turn the current prompt-generator flow into a user-facing result flow so a non-technical user can select a job and get a finished resume or outreach message inside the Control Center.
