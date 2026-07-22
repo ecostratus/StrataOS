@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "strataos/person.schema.json",
+  "title": "Person",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["person_id", "profile", "goals", "constraints", "attributes"],
+  "properties": {
+    "person_id": { "type": "string", "minLength": 1 },
+    "profile": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["skills"],
+      "properties": {
+        "name": { "type": "string" },
+        "headline": { "type": "string" },
+        "skills": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "goals": { "type": "object", "additionalProperties": true },
+    "constraints": { "type": "object", "additionalProperties": true },
+    "attributes": { "type": "object", "additionalProperties": true }
+  }
+}

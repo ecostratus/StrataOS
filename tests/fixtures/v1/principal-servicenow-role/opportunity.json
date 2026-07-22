@@ -1,0 +1,17 @@
+{
+  "opportunity_id": "opp-servicenow-principal",
+  "type": "FTE",
+  "organization": {
+    "name": "Acme Systems"
+  },
+  "metadata": {
+    "title": "Principal ServiceNow Architect",
+    "location": "Remote",
+    "source": "remoteok"
+  },
+  "observations": [
+    "obs-1",
+    "obs-2",
+    "obs-3"
+  ]
+}

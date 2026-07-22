@@ -314,6 +314,16 @@ def fetch_indeed_jobs() -> List[Dict[str, str]]:
     def _fetch() -> List[Dict[str, Any]]:
         limiter.acquire()
         data = _http_get_json(ensure_str(url), timeout=timeout)
+
+        # Normalize common envelope payloads used by public job APIs.
+        if isinstance(data, dict):
+            if isinstance(data.get("jobs"), list):
+                data = data.get("jobs")
+            elif isinstance(data.get("results"), list):
+                data = data.get("results")
+            elif isinstance(data.get("data"), list):
+                data = data.get("data")
+
         if not isinstance(data, list):
             raise ValueError("Indeed API returned non-list")
         return data

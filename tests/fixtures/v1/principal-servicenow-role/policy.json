@@ -1,0 +1,17 @@
+{
+  "id": "policy-default",
+  "name": "Default growth policy",
+  "weights": {
+    "skill_match": 0.4,
+    "seniority_alignment": 0.3,
+    "remote_alignment": 0.3
+  },
+  "thresholds": {
+    "apply_immediately": 0.8,
+    "high_priority_review": 0.6,
+    "network_first": 0.4,
+    "monitor": 0.2
+  },
+  "constraints": [],
+  "version": 1
+}

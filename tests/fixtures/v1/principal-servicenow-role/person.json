@@ -1,0 +1,25 @@
+{
+  "person_id": "person-james",
+  "profile": {
+    "name": "James Naphen",
+    "headline": "Principal platform architect",
+    "skills": [
+      "ServiceNow",
+      "Enterprise Architecture",
+      "Platform Strategy"
+    ]
+  },
+  "goals": {
+    "target_roles": [
+      "Principal Architect",
+      "Director, Platform Engineering"
+    ]
+  },
+  "constraints": {
+    "remote_only": true
+  },
+  "attributes": {
+    "seniority": "principal",
+    "years_experience": 15
+  }
+}

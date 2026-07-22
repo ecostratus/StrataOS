@@ -206,7 +206,24 @@ def main(argv: List[str] | None = None) -> None:
     parser.add_argument("--schedule", dest="schedule", action="store_true", help="Enable scheduling gate (Phase 3B)")
     args = parser.parse_args(argv)
 
-    config.initialize()
+    # Uvicorn and parent shells can retain stale env values across hot reloads.
+    # Reset discovery-related keys so this run uses the latest .env/json settings.
+    for key in (
+        "JOB_FILTER_KEYWORDS",
+        "JOB_FILTER_LOCATIONS",
+        "JOB_FILTER_EXCLUDE_KEYWORDS",
+        "JOB_FILTER_MAX_AGE_DAYS",
+        "INDEED_API_URL",
+        "INDEED_ENABLED",
+        "LINKEDIN_ENABLED",
+        "LINKEDIN_API_URL",
+    ):
+        os.environ.pop(key, None)
+
+    json_cfg = os.path.join(_ROOT, "config", "env.json")
+    if not os.path.exists(json_cfg):
+        json_cfg = os.path.join(_ROOT, "config", "env.sample.json")
+    config.initialize(json_path=json_cfg)
 
     environment = config.get("SYSTEM_ENVIRONMENT", "development")
     log_level = config.get("SYSTEM_LOG_LEVEL", "INFO")

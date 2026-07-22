@@ -1,0 +1,39 @@
+{
+  "id": "dec-person-james-opp-servicenow-principal-policy-default",
+  "decision_model_version": "1.0.0",
+  "person_id": "person-james",
+  "opportunity_id": "opp-servicenow-principal",
+  "policy_id": "policy-default",
+  "recommendation": "APPLY_IMMEDIATELY",
+  "score": 1.0,
+  "evidence_confidence": 1.0,
+  "prediction_confidence": 1.0,
+  "claim_ids": [
+    "cl-remote-positive",
+    "cl-seniority-positive",
+    "cl-skill-servicenow-match"
+  ],
+  "explanations": [
+    {
+      "direction": "positive",
+      "claim_ref": "cl-remote-positive",
+      "message": "remote_alignment -> +0.30"
+    },
+    {
+      "direction": "positive",
+      "claim_ref": "cl-seniority-positive",
+      "message": "seniority_alignment -> +0.30"
+    },
+    {
+      "direction": "positive",
+      "claim_ref": "cl-skill-servicenow-match",
+      "message": "skill_match -> +0.40"
+    }
+  ],
+  "inputs_hash": "person-james|opp-servicenow-principal|policy-default|obs-1,obs-2,obs-3",
+  "policy_hash": "88106bdd7d66cf47c882ef05f04ef040be333a44efcd7ce5d40ada8722bdf0c9",
+  "engine_hash": "ae36391d1146c581d3597f107cb4e5b9471f88be5b50f527cbda6d3a1b63cb16",
+  "fixture_hash": "18d3053a929dd3977bc161109ffce6ec7fdef869bff3fe567b4c2fc56be7b4aa",
+  "engine_version": "decision-model-v1-reference",
+  "created_at": "2026-01-01T00:00:00Z"
+}

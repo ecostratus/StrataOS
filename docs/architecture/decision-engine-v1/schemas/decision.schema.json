@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "strataos/decision.schema.json",
+  "title": "Decision",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "decision_model_version",
+    "person_id",
+    "opportunity_id",
+    "policy_id",
+    "recommendation",
+    "score",
+    "evidence_confidence",
+    "prediction_confidence",
+    "claim_ids",
+    "explanations",
+    "inputs_hash",
+    "policy_hash",
+    "engine_hash",
+    "fixture_hash",
+    "engine_version",
+    "created_at"
+  ],
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "decision_model_version": { "type": "string", "minLength": 1 },
+    "person_id": { "type": "string", "minLength": 1 },
+    "opportunity_id": { "type": "string", "minLength": 1 },
+    "policy_id": { "type": "string", "minLength": 1 },
+    "recommendation": {
+      "type": "string",
+      "enum": [
+        "APPLY_IMMEDIATELY",
+        "HIGH_PRIORITY_REVIEW",
+        "NETWORK_FIRST",
+        "MONITOR",
+        "IGNORE",
+        "RESEARCH_COMPANY"
+      ]
+    },
+    "score": { "type": "number" },
+    "evidence_confidence": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+    "prediction_confidence": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+    "claim_ids": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "explanations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["direction", "claim_ref", "message"],
+        "properties": {
+          "direction": { "type": "string", "enum": ["positive", "negative"] },
+          "claim_ref": { "type": "string", "minLength": 1 },
+          "message": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "inputs_hash": { "type": "string", "minLength": 1 },
+    "policy_hash": { "type": "string", "minLength": 1 },
+    "engine_hash": { "type": "string", "minLength": 1 },
+    "fixture_hash": { "type": "string", "minLength": 1 },
+    "engine_version": { "type": "string", "minLength": 1 },
+    "created_at": { "type": "string", "format": "date-time" }
+  }
+}

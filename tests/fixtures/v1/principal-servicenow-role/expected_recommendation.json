@@ -1,0 +1,23 @@
+{
+  "decision_id": "dec-person-james-opp-servicenow-principal-policy-default",
+  "decision_model_version": "1.0.0",
+  "action": "APPLY_IMMEDIATELY",
+  "summary": "Action APPLY_IMMEDIATELY based on weighted claim evidence",
+  "drivers": [
+    {
+      "direction": "positive",
+      "message": "remote_alignment -> +0.30",
+      "claim_ref": "cl-remote-positive"
+    },
+    {
+      "direction": "positive",
+      "message": "seniority_alignment -> +0.30",
+      "claim_ref": "cl-seniority-positive"
+    },
+    {
+      "direction": "positive",
+      "message": "skill_match -> +0.40",
+      "claim_ref": "cl-skill-servicenow-match"
+    }
+  ]
+}

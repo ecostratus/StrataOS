@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "strataos/trace_artifact.schema.json",
+  "title": "TraceArtifact",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["decision_model_version", "trace"],
+  "properties": {
+    "decision_model_version": { "type": "string", "minLength": 1 },
+    "trace": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "observation_id",
+          "evidence_id",
+          "claim_id",
+          "decision_factor",
+          "recommendation_driver",
+          "source"
+        ],
+        "properties": {
+          "observation_id": { "type": "string", "minLength": 1 },
+          "evidence_id": { "type": "string", "minLength": 1 },
+          "claim_id": { "type": "string", "minLength": 1 },
+          "decision_factor": { "type": "string", "minLength": 1 },
+          "recommendation_driver": { "type": "string", "enum": ["positive", "negative"] },
+          "source": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

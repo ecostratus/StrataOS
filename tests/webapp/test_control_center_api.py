@@ -207,6 +207,11 @@ def test_generate_artifact_missing_configuration(monkeypatch):
         "OPENAI_TEMPERATURE": "0.2",
         "OPENAI_MAX_TOKENS": "256",
     }.get(key, default))
+    monkeypatch.setattr(
+        generation.config,
+        "get_json",
+        lambda path, default=None: "YOUR_OPENAI_API_KEY_HERE" if path == "ai_services.openai.api_key" else default,
+    )
     called = {"value": False}
 
     def fail_if_called(api_key: str):

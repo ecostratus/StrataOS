@@ -1,0 +1,56 @@
+[
+  {
+    "evidence_id": "ev-obs-1",
+    "person_id": "person-james",
+    "opportunity_id": "opp-servicenow-principal",
+    "observation_ids": [
+      "obs-1"
+    ],
+    "kind": "required_skill",
+    "quality": 1.0,
+    "provenance": {
+      "source": "job-posting",
+      "captured_at": "2026-01-01T00:00:00Z",
+      "parser": "observation-parser-v1",
+      "normalizer": "observation-normalizer-v1",
+      "evidence_builder": "evidence-builder-v1",
+      "claim_generator": "claim-generator-v1"
+    }
+  },
+  {
+    "evidence_id": "ev-obs-2",
+    "person_id": "person-james",
+    "opportunity_id": "opp-servicenow-principal",
+    "observation_ids": [
+      "obs-2"
+    ],
+    "kind": "role_level",
+    "quality": 1.0,
+    "provenance": {
+      "source": "job-posting",
+      "captured_at": "2026-01-01T00:00:00Z",
+      "parser": "observation-parser-v1",
+      "normalizer": "observation-normalizer-v1",
+      "evidence_builder": "evidence-builder-v1",
+      "claim_generator": "claim-generator-v1"
+    }
+  },
+  {
+    "evidence_id": "ev-obs-3",
+    "person_id": "person-james",
+    "opportunity_id": "opp-servicenow-principal",
+    "observation_ids": [
+      "obs-3"
+    ],
+    "kind": "work_mode",
+    "quality": 1.0,
+    "provenance": {
+      "source": "job-posting",
+      "captured_at": "2026-01-01T00:00:00Z",
+      "parser": "observation-parser-v1",
+      "normalizer": "observation-normalizer-v1",
+      "evidence_builder": "evidence-builder-v1",
+      "claim_generator": "claim-generator-v1"
+    }
+  }
+]

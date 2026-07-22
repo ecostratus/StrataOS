@@ -50,6 +50,11 @@ def _stringify(value: object | None, default: str = "") -> str:
 def _get_settings() -> tuple[str, str, str, float, int]:
 	provider = _stringify(config.get("AI_PROVIDER", "openai"), "openai").lower()
 	api_key = _stringify(config.get("OPENAI_API_KEY", ""))
+	# If .env still has the placeholder key, prefer a real key from JSON config.
+	if api_key == "YOUR_OPENAI_API_KEY_HERE":
+		json_key = _stringify(config.get_json("ai_services.openai.api_key", ""))
+		if json_key and json_key != "YOUR_OPENAI_API_KEY_HERE":
+			api_key = json_key
 	model = _stringify(config.get("OPENAI_MODEL", "gpt-4"), "gpt-4")
 	temperature = config.get_float("OPENAI_TEMPERATURE", 0.7)
 	max_tokens = config.get_int("OPENAI_MAX_TOKENS", 2000)

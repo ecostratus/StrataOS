@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "strataos/opportunity.schema.json",
+  "title": "Opportunity",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["opportunity_id", "type", "organization", "metadata", "observations"],
+  "properties": {
+    "opportunity_id": { "type": "string", "minLength": 1 },
+    "type": { "type": "string", "enum": ["FTE", "CONTRACT"] },
+    "organization": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 }
+      }
+    },
+    "metadata": { "type": "object", "additionalProperties": true },
+    "observations": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    }
+  }
+}
