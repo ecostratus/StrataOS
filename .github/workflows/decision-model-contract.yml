@@ -2,12 +2,15 @@ name: Decision Model Contract Gate
 
 # Philosophy: CI should prove the Decision Model remains deterministic and
 # explainable — not just that code compiles. Every check below maps to a
-# specific certification criterion in docs/architecture/decision-engine-v1/CERTIFICATION.md.
+# specific certification criterion in docs/architecture/decision-engine-v1/certification-v*.json.
 #
 # Required checks:
 #   1. Schema validation       — canonical schemas still describe actual data shapes
 #   2. Contract tests          — determinism, order-independence, idempotence, traceability
-#   3. Certification gate      — CERTIFICATION.md remains Status: Certified, 0 unchecked criteria
+#   3. Certification gate      — certification-v*.json declares Status: Certified, all criteria met
+#
+# Note: CERTIFICATION.md remains human-readable; certification-v*.json is the enforcement source.
+# This separation prevents CI breakage from documentation formatting changes.
 
 on:
   push:
@@ -17,6 +20,7 @@ on:
       - "tests/decision_model_contract_tests.py"
       - "tests/fixtures/v1/**"
       - "docs/architecture/decision-engine-v1/schemas/**"
+      - "docs/architecture/decision-engine-v1/certification-v*.json"
       - "docs/architecture/decision-engine-v1/CERTIFICATION.md"
   pull_request:
     branches: [main]
@@ -25,6 +29,7 @@ on:
       - "tests/decision_model_contract_tests.py"
       - "tests/fixtures/v1/**"
       - "docs/architecture/decision-engine-v1/schemas/**"
+      - "docs/architecture/decision-engine-v1/certification-v*.json"
       - "docs/architecture/decision-engine-v1/CERTIFICATION.md"
 
 jobs:
@@ -48,7 +53,6 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -r dev-requirements.txt
-          pip install jsonschema
 
       # ── Check 1: Schema Validation ────────────────────────────────────────
       # Proves the canonical schemas in docs/architecture/decision-engine-v1/schemas/
@@ -127,26 +131,48 @@ jobs:
           echo "Contract tests passed — Decision Model is deterministic and fully traceable."
 
       # ── Check 3: Certification Gate ───────────────────────────────────────
-      # Proves CERTIFICATION.md still declares Status: Certified and has no
-      # unchecked criteria. Any drift here signals a governance obligation.
+      # Proves certification-v*.json declares Status: Certified and has no
+      # unchecked criteria. Separates presentation (Markdown) from enforcement (JSON).
       - name: Verify certification status
         run: |
           python - <<'PYEOF'
+          import json
           import sys
           from pathlib import Path
 
-          cert_path = Path("docs/architecture/decision-engine-v1/CERTIFICATION.md")
-          cert = cert_path.read_text()
+          cert_file = Path("docs/architecture/decision-engine-v1/certification-v1.0.0.json")
+          if not cert_file.exists():
+              print(f"  ✗  Certification file not found: {cert_file}", file=sys.stderr)
+              sys.exit(1)
+
+          try:
+              cert_data = json.loads(cert_file.read_text())
+          except json.JSONDecodeError as e:
+              print(f"  ✗  Invalid JSON in {cert_file}: {e}", file=sys.stderr)
+              sys.exit(1)
 
           failures = []
 
-          if "Status: Certified" not in cert:
-              failures.append("CERTIFICATION.md does not contain 'Status: Certified'")
+          # Check status is "Certified"
+          status = cert_data.get("status", "").lower()
+          if status != "certified":
+              failures.append(f"Status is '{status}', expected 'Certified'")
 
-          unchecked = cert.count("- [ ]")
-          if unchecked > 0:
+          # Check all criteria are met (no unchecked items)
+          criteria = cert_data.get("criteria", {})
+          unchecked_count = 0
+          total_count = 0
+
+          for category, items in criteria.items():
+              if isinstance(items, list):
+                  for item in items:
+                      total_count += 1
+                      if not item.get("met", False):
+                          unchecked_count += 1
+
+          if unchecked_count > 0:
               failures.append(
-                  f"{unchecked} unchecked certification criteria found — "
+                  f"{unchecked_count}/{total_count} certification criteria unchecked — "
                   f"complete or explicitly defer before merging"
               )
 
@@ -156,8 +182,13 @@ jobs:
               print("\nCertification gate FAILED.", file=sys.stderr)
               sys.exit(1)
 
-          checked = cert.count("- [x]")
+          checked = sum(
+              1 for category in criteria.values()
+              if isinstance(category, list)
+              for item in category
+              if item.get("met", False)
+          )
           print(f"  ✓  Status: Certified")
-          print(f"  ✓  {checked} criteria met, 0 unchecked")
-          print(f"\nCertification gate passed.")
+          print(f"  ✓  {checked}/{total_count} criteria met")
+          print(f"\nCertification gate passed — source of truth: {cert_file.name}")
           PYEOF

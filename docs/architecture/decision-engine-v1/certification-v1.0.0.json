@@ -1,0 +1,45 @@
+{
+  "status": "Certified",
+  "version": "1.0.0",
+  "criteria": {
+    "architecture": [
+      {"name": "Canonical schemas defined", "met": true},
+      {"name": "ADRs accepted", "met": true},
+      {"name": "Domain model documented", "met": true},
+      {"name": "Evolution policy documented", "met": true}
+    ],
+    "determinism": [
+      {"name": "Identical input replay produces identical output", "met": true},
+      {"name": "Observation ordering does not affect output", "met": true},
+      {"name": "Repeated execution is idempotent", "met": true}
+    ],
+    "explainability": [
+      {"name": "Every recommendation references a decision", "met": true},
+      {"name": "Every decision references claims", "met": true},
+      {"name": "Every claim references evidence", "met": true},
+      {"name": "Every evidence item references observations", "met": true}
+    ],
+    "reproducibility": [
+      {"name": "Model version recorded", "met": true},
+      {"name": "Input hash recorded", "met": true},
+      {"name": "Policy hash recorded", "met": true},
+      {"name": "Engine hash recorded", "met": true},
+      {"name": "Fixture hash recorded", "met": true}
+    ],
+    "testing": [
+      {"name": "Golden fixture exists", "met": true},
+      {"name": "Snapshot regression tests pass", "met": true},
+      {"name": "Trace artifact generated", "met": true}
+    ]
+  },
+  "governance": {
+    "semantic_change_requires": [
+      "New ADR",
+      "Decision model version increment",
+      "New fixture version"
+    ],
+    "frozen_artifacts": [
+      "tests/fixtures/v1"
+    ]
+  }
+}

@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ecostratus/StrataOS/schemas/certification.schema.json",
+  "title": "Decision Model Certification",
+  "description": "Machine-readable source of truth for Decision Model v1 certification status and criteria",
+  "type": "object",
+  "required": ["status", "version", "criteria"],
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": ["Certified", "Pending", "Revoked"],
+      "description": "Current certification status"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "description": "Semantic version of the certified model"
+    },
+    "criteria": {
+      "type": "object",
+      "description": "Certification criteria by category",
+      "properties": {
+        "architecture": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "met"],
+            "properties": {
+              "name": {"type": "string"},
+              "met": {"type": "boolean"}
+            }
+          }
+        },
+        "determinism": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "met"],
+            "properties": {
+              "name": {"type": "string"},
+              "met": {"type": "boolean"}
+            }
+          }
+        },
+        "explainability": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "met"],
+            "properties": {
+              "name": {"type": "string"},
+              "met": {"type": "boolean"}
+            }
+          }
+        },
+        "reproducibility": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "met"],
+            "properties": {
+              "name": {"type": "string"},
+              "met": {"type": "boolean"}
+            }
+          }
+        },
+        "testing": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "met"],
+            "properties": {
+              "name": {"type": "string"},
+              "met": {"type": "boolean"}
+            }
+          }
+        }
+      }
+    },
+    "governance": {
+      "type": "object",
+      "description": "Governance rules that govern changes to certified model",
+      "properties": {
+        "semantic_change_requires": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Any of these must accompany semantic behavior changes"
+        },
+        "frozen_artifacts": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Artifacts treated as immutable baseline behavior"
+        }
+      }
+    }
+  },
+  "example": {
+    "status": "Certified",
+    "version": "1.0.0",
+    "criteria": {
+      "architecture": [
+        {"name": "Canonical schemas defined", "met": true},
+        {"name": "ADRs accepted", "met": true}
+      ]
+    }
+  }
+}
