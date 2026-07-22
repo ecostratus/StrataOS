@@ -28,16 +28,16 @@ This documentation supports the 60-day operating system by providing clear, acce
 - Archived Artifacts: [archived_artifacts.md](archived_artifacts.md) (Archived)
 
 ## Releases
-Current: [v0.3.0-Phase3C-Normalization](https://github.com/ecostratus/personal-operating-system-60d/releases/tag/v0.3.0-Phase3C-Normalization)
+Current: [v0.3.0-Phase3C-Normalization](https://github.com/ecostratus/StrataOS/releases/tag/v0.3.0-Phase3C-Normalization)
 
 Historical releases:
-- [v0.1.0 (Phase 1)](https://github.com/ecostratus/personal-operating-system-60d/releases/tag/v0.1.0)
-- [v0.1.1 (Phase 2A)](https://github.com/ecostratus/personal-operating-system-60d/releases/tag/v0.1.1)
-- [v0.2.0 (Phase 2C)](https://github.com/ecostratus/personal-operating-system-60d/releases/tag/v0.2.0)
-- [v0.3.2 (Phase 3D  Lever)](https://github.com/ecostratus/personal-operating-system-60d/releases/tag/v0.3.2-Phase3D-Lever)
-- [v0.3.3 (Phase 3D  Extended Sources)](https://github.com/ecostratus/personal-operating-system-60d/releases/tag/v0.3.3-Phase3D-ExtendedSources)
-- [v0.3.4 (Phase 3E  Enrichment)](https://github.com/ecostratus/personal-operating-system-60d/releases/tag/v0.3.4-Phase3E-Enrichment)
-- [v0.3.5 (Phase 3E  CLI/Prompt Rendering)](https://github.com/ecostratus/personal-operating-system-60d/releases/tag/v0.3.5-Phase3E-CLI-PromptRendering)
+- [v0.1.0 (Phase 1)](https://github.com/ecostratus/StrataOS/releases/tag/v0.1.0)
+- [v0.1.1 (Phase 2A)](https://github.com/ecostratus/StrataOS/releases/tag/v0.1.1)
+- [v0.2.0 (Phase 2C)](https://github.com/ecostratus/StrataOS/releases/tag/v0.2.0)
+- [v0.3.2 (Phase 3D  Lever)](https://github.com/ecostratus/StrataOS/releases/tag/v0.3.2-Phase3D-Lever)
+- [v0.3.3 (Phase 3D  Extended Sources)](https://github.com/ecostratus/StrataOS/releases/tag/v0.3.3-Phase3D-ExtendedSources)
+- [v0.3.4 (Phase 3E  Enrichment)](https://github.com/ecostratus/StrataOS/releases/tag/v0.3.4-Phase3E-Enrichment)
+- [v0.3.5 (Phase 3E  CLI/Prompt Rendering)](https://github.com/ecostratus/StrataOS/releases/tag/v0.3.5-Phase3E-CLI-PromptRendering)
 
 See the top-level [changelog.md](../changelog.md) for detailed history.
 

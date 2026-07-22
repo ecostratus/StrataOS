@@ -57,4 +57,4 @@ Minimal example (see full sample in [config/env.sample.json](env.sample.json)):
 See detailed guidance in [docs/phase3A_enrichment_scoring.md](../docs/phase3A_enrichment_scoring.md).
 
 ## Normalization Milestone (Phase 3C)
-Phase 3C consolidates the normalization boundary and introduces shared typed helpers to ensure clean, deterministic inputs across enrichment and scoring. Enrichment config lists (seniority patterns, stack patterns, keyword lists, rolefit heuristics) are normalized once at load time, with defensive normalization at function entry. Release details: [v0.3.0-Phase3C-Normalization](https://github.com/ecostratus/personal-operating-system-60d/releases/tag/v0.3.0-Phase3C-Normalization).
+Phase 3C consolidates the normalization boundary and introduces shared typed helpers to ensure clean, deterministic inputs across enrichment and scoring. Enrichment config lists (seniority patterns, stack patterns, keyword lists, rolefit heuristics) are normalized once at load time, with defensive normalization at function entry. Release details: [v0.3.0-Phase3C-Normalization](https://github.com/ecostratus/StrataOS/releases/tag/v0.3.0-Phase3C-Normalization).

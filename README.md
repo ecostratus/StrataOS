@@ -1,7 +1,7 @@
 # StrataOS - Personal Operating System - 60 Day Execution Plan
 
-[![GitHub Release](https://img.shields.io/github/v/release/ecostratus/personal-operating-system-60d)](https://github.com/ecostratus/personal-operating-system-60d/releases)
-[![Current](https://img.shields.io/badge/release-v0.3.0--Phase3C--Normalization-blue)](https://github.com/ecostratus/personal-operating-system-60d/releases/tag/v0.3.0-Phase3C-Normalization)
+[![GitHub Release](https://img.shields.io/github/v/release/ecostratus/StrataOS)](https://github.com/ecostratus/StrataOS/releases)
+[![Current](https://img.shields.io/badge/release-v0.3.0--Phase3C--Normalization-blue)](https://github.com/ecostratus/StrataOS/releases/tag/v0.3.0-Phase3C-Normalization)
 
 A comprehensive, auditable system for executing a 60-day career development plan integrating job search, networking, and consulting opportunities through Microsoft 365, Copilot Studio, and Python automation.
 
@@ -334,7 +334,7 @@ This is a personal operating system, but the structure can be adapted for your u
 
 ## Changelog
 
-See [changelog.md](changelog.md) for version history and updates. Current release: [v0.3.0-Phase3C-Normalization](https://github.com/ecostratus/personal-operating-system-60d/releases/tag/v0.3.0-Phase3C-Normalization).
+See [changelog.md](changelog.md) for version history and updates. Current release: [v0.3.0-Phase3C-Normalization](https://github.com/ecostratus/StrataOS/releases/tag/v0.3.0-Phase3C-Normalization).
 <!-- TODO: External link validation required for GitHub release tag URL; validate in CI with network access. -->
 
 ## License

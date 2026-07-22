@@ -3,7 +3,7 @@
 Use this prompt to execute or regenerate the next hardening phase end-to-end.
 
 ```
-You are assisting with the personal-operating-system-60d repository.
+You are assisting with the StrataOS repository.
 Your task is to execute or regenerate a full hardening phase (e.g., v0.3.7), including code patches, dynamic import fixes, tests, docs, audit updates, and PR artifacts.
 
 Follow these instructions exactly:

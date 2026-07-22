@@ -54,10 +54,10 @@ This project follows Semantic Versioning.
 ### Fixed
 - `normalize_terms()` in `automation/job-discovery/scripts/filters.py` to skip `None`/empty values.
 
-[Unreleased]: https://github.com/ecostratus/personal-operating-system-60d/compare/v0.3.6-Phase3F-ImportHardening...HEAD
-[v0.3.0-Phase3C-Normalization]: https://github.com/ecostratus/personal-operating-system-60d/releases/tag/v0.3.0-Phase3C-Normalization
-[v0.3.2-Phase3D-Lever]: https://github.com/ecostratus/personal-operating-system-60d/releases/tag/v0.3.2-Phase3D-Lever
-[v0.1.0]: https://github.com/ecostratus/personal-operating-system-60d/releases/tag/v0.1.0
+[Unreleased]: https://github.com/ecostratus/StrataOS/compare/v0.3.6-Phase3F-ImportHardening...HEAD
+[v0.3.0-Phase3C-Normalization]: https://github.com/ecostratus/StrataOS/releases/tag/v0.3.0-Phase3C-Normalization
+[v0.3.2-Phase3D-Lever]: https://github.com/ecostratus/StrataOS/releases/tag/v0.3.2-Phase3D-Lever
+[v0.1.0]: https://github.com/ecostratus/StrataOS/releases/tag/v0.1.0
 
 ## [v0.3.2-Phase3D-Lever] - 2026-01-10
 
@@ -106,7 +106,7 @@ This project follows Semantic Versioning.
 ### Testing
 - Added unit tests for enrichment transforms; full suite passing.
 
-[v0.3.4-Phase3E-Enrichment]: https://github.com/ecostratus/personal-operating-system-60d/releases/tag/v0.3.4-Phase3E-Enrichment
+[v0.3.4-Phase3E-Enrichment]: https://github.com/ecostratus/StrataOS/releases/tag/v0.3.4-Phase3E-Enrichment
 
 ## [v0.3.6-Phase3F-ImportHardening] - 2026-01-12
 
@@ -124,4 +124,4 @@ This project follows Semantic Versioning.
 ### Fixed
 - Docs CI failure due to missing canonical reference from `docs/master_roadmap.md` to `docs/progress_to_launch_checklist_timeline.md`.
 
-[v0.3.6-Phase3F-ImportHardening]: https://github.com/ecostratus/personal-operating-system-60d/releases/tag/v0.3.6-Phase3F-ImportHardening
+[v0.3.6-Phase3F-ImportHardening]: https://github.com/ecostratus/StrataOS/releases/tag/v0.3.6-Phase3F-ImportHardening

@@ -7,6 +7,9 @@ config/env.json
 # GitHub CLI tokens
 .config/gh/
 
+# Python virtual environment
+.venv/
+
 # Python caches
 __pycache__/
 *.pyc

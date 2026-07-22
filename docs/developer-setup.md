@@ -14,8 +14,8 @@ This guide helps you set up your development environment for the Personal Operat
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/ecostratus/personal-operating-system-60d.git
-cd personal-operating-system-60d
+git clone https://github.com/ecostratus/StrataOS.git
+cd StrataOS
 ```
 
 ### 2. GitHub CLI Authentication

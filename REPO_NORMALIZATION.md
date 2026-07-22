@@ -1,14 +1,14 @@
 # Repository Normalization Audit
 
 **Audit Date:** 2026-01-07  
-**Repository:** ecostratus/personal-operating-system-60d  
+**Repository:** ecostratus/StrataOS  
 **Auditor:** System Architecture Validator
 
 ---
 
 ## Executive Summary
 
-This document records the normalization of the personal-operating-system-60d repository to align with the **canonical 60-day operating system architecture**. The repository has been audited against the authoritative System of Record (SoR) and folder structure to ensure consistency, eliminate deprecated schemas, and establish a single source of truth.
+This document records the normalization of the StrataOS repository to align with the **canonical 60-day operating system architecture**. The repository has been audited against the authoritative System of Record (SoR) and folder structure to ensure consistency, eliminate deprecated schemas, and establish a single source of truth.
 
 ---
 
@@ -44,7 +44,7 @@ The following legacy sheet names are **NOT** part of the canonical SoR and must 
 The repository must maintain the following top-level structure:
 
 ```
-personal-operating-system-60d/
+StrataOS/
  docs/                    # Documentation and architecture guides
  automation/              # Python/Node automation modules
  copilot-flows/           # GitHub Copilot workflow definitions
