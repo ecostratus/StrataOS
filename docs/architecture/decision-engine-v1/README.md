@@ -25,3 +25,4 @@ The core product asset is the **Decision Model**. The engine executes the model.
 - `GLOSSARY.md`
 - `NON_FUNCTIONAL_REQUIREMENTS.md`
 - `ARCHITECTURE_REVIEW_CHECKLIST.md`
+- `CERTIFICATION.md`
