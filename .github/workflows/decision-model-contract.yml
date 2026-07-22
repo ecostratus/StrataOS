@@ -1,0 +1,163 @@
+name: Decision Model Contract Gate
+
+# Philosophy: CI should prove the Decision Model remains deterministic and
+# explainable — not just that code compiles. Every check below maps to a
+# specific certification criterion in docs/architecture/decision-engine-v1/CERTIFICATION.md.
+#
+# Required checks:
+#   1. Schema validation       — canonical schemas still describe actual data shapes
+#   2. Contract tests          — determinism, order-independence, idempotence, traceability
+#   3. Certification gate      — CERTIFICATION.md remains Status: Certified, 0 unchecked criteria
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "automation/common/decision_model_v1.py"
+      - "tests/decision_model_contract_tests.py"
+      - "tests/fixtures/v1/**"
+      - "docs/architecture/decision-engine-v1/schemas/**"
+      - "docs/architecture/decision-engine-v1/CERTIFICATION.md"
+  pull_request:
+    branches: [main]
+    paths:
+      - "automation/common/decision_model_v1.py"
+      - "tests/decision_model_contract_tests.py"
+      - "tests/fixtures/v1/**"
+      - "docs/architecture/decision-engine-v1/schemas/**"
+      - "docs/architecture/decision-engine-v1/CERTIFICATION.md"
+
+jobs:
+  contract-gate:
+    name: Decision Model Contract Gate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: |
+            dev-requirements.txt
+            webapp/backend/requirements.txt
+
+      - name: Install dependencies
+        run: |
+          pip install -r dev-requirements.txt
+          pip install jsonschema
+
+      # ── Check 1: Schema Validation ────────────────────────────────────────
+      # Proves the canonical schemas in docs/architecture/decision-engine-v1/schemas/
+      # still describe the actual data shapes used by the model.
+      - name: Validate fixture schemas
+        run: |
+          python - <<'PYEOF'
+          import json, sys
+          from pathlib import Path
+          try:
+              import jsonschema
+          except ImportError:
+              print("FAIL: jsonschema not installed", file=sys.stderr)
+              sys.exit(1)
+
+          SCHEMA_DIR = Path("docs/architecture/decision-engine-v1/schemas")
+          FIXTURE_DIR = Path("tests/fixtures/v1/principal-servicenow-role")
+
+          # Objects validated directly against their schema.
+          OBJECT_PAIRS = [
+              ("person.schema.json",           "person.json"),
+              ("opportunity.schema.json",       "opportunity.json"),
+              ("policy.schema.json",            "policy.json"),
+              ("decision.schema.json",          "expected_decision.json"),
+              ("recommendation.schema.json",    "expected_recommendation.json"),
+              ("trace_artifact.schema.json",    "expected_trace_artifact.json"),
+          ]
+
+          # Arrays where each element must satisfy the item schema.
+          ARRAY_PAIRS = [
+              ("observation.schema.json",  "observations.json"),
+              ("evidence.schema.json",     "expected_evidence.json"),
+              ("claim.schema.json",        "expected_claims.json"),
+          ]
+
+          errors = []
+
+          for schema_file, fixture_file in OBJECT_PAIRS:
+              schema   = json.loads((SCHEMA_DIR / schema_file).read_text())
+              instance = json.loads((FIXTURE_DIR / fixture_file).read_text())
+              try:
+                  jsonschema.validate(instance, schema)
+                  print(f"  ✓  {fixture_file}")
+              except jsonschema.ValidationError as e:
+                  msg = f"  ✗  {fixture_file} vs {schema_file}: {e.message}"
+                  errors.append(msg)
+                  print(msg, file=sys.stderr)
+
+          for schema_file, fixture_file in ARRAY_PAIRS:
+              schema  = json.loads((SCHEMA_DIR / schema_file).read_text())
+              items   = json.loads((FIXTURE_DIR / fixture_file).read_text())
+              for i, item in enumerate(items):
+                  try:
+                      jsonschema.validate(item, schema)
+                  except jsonschema.ValidationError as e:
+                      msg = f"  ✗  {fixture_file}[{i}] vs {schema_file}: {e.message}"
+                      errors.append(msg)
+                      print(msg, file=sys.stderr)
+              if not any(e.startswith(f"  ✗  {fixture_file}") for e in errors):
+                  print(f"  ✓  {fixture_file} ({len(items)} items)")
+
+          if errors:
+              print(f"\nSchema validation FAILED — {len(errors)} error(s)", file=sys.stderr)
+              sys.exit(1)
+
+          print(f"\nSchema validation passed — all fixture files conform to canonical schemas.")
+          PYEOF
+
+      # ── Check 2: Contract Tests ───────────────────────────────────────────
+      # Proves determinism, order-independence, idempotence, and end-to-end
+      # traceability (Observation → Evidence → Claim → Decision → Recommendation).
+      - name: Run decision model contract tests
+        run: |
+          python -m pytest tests/decision_model_contract_tests.py -v --tb=short
+          echo ""
+          echo "Contract tests passed — Decision Model is deterministic and fully traceable."
+
+      # ── Check 3: Certification Gate ───────────────────────────────────────
+      # Proves CERTIFICATION.md still declares Status: Certified and has no
+      # unchecked criteria. Any drift here signals a governance obligation.
+      - name: Verify certification status
+        run: |
+          python - <<'PYEOF'
+          import sys
+          from pathlib import Path
+
+          cert_path = Path("docs/architecture/decision-engine-v1/CERTIFICATION.md")
+          cert = cert_path.read_text()
+
+          failures = []
+
+          if "Status: Certified" not in cert:
+              failures.append("CERTIFICATION.md does not contain 'Status: Certified'")
+
+          unchecked = cert.count("- [ ]")
+          if unchecked > 0:
+              failures.append(
+                  f"{unchecked} unchecked certification criteria found — "
+                  f"complete or explicitly defer before merging"
+              )
+
+          if failures:
+              for f in failures:
+                  print(f"  ✗  {f}", file=sys.stderr)
+              print("\nCertification gate FAILED.", file=sys.stderr)
+              sys.exit(1)
+
+          checked = cert.count("- [x]")
+          print(f"  ✓  Status: Certified")
+          print(f"  ✓  {checked} criteria met, 0 unchecked")
+          print(f"\nCertification gate passed.")
+          PYEOF
