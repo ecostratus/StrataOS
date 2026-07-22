@@ -84,7 +84,7 @@ def test_structured_logs_and_metrics(monkeypatch, caplog):
 def test_summary_artifact_created(monkeypatch, tmp_path):
     # Configure orchestrator with minimal filters and paths
     class DummyConfig:
-        def initialize(self):
+        def initialize(self, **kwargs):
             return None
 
         def get(self, key, default=None):

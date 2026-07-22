@@ -22,7 +22,7 @@ import sources  # type: ignore
 def test_logs_emitted_to_jsonl(monkeypatch, tmp_path):
     # Enable log-to-file and fixed timestamp
     class DummyConfig:
-        def initialize(self):
+        def initialize(self, **kwargs):
             return None
 
         def get(self, k, d=None):

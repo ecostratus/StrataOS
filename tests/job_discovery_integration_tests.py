@@ -116,7 +116,7 @@ def test_rate_limit_and_retry_in_scraper(monkeypatch):
 def test_main_filters_and_csv_export_deterministic(monkeypatch, tmp_path):
     # Provide deterministic filters via config and fixed timestamp
     class DummyConfig:
-        def initialize(self):
+        def initialize(self, **kwargs):
             return None
 
         def get(self, key, default=None):
