@@ -1,0 +1,19 @@
+{
+  "opportunity_id": "opp-servicenow-principal-declining",
+  "type": "FTE",
+  "organization": {
+    "name": "Horizon Tech Solutions"
+  },
+  "metadata": {
+    "title": "Principal ServiceNow Architect",
+    "location": "Remote",
+    "source": "linkedin",
+    "company_stage": "Declining",
+    "revenue_trend": "down 15% YoY"
+  },
+  "observations": [
+    "obs-1-hilo",
+    "obs-2-hilo",
+    "obs-3-hilo"
+  ]
+}

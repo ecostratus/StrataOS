@@ -1,6 +1,8 @@
 {
   "status": "Certified",
+  "certification_type": "Technical Baseline",
   "version": "1.0.0",
+  "description": "Decision Model v1 technical infrastructure and deterministic execution layer. Judgment calibration validation is pending.",
   "criteria": {
     "architecture": [
       {"name": "Canonical schemas defined", "met": true},
@@ -41,5 +43,28 @@
     "frozen_artifacts": [
       "tests/fixtures/v1"
     ]
+  },
+  "pending_gates": {
+    "judgment_calibration": {
+      "description": "Validate that engine recommendations align with human expert judgment",
+      "status": "Not started",
+      "required_evidence": [
+        "Human validation review for principal-servicenow-role",
+        "Human validation review for High Fit / Low Upside fixture",
+        "Human validation review for Medium Fit / High Trajectory fixture",
+        "Disagreement pattern analysis",
+        "False positive rate quantification",
+        "False negative rate quantification"
+      ]
+    },
+    "domain_validation": {
+      "description": "Validate that engine generalizes beyond golden fixture",
+      "status": "Not started",
+      "required_evidence": [
+        "10+ diverse scenarios tested",
+        "No critical logic errors found",
+        "Graceful degradation with missing data verified"
+      ]
+    }
   }
 }

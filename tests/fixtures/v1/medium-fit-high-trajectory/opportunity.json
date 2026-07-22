@@ -1,0 +1,20 @@
+{
+  "opportunity_id": "opp-servicenow-principal-growth",
+  "type": "FTE",
+  "organization": {
+    "name": "SyncFlow Systems"
+  },
+  "metadata": {
+    "title": "Principal ServiceNow Architect",
+    "location": "Hybrid (Austin, TX HQ)",
+    "source": "angel-list",
+    "company_stage": "Series B",
+    "revenue_trend": "high growth"
+  },
+  "observations": [
+    "obs-1-mhit",
+    "obs-2-mhit",
+    "obs-3-mhit",
+    "obs-4-mhit"
+  ]
+}

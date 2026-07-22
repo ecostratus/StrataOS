@@ -1,0 +1,56 @@
+[
+  {
+    "evidence_id": "ev-obs-1-hilo",
+    "person_id": "person-sarah",
+    "opportunity_id": "opp-servicenow-principal-declining",
+    "observation_ids": [
+      "obs-1-hilo"
+    ],
+    "kind": "required_skill",
+    "quality": 1.0,
+    "provenance": {
+      "source": "job-posting",
+      "captured_at": "2026-01-01T00:00:00Z",
+      "parser": "observation-parser-v1",
+      "normalizer": "observation-normalizer-v1",
+      "evidence_builder": "evidence-builder-v1",
+      "claim_generator": "claim-generator-v1"
+    }
+  },
+  {
+    "evidence_id": "ev-obs-2-hilo",
+    "person_id": "person-sarah",
+    "opportunity_id": "opp-servicenow-principal-declining",
+    "observation_ids": [
+      "obs-2-hilo"
+    ],
+    "kind": "role_level",
+    "quality": 1.0,
+    "provenance": {
+      "source": "job-posting",
+      "captured_at": "2026-01-01T00:00:00Z",
+      "parser": "observation-parser-v1",
+      "normalizer": "observation-normalizer-v1",
+      "evidence_builder": "evidence-builder-v1",
+      "claim_generator": "claim-generator-v1"
+    }
+  },
+  {
+    "evidence_id": "ev-obs-3-hilo",
+    "person_id": "person-sarah",
+    "opportunity_id": "opp-servicenow-principal-declining",
+    "observation_ids": [
+      "obs-3-hilo"
+    ],
+    "kind": "work_mode",
+    "quality": 1.0,
+    "provenance": {
+      "source": "job-posting",
+      "captured_at": "2026-01-01T00:00:00Z",
+      "parser": "observation-parser-v1",
+      "normalizer": "observation-normalizer-v1",
+      "evidence_builder": "evidence-builder-v1",
+      "claim_generator": "claim-generator-v1"
+    }
+  }
+]

@@ -1,0 +1,24 @@
+{
+  "person_id": "person-alex",
+  "profile": {
+    "name": "Alex Rodriguez",
+    "headline": "Senior Salesforce architect, platform experience",
+    "skills": [
+      "Salesforce",
+      "Enterprise Architecture",
+      "ServiceNow",
+      "Platform Design"
+    ]
+  },
+  "goals": {
+    "target_roles": [
+      "Principal Architect",
+      "VP Engineering"
+    ],
+    "career_stage": "Ready for Principal/VP"
+  },
+  "constraints": {
+    "remote_only": false,
+    "willing_to_relocate": true
+  }
+}

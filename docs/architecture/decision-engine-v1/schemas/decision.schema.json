@@ -40,6 +40,7 @@
         "RESEARCH_COMPANY"
       ]
     },
+
     "score": { "type": "number" },
     "evidence_confidence": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
     "prediction_confidence": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
@@ -60,6 +61,103 @@
         }
       }
     },
+
+    "alignment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["score"],
+      "properties": {
+        "score": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+        "interpretation": { "type": "string" },
+        "factors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["factor", "score"],
+            "properties": {
+              "factor": { "type": "string", "minLength": 1 },
+              "score": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+              "evidence_ids": {
+                "type": "array",
+                "items": { "type": "string", "minLength": 1 }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "completeness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["score"],
+      "properties": {
+        "score": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+        "known_factors": { "type": "integer", "minimum": 0 },
+        "required_factors": { "type": "integer", "minimum": 0 },
+        "gap_analysis": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        }
+      }
+    },
+
+    "evidence_quality": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["score"],
+      "properties": {
+        "score": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+        "source_quality": {
+          "type": "string",
+          "enum": ["LOW", "MEDIUM", "HIGH"]
+        }
+      }
+    },
+
+    "decision_confidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["score", "level"],
+      "properties": {
+        "score": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+        "level": {
+          "type": "string",
+          "enum": ["LOW", "MEDIUM", "HIGH"]
+        },
+        "rationale": { "type": "string" },
+        "components": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "alignment": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+            "completeness": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+            "evidence_quality": { "type": "number", "minimum": 0.0, "maximum": 1.0 }
+          }
+        },
+        "confidence_model": { "type": "string" }
+      }
+    },
+
+    "unknowns": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["factor", "impact"],
+        "properties": {
+          "factor": { "type": "string", "minLength": 1 },
+          "impact": {
+            "type": "string",
+            "enum": ["LOW", "MEDIUM", "HIGH"]
+          },
+          "decision_effect": { "type": "string" },
+          "resolution_strategy": { "type": "string" }
+        }
+      }
+    },
+
     "inputs_hash": { "type": "string", "minLength": 1 },
     "policy_hash": { "type": "string", "minLength": 1 },
     "engine_hash": { "type": "string", "minLength": 1 },

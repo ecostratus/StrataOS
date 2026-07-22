@@ -1,0 +1,22 @@
+{
+  "person_id": "person-sarah",
+  "profile": {
+    "name": "Sarah Chen",
+    "headline": "Principal ServiceNow architect",
+    "skills": [
+      "ServiceNow",
+      "Enterprise Architecture",
+      "Process Automation"
+    ]
+  },
+  "goals": {
+    "target_roles": [
+      "Principal Architect",
+      "Director, Platform Engineering"
+    ],
+    "career_stage": "Growth (want leadership/learning)"
+  },
+  "constraints": {
+    "remote_only": true
+  }
+}

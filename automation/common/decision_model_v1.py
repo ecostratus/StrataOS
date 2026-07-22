@@ -278,16 +278,258 @@ def _build_trace_artifact(
     return {"decision_model_version": DECISION_MODEL_VERSION, "trace": trace_rows}
 
 
+# ============================================================================
+# V1.1 Reasoning Layer (Additive — preserves v1 output untouched)
+# ============================================================================
+# This layer adds uncertainty-aware reasoning on top of the deterministic engine.
+# It does NOT modify existing outputs. New fields are added only.
+
+DECISION_CRITICAL_FACTORS = [
+    "required_skill",
+    "role_level",
+    "work_mode",
+    "compensation_level",
+    "company_trajectory",
+    "team_maturity",
+    "reporting_structure",
+]
+
+
+def _calculate_alignment(
+    claims: list[dict[str, Any]],
+    observations: list[dict[str, Any]],
+) -> dict[str, Any]:
+    """Calculate how well known facts match stated criteria.
+    
+    Returns alignment score (0-1) and factor breakdown.
+    This measures observational accuracy, not completeness.
+    """
+    # Extract alignment factors from claims
+    factors: list[dict[str, Any]] = []
+    for claim in claims:
+        predicate = str(claim["predicate"])
+        if predicate in ["skill_match", "seniority_alignment", "remote_alignment"]:
+            factors.append({
+                "factor": predicate.replace("_", " ").title(),
+                "score": float(claim["confidence"]),
+                "evidence_ids": claim.get("evidence_ids", []),
+            })
+    
+    # Overall alignment is the average of factor scores
+    overall = sum(f["score"] for f in factors) / max(len(factors), 1) if factors else 0.0
+    
+    return {
+        "score": round(overall, 4),
+        "interpretation": (
+            "High match with stated criteria" if overall >= 0.9
+            else "Moderate match with stated criteria" if overall >= 0.7
+            else "Weak match with stated criteria"
+        ),
+        "factors": factors,
+    }
+
+
+def _calculate_completeness(
+    observations: list[dict[str, Any]],
+) -> dict[str, Any]:
+    """Calculate what fraction of decision-critical information is available.
+    
+    Returns completeness score (0-1) and gap analysis.
+    """
+    observed_keys = set(str(obs.get("key", "")) for obs in observations)
+    required_keys = set(DECISION_CRITICAL_FACTORS)
+    
+    known_factors = list(observed_keys & required_keys)
+    missing_factors = list(required_keys - observed_keys)
+    
+    known_count = len(known_factors)
+    required_count = len(required_keys)
+    completeness_score = known_count / max(required_count, 1)
+    
+    gap_analysis = {factor: "unknown" for factor in sorted(missing_factors)}
+    
+    return {
+        "score": round(completeness_score, 4),
+        "known_factors": sorted(known_factors),
+        "required_factors": required_count,
+        "observed_factors": known_count,
+        "gap_analysis": gap_analysis,
+    }
+
+
+def _identify_unknowns(
+    observations: list[dict[str, Any]],
+    person: dict[str, Any],
+    opportunity: dict[str, Any],
+) -> list[dict[str, Any]]:
+    """Extract unknowns as first-class reasoning objects.
+    
+    Maps missing factors to their impact on the decision.
+    """
+    observed_keys = set(str(obs.get("key", "")) for obs in observations)
+    required_keys = set(DECISION_CRITICAL_FACTORS)
+    missing_factors = required_keys - observed_keys
+    
+    impact_map = {
+        "compensation_level": {"impact": "HIGH", "decision_effect": "may_affect_financial_viability"},
+        "company_trajectory": {"impact": "HIGH", "decision_effect": "may_affect_stability_and_growth"},
+        "team_maturity": {"impact": "MEDIUM", "decision_effect": "may_affect_execution_risk"},
+        "reporting_structure": {"impact": "MEDIUM", "decision_effect": "may_affect_scope_clarity"},
+    }
+    
+    unknowns: list[dict[str, Any]] = []
+    for factor in sorted(missing_factors):
+        info = impact_map.get(str(factor), {
+            "impact": "MEDIUM",
+            "decision_effect": "additional_context_needed"
+        })
+        unknowns.append({
+            "factor": str(factor),
+            "impact": info["impact"],
+            "decision_effect": info["decision_effect"],
+            "resolution_strategy": f"research_{factor.replace('_', '_')}",
+        })
+    
+    return unknowns
+
+
+def _calculate_evidence_quality(
+    observations: list[dict[str, Any]],
+) -> dict[str, Any]:
+    """Assess the reliability of extracted evidence.
+    
+    Higher quality sources increase evidence confidence.
+    """
+    if not observations:
+        return {"score": 0.0, "source_quality": "UNKNOWN"}
+    
+    qualities = [float(obs.get("quality", 0.5)) for obs in observations]
+    average_quality = sum(qualities) / len(qualities)
+    
+    quality_level = (
+        "HIGH" if average_quality >= 0.8
+        else "MEDIUM" if average_quality >= 0.5
+        else "LOW"
+    )
+    
+    return {
+        "score": round(average_quality, 4),
+        "source_quality": quality_level,
+    }
+
+
+def _calculate_decision_confidence(
+    alignment_score: float,
+    completeness_score: float,
+    evidence_quality_score: float,
+) -> dict[str, Any]:
+    """Calculate justified certainty in the recommendation.
+    
+    Uses conservative interpretation: does not premultiply.
+    Stores components separately for policy evolution.
+    """
+    # Conservative interpretation-based confidence
+    # (avoids false precision from multiplication)
+    
+    if alignment_score >= 0.9 and completeness_score >= 0.7:
+        confidence_level = "HIGH"
+        confidence_score = 0.85
+    elif alignment_score >= 0.8 and completeness_score >= 0.5:
+        confidence_level = "MEDIUM"
+        confidence_score = 0.55
+    elif alignment_score >= 0.6 or completeness_score >= 0.3:
+        confidence_level = "MEDIUM"
+        confidence_score = 0.45
+    else:
+        confidence_level = "LOW"
+        confidence_score = 0.25
+    
+    # Adjust if evidence quality is low
+    if evidence_quality_score < 0.7:
+        confidence_level = (
+            "MEDIUM" if confidence_level == "HIGH" else "LOW"
+        )
+        confidence_score *= 0.8
+    
+    rationale_parts = []
+    if alignment_score >= 0.9:
+        rationale_parts.append("strong alignment with stated criteria")
+    elif alignment_score >= 0.7:
+        rationale_parts.append("moderate alignment with stated criteria")
+    else:
+        rationale_parts.append("weak alignment with stated criteria")
+    
+    if completeness_score < 0.7:
+        rationale_parts.append(
+            f"incomplete information ({int(completeness_score * 100)}% of decision factors known)"
+        )
+    
+    rationale = ", but ".join(rationale_parts) if len(rationale_parts) > 1 else rationale_parts[0]
+    
+    return {
+        "score": round(confidence_score, 4),
+        "level": confidence_level,
+        "rationale": rationale,
+        "components": {
+            "alignment": round(alignment_score, 4),
+            "completeness": round(completeness_score, 4),
+            "evidence_quality": round(evidence_quality_score, 4),
+        },
+        "confidence_model": "v1_weighted_conservative",
+    }
+
+
+def _enrich_decision_output(
+    decision: dict[str, Any],
+    person: dict[str, Any],
+    opportunity: dict[str, Any],
+    observations: list[dict[str, Any]],
+    claims: list[dict[str, Any]],
+) -> dict[str, Any]:
+    """Add v1.1 reasoning fields to decision output.
+    
+    Preserves all v1.0 fields. New fields are purely additive.
+    This enables comparison between v1.0 and v1.1 outputs.
+    """
+    alignment = _calculate_alignment(claims, observations)
+    completeness = _calculate_completeness(observations)
+    evidence_quality = _calculate_evidence_quality(observations)
+    unknowns = _identify_unknowns(observations, person, opportunity)
+    decision_confidence = _calculate_decision_confidence(
+        alignment["score"],
+        completeness["score"],
+        evidence_quality["score"],
+    )
+    
+    # Add v1.1 fields (decision_model_version stays v1.0 for compatibility)
+    enriched = {**decision}
+    enriched["alignment"] = alignment
+    enriched["completeness"] = completeness
+    enriched["evidence_quality"] = evidence_quality
+    enriched["decision_confidence"] = decision_confidence
+    enriched["unknowns"] = unknowns
+    
+    return enriched
+
+
 def evaluate(
     person: dict[str, Any],
     opportunity: dict[str, Any],
     observations: list[dict[str, Any]],
     policy: dict[str, Any],
 ) -> EvaluationBundle:
-    """Run deterministic evaluation from observations to recommendation and trace."""
+    """Run deterministic evaluation from observations to recommendation and trace.
+    
+    v1.0: Builds evidence → claims → decision → recommendation
+    v1.1: Adds uncertainty-aware reasoning layer to decision (additive, preserves v1.0)
+    """
     evidence = _build_evidence(observations)
     claims = _build_claims(person, opportunity, observations, evidence)
     decision = _build_decision(person, opportunity, claims, observations, policy)
+    
+    # NEW: Enrich decision with v1.1 reasoning layer (additive, preserves v1.0 fields)
+    decision = _enrich_decision_output(decision, person, opportunity, observations, claims)
+    
     recommendation = _build_recommendation(decision)
     trace_artifact = _build_trace_artifact(observations, evidence, claims)
     return EvaluationBundle(

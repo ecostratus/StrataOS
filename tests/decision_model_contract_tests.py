@@ -128,3 +128,68 @@ def test_snapshot_artifacts_match_golden_files():
     assert run.decision == _load_json("expected_decision.json")
     assert run.recommendation == _load_json("expected_recommendation.json")
     assert run.trace_artifact == _load_json("expected_trace_artifact.json")
+
+
+def test_v1_v1_1_migration_recommendation_consistency():
+    """Verify v1.1 preserves v1 recommendations while adding uncertainty explanation.
+    
+    This test validates the key architectural transition:
+    - v1.0 output is preserved (backward compatible)
+    - v1.1 output is added (forward compatible)
+    - Recommendation stays the same (action not diluted)
+    - Confidence changes to reflect unknowns (honest reasoning)
+    """
+    person, opportunity, observations, policy = _load_fixture_inputs()
+    run = decision_model_v1.evaluate(person, opportunity, observations, policy)
+    decision = run.decision
+
+    # Verify v1.0 fields are preserved unchanged
+    assert "recommendation" in decision
+    assert "score" in decision
+    assert "evidence_confidence" in decision
+    assert "prediction_confidence" in decision
+    assert decision["recommendation"] == "APPLY_IMMEDIATELY"
+    
+    # Verify v1.1 fields are added
+    assert "alignment" in decision
+    assert "completeness" in decision
+    assert "evidence_quality" in decision
+    assert "decision_confidence" in decision
+    assert "unknowns" in decision
+
+    # Verify recommendation is NOT changed by v1.1 enrichment
+    # (same action, different confidence interpretation)
+    assert decision["recommendation"] == "APPLY_IMMEDIATELY"
+
+    # Verify alignment is high (all observed factors match)
+    assert decision["alignment"]["score"] >= 0.9
+    assert len(decision["alignment"]["factors"]) >= 3
+
+    # Verify completeness is moderate (only 3 of 7 decision factors known)
+    completeness = decision["completeness"]["score"]
+    assert 0.35 <= completeness <= 0.50, (
+        f"Expected completeness around 43% (3 of 7 factors), got {completeness:.1%}"
+    )
+
+    # Verify unknowns are identified
+    assert len(decision["unknowns"]) > 0
+    unknown_factors = {u["factor"] for u in decision["unknowns"]}
+    assert "compensation_level" in unknown_factors
+    assert "company_trajectory" in unknown_factors
+
+    # Verify decision_confidence is MEDIUM (not HIGH despite perfect alignment)
+    decision_conf = decision["decision_confidence"]
+    assert decision_conf["level"] in ["MEDIUM", "LOW"]
+    # Score should be lower than v1.0's prediction_confidence due to incompleteness
+    assert decision_conf["score"] < decision["prediction_confidence"]
+
+    # Verify confidence components are captured
+    assert "components" in decision_conf
+    assert "alignment" in decision_conf["components"]
+    assert "completeness" in decision_conf["components"]
+    assert "evidence_quality" in decision_conf["components"]
+    
+    # Verify rationale explains the gap
+    rationale = str(decision_conf.get("rationale", ""))
+    assert "strong alignment" in rationale.lower() or "high match" in rationale.lower()
+    assert "incomplete" in rationale.lower() or "unknown" in rationale.lower()

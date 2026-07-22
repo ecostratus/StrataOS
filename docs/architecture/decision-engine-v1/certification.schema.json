@@ -1,0 +1,157 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ecostratus/StrataOS/schemas/certification.schema.json",
+  "title": "StrataOS Certification Schema",
+  "description": "Formal governance for certification artifacts. Every certification JSON must validate against this schema.",
+  "type": "object",
+  "required": [
+    "status",
+    "version",
+    "criteria",
+    "governance"
+  ],
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": [
+        "Certified",
+        "Pending",
+        "Revoked"
+      ],
+      "description": "Certification status. Only 'Certified' unblocks governance gates."
+    },
+    "certification_type": {
+      "type": "string",
+      "description": "Type of certification (e.g., 'Technical Baseline', 'Judgment Calibration', 'Domain Validation')",
+      "examples": ["Technical Baseline", "Judgment Calibration", "Domain Validation"]
+    },
+    "description": {
+      "type": "string",
+      "description": "Human-readable description of what this certification covers and its scope"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Semantic version of the certified artifact (e.g., 1.0.0, 1.1.0, 2.0.0)"
+    },
+    "criteria": {
+      "type": "object",
+      "description": "Certification criteria grouped by category",
+      "properties": {
+        "architecture": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/criterion"
+          },
+          "description": "Architecture and design criteria"
+        },
+        "determinism": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/criterion"
+          },
+          "description": "Determinism and reproducibility criteria"
+        },
+        "explainability": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/criterion"
+          },
+          "description": "Explainability and traceability criteria"
+        },
+        "reproducibility": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/criterion"
+          },
+          "description": "Reproducibility and artifact recording criteria"
+        },
+        "testing": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/criterion"
+          },
+          "description": "Testing and validation criteria"
+        }
+      },
+      "additionalProperties": false
+    },
+    "governance": {
+      "type": "object",
+      "required": [
+        "semantic_change_requires",
+        "frozen_artifacts"
+      ],
+      "properties": {
+        "semantic_change_requires": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          },
+          "description": "List of required governance actions for semantic changes (e.g., 'New ADR', 'Version increment')"
+        },
+        "frozen_artifacts": {
+          "type": "array",
+          "minItems": 0,
+          "items": {
+            "type": "string"
+          },
+          "description": "Artifact paths treated as immutable baseline behavior"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "$defs": {
+    "criterion": {
+      "type": "object",
+      "required": [
+        "name",
+        "met"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Human-readable criterion name"
+        },
+        "met": {
+          "type": "boolean",
+          "description": "Whether this criterion is satisfied (true) or pending (false)"
+        }
+      },
+      "additionalProperties": false
+    },
+    "pending_gates": {
+      "type": "object",
+      "description": "Future certification gates and their status",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string",
+            "description": "What this gate validates"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["Not started", "In progress", "Completed"],
+            "description": "Current status of this gate"
+          },
+          "required_evidence": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of evidence or artifacts needed to complete this gate"
+          }
+        }
+      }
+    }
+  }
+}

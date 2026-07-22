@@ -1,0 +1,74 @@
+[
+  {
+    "evidence_id": "ev-obs-1-mhit",
+    "person_id": "person-alex",
+    "opportunity_id": "opp-servicenow-principal-growth",
+    "observation_ids": [
+      "obs-1-mhit"
+    ],
+    "kind": "required_skill",
+    "quality": 0.65,
+    "provenance": {
+      "source": "linkedin-phone-screen",
+      "captured_at": "2026-01-02T00:00:00Z",
+      "parser": "observation-parser-v1",
+      "normalizer": "observation-normalizer-v1",
+      "evidence_builder": "evidence-builder-v1",
+      "claim_generator": "claim-generator-v1"
+    }
+  },
+  {
+    "evidence_id": "ev-obs-2-mhit",
+    "person_id": "person-alex",
+    "opportunity_id": "opp-servicenow-principal-growth",
+    "observation_ids": [
+      "obs-2-mhit"
+    ],
+    "kind": "role_level",
+    "quality": 0.85,
+    "provenance": {
+      "source": "linkedin-verification",
+      "captured_at": "2026-01-02T00:00:00Z",
+      "parser": "observation-parser-v1",
+      "normalizer": "observation-normalizer-v1",
+      "evidence_builder": "evidence-builder-v1",
+      "claim_generator": "claim-generator-v1"
+    }
+  },
+  {
+    "evidence_id": "ev-obs-3-mhit",
+    "person_id": "person-alex",
+    "opportunity_id": "opp-servicenow-principal-growth",
+    "observation_ids": [
+      "obs-3-mhit"
+    ],
+    "kind": "work_mode",
+    "quality": 1.0,
+    "provenance": {
+      "source": "job-posting",
+      "captured_at": "2026-01-02T00:00:00Z",
+      "parser": "observation-parser-v1",
+      "normalizer": "observation-normalizer-v1",
+      "evidence_builder": "evidence-builder-v1",
+      "claim_generator": "claim-generator-v1"
+    }
+  },
+  {
+    "evidence_id": "ev-obs-4-mhit",
+    "person_id": "person-alex",
+    "opportunity_id": "opp-servicenow-principal-growth",
+    "observation_ids": [
+      "obs-4-mhit"
+    ],
+    "kind": "company_trajectory",
+    "quality": 0.9,
+    "provenance": {
+      "source": "crunchbase-financials",
+      "captured_at": "2026-01-02T00:00:00Z",
+      "parser": "observation-parser-v1",
+      "normalizer": "observation-normalizer-v1",
+      "evidence_builder": "evidence-builder-v1",
+      "claim_generator": "claim-generator-v1"
+    }
+  }
+]

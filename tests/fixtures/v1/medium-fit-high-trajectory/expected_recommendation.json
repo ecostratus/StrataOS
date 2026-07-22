@@ -1,0 +1,18 @@
+{
+  "decision_id": "dec-person-alex-opp-servicenow-principal-growth-policy-default",
+  "decision_model_version": "1.0.0",
+  "action": "IGNORE",
+  "summary": "Action IGNORE based on weighted claim evidence",
+  "drivers": [
+    {
+      "direction": "positive",
+      "message": "remote_alignment -> +0.30",
+      "claim_ref": "cl-remote-positive"
+    },
+    {
+      "direction": "negative",
+      "message": "seniority_alignment -> -0.30",
+      "claim_ref": "cl-seniority-negative"
+    }
+  ]
+}

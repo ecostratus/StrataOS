@@ -1,0 +1,32 @@
+[
+  {
+    "observation_id": "obs-1-hilo",
+    "person_id": "person-sarah",
+    "opportunity_id": "opp-servicenow-principal-declining",
+    "key": "required_skill",
+    "value": "ServiceNow",
+    "source": "job-posting",
+    "quality": 1.0,
+    "captured_at": "2026-01-01T00:00:00Z"
+  },
+  {
+    "observation_id": "obs-2-hilo",
+    "person_id": "person-sarah",
+    "opportunity_id": "opp-servicenow-principal-declining",
+    "key": "role_level",
+    "value": "principal",
+    "source": "job-posting",
+    "quality": 1.0,
+    "captured_at": "2026-01-01T00:00:00Z"
+  },
+  {
+    "observation_id": "obs-3-hilo",
+    "person_id": "person-sarah",
+    "opportunity_id": "opp-servicenow-principal-declining",
+    "key": "work_mode",
+    "value": "remote",
+    "source": "job-posting",
+    "quality": 1.0,
+    "captured_at": "2026-01-01T00:00:00Z"
+  }
+]

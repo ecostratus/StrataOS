@@ -1,17 +1,16 @@
 {
-  "id": "dec-person-james-opp-servicenow-principal-policy-default",
+  "id": "dec-person-alex-opp-servicenow-principal-growth-policy-default",
   "decision_model_version": "1.0.0",
-  "person_id": "person-james",
-  "opportunity_id": "opp-servicenow-principal",
+  "person_id": "person-alex",
+  "opportunity_id": "opp-servicenow-principal-growth",
   "policy_id": "policy-default",
-  "recommendation": "APPLY_IMMEDIATELY",
-  "score": 1.0,
+  "recommendation": "IGNORE",
+  "score": 0.0,
   "evidence_confidence": 1.0,
   "prediction_confidence": 1.0,
   "claim_ids": [
     "cl-remote-positive",
-    "cl-seniority-positive",
-    "cl-skill-servicenow-match"
+    "cl-seniority-negative"
   ],
   "explanations": [
     {
@@ -20,20 +19,15 @@
       "message": "remote_alignment -> +0.30"
     },
     {
-      "direction": "positive",
-      "claim_ref": "cl-seniority-positive",
-      "message": "seniority_alignment -> +0.30"
-    },
-    {
-      "direction": "positive",
-      "claim_ref": "cl-skill-servicenow-match",
-      "message": "skill_match -> +0.40"
+      "direction": "negative",
+      "claim_ref": "cl-seniority-negative",
+      "message": "seniority_alignment -> -0.30"
     }
   ],
-  "inputs_hash": "person-james|opp-servicenow-principal|policy-default|obs-1,obs-2,obs-3",
-  "policy_hash": "88106bdd7d66cf47c882ef05f04ef040be333a44efcd7ce5d40ada8722bdf0c9",
+  "inputs_hash": "person-alex|opp-servicenow-principal-growth|policy-default|obs-1-mhit,obs-2-mhit,obs-3-mhit,obs-4-mhit",
+  "policy_hash": "2fb270c0d65fe225676086efe09c961466258507fd2bfd94652e69f96a0718e0",
   "engine_hash": "ae36391d1146c581d3597f107cb4e5b9471f88be5b50f527cbda6d3a1b63cb16",
-  "fixture_hash": "18d3053a929dd3977bc161109ffce6ec7fdef869bff3fe567b4c2fc56be7b4aa",
+  "fixture_hash": "3d74c901ade7a44d970754013af72f1f6b2c69517b0bcf4eb886f5d848934b35",
   "engine_version": "decision-model-v1-reference",
   "created_at": "2026-01-01T00:00:00Z",
   "alignment": {
@@ -44,63 +38,50 @@
         "factor": "Remote Alignment",
         "score": 1.0,
         "evidence_ids": [
-          "ev-obs-3"
+          "ev-obs-3-mhit"
         ]
       },
       {
         "factor": "Seniority Alignment",
         "score": 1.0,
         "evidence_ids": [
-          "ev-obs-2"
-        ]
-      },
-      {
-        "factor": "Skill Match",
-        "score": 1.0,
-        "evidence_ids": [
-          "ev-obs-1"
+          "ev-obs-2-mhit"
         ]
       }
     ]
   },
   "completeness": {
-    "score": 0.4286,
+    "score": 0.5714,
     "known_factors": [
+      "company_trajectory",
       "required_skill",
       "role_level",
       "work_mode"
     ],
     "required_factors": 7,
-    "observed_factors": 3,
+    "observed_factors": 4,
     "gap_analysis": {
-      "company_trajectory": "unknown",
       "compensation_level": "unknown",
       "reporting_structure": "unknown",
       "team_maturity": "unknown"
     }
   },
   "evidence_quality": {
-    "score": 1.0,
+    "score": 0.85,
     "source_quality": "HIGH"
   },
   "decision_confidence": {
-    "score": 0.45,
+    "score": 0.55,
     "level": "MEDIUM",
-    "rationale": "strong alignment with stated criteria, but incomplete information (42% of decision factors known)",
+    "rationale": "strong alignment with stated criteria, but incomplete information (57% of decision factors known)",
     "components": {
       "alignment": 1.0,
-      "completeness": 0.4286,
-      "evidence_quality": 1.0
+      "completeness": 0.5714,
+      "evidence_quality": 0.85
     },
     "confidence_model": "v1_weighted_conservative"
   },
   "unknowns": [
-    {
-      "factor": "company_trajectory",
-      "impact": "HIGH",
-      "decision_effect": "may_affect_stability_and_growth",
-      "resolution_strategy": "research_company_trajectory"
-    },
     {
       "factor": "compensation_level",
       "impact": "HIGH",

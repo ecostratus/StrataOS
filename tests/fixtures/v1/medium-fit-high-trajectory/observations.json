@@ -1,0 +1,42 @@
+[
+  {
+    "observation_id": "obs-1-mhit",
+    "person_id": "person-alex",
+    "opportunity_id": "opp-servicenow-principal-growth",
+    "key": "required_skill",
+    "value": "Salesforce (primary), ServiceNow (secondary, 2 years)",
+    "source": "linkedin-phone-screen",
+    "quality": 0.65,
+    "captured_at": "2026-01-02T00:00:00Z"
+  },
+  {
+    "observation_id": "obs-2-mhit",
+    "person_id": "person-alex",
+    "opportunity_id": "opp-servicenow-principal-growth",
+    "key": "role_level",
+    "value": "senior",
+    "source": "linkedin-verification",
+    "quality": 0.85,
+    "captured_at": "2026-01-02T00:00:00Z"
+  },
+  {
+    "observation_id": "obs-3-mhit",
+    "person_id": "person-alex",
+    "opportunity_id": "opp-servicenow-principal-growth",
+    "key": "work_mode",
+    "value": "hybrid",
+    "source": "job-posting",
+    "quality": 1.0,
+    "captured_at": "2026-01-02T00:00:00Z"
+  },
+  {
+    "observation_id": "obs-4-mhit",
+    "person_id": "person-alex",
+    "opportunity_id": "opp-servicenow-principal-growth",
+    "key": "company_trajectory",
+    "value": "high-growth",
+    "source": "crunchbase-financials",
+    "quality": 0.9,
+    "captured_at": "2026-01-02T00:00:00Z"
+  }
+]

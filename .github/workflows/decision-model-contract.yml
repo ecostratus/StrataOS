@@ -7,10 +7,11 @@ name: Decision Model Contract Gate
 # Required checks:
 #   1. Schema validation       — canonical schemas still describe actual data shapes
 #   2. Contract tests          — determinism, order-independence, idempotence, traceability
+#   2.5. Certification schema  — governance artifact conforms to certification.schema.json
 #   3. Certification gate      — certification-v*.json declares Status: Certified, all criteria met
 #
 # Note: CERTIFICATION.md remains human-readable; certification-v*.json is the enforcement source.
-# This separation prevents CI breakage from documentation formatting changes.
+# certification.schema.json governs the governance artifact itself (meta-governance).
 
 on:
   push:
@@ -20,6 +21,7 @@ on:
       - "tests/decision_model_contract_tests.py"
       - "tests/fixtures/v1/**"
       - "docs/architecture/decision-engine-v1/schemas/**"
+      - "docs/architecture/decision-engine-v1/certification.schema.json"
       - "docs/architecture/decision-engine-v1/certification-v*.json"
       - "docs/architecture/decision-engine-v1/CERTIFICATION.md"
   pull_request:
@@ -29,6 +31,7 @@ on:
       - "tests/decision_model_contract_tests.py"
       - "tests/fixtures/v1/**"
       - "docs/architecture/decision-engine-v1/schemas/**"
+      - "docs/architecture/decision-engine-v1/certification.schema.json"
       - "docs/architecture/decision-engine-v1/certification-v*.json"
       - "docs/architecture/decision-engine-v1/CERTIFICATION.md"
 
@@ -129,6 +132,51 @@ jobs:
           python -m pytest tests/decision_model_contract_tests.py -v --tb=short
           echo ""
           echo "Contract tests passed — Decision Model is deterministic and fully traceable."
+
+      # ── Check 2.5: Certification Schema Validation ────────────────────────
+      # Proves the certification artifact itself conforms to the governance schema.
+      # Meta-governance: the governance artifact is governed.
+      - name: Validate certification artifact schema
+        run: |
+          python - <<'PYEOF'
+          import json
+          import sys
+          from pathlib import Path
+
+          try:
+              import jsonschema
+          except ImportError:
+              print("FAIL: jsonschema not installed", file=sys.stderr)
+              sys.exit(1)
+
+          schema_file = Path("docs/architecture/decision-engine-v1/certification.schema.json")
+          cert_file = Path("docs/architecture/decision-engine-v1/certification-v1.0.0.json")
+
+          if not schema_file.exists():
+              print(f"  ✗  Schema file not found: {schema_file}", file=sys.stderr)
+              sys.exit(1)
+
+          if not cert_file.exists():
+              print(f"  ✗  Certification file not found: {cert_file}", file=sys.stderr)
+              sys.exit(1)
+
+          try:
+              schema = json.loads(schema_file.read_text())
+              cert_data = json.loads(cert_file.read_text())
+          except json.JSONDecodeError as e:
+              print(f"  ✗  Invalid JSON: {e}", file=sys.stderr)
+              sys.exit(1)
+
+          try:
+              jsonschema.validate(cert_data, schema)
+          except jsonschema.ValidationError as e:
+              print(f"  ✗  Certification artifact validation failed:", file=sys.stderr)
+              print(f"     {e.message}", file=sys.stderr)
+              sys.exit(1)
+
+          print(f"  ✓  Certification artifact validates against schema")
+          print(f"\nCertification schema validation passed.")
+          PYEOF
 
       # ── Check 3: Certification Gate ───────────────────────────────────────
       # Proves certification-v*.json declares Status: Certified and has no

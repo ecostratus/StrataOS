@@ -1,0 +1,28 @@
+[
+  {
+    "claim_id": "cl-remote-positive",
+    "decision_model_version": "1.0.0",
+    "person_id": "person-alex",
+    "opportunity_id": "opp-servicenow-principal-growth",
+    "predicate": "remote_alignment",
+    "value": "hybrid",
+    "polarity": "positive",
+    "confidence": 1.0,
+    "evidence_ids": [
+      "ev-obs-3-mhit"
+    ]
+  },
+  {
+    "claim_id": "cl-seniority-negative",
+    "decision_model_version": "1.0.0",
+    "person_id": "person-alex",
+    "opportunity_id": "opp-servicenow-principal-growth",
+    "predicate": "seniority_alignment",
+    "value": "senior",
+    "polarity": "negative",
+    "confidence": 1.0,
+    "evidence_ids": [
+      "ev-obs-2-mhit"
+    ]
+  }
+]

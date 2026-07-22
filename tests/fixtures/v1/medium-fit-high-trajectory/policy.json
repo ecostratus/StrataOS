@@ -1,0 +1,15 @@
+{
+  "id": "policy-default",
+  "name": "Default Role Fit Assessment",
+  "weights": {
+    "skill_match": 0.4,
+    "seniority_alignment": 0.3,
+    "remote_alignment": 0.3
+  },
+  "decision_threshold": 0.7,
+  "recommendation_tiers": {
+    "high": {"min": 0.85, "action": "APPLY_IMMEDIATELY"},
+    "medium": {"min": 0.7, "action": "APPLY_WITH_RESEARCH"},
+    "low": {"max": 0.7, "action": "HOLD_AND_MONITOR"}
+  }
+}

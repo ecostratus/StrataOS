@@ -1,0 +1,29 @@
+{
+  "decision_model_version": "1.0.0",
+  "trace": [
+    {
+      "observation_id": "obs-3-hilo",
+      "evidence_id": "ev-obs-3-hilo",
+      "claim_id": "cl-remote-positive",
+      "decision_factor": "remote_alignment",
+      "recommendation_driver": "positive",
+      "source": "job-posting"
+    },
+    {
+      "observation_id": "obs-2-hilo",
+      "evidence_id": "ev-obs-2-hilo",
+      "claim_id": "cl-seniority-negative",
+      "decision_factor": "seniority_alignment",
+      "recommendation_driver": "negative",
+      "source": "job-posting"
+    },
+    {
+      "observation_id": "obs-1-hilo",
+      "evidence_id": "ev-obs-1-hilo",
+      "claim_id": "cl-skill-servicenow-match",
+      "decision_factor": "skill_match",
+      "recommendation_driver": "positive",
+      "source": "job-posting"
+    }
+  ]
+}

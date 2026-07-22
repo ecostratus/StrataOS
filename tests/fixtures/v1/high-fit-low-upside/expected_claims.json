@@ -1,0 +1,41 @@
+[
+  {
+    "claim_id": "cl-remote-positive",
+    "decision_model_version": "1.0.0",
+    "person_id": "person-sarah",
+    "opportunity_id": "opp-servicenow-principal-declining",
+    "predicate": "remote_alignment",
+    "value": "remote",
+    "polarity": "positive",
+    "confidence": 1.0,
+    "evidence_ids": [
+      "ev-obs-3-hilo"
+    ]
+  },
+  {
+    "claim_id": "cl-seniority-negative",
+    "decision_model_version": "1.0.0",
+    "person_id": "person-sarah",
+    "opportunity_id": "opp-servicenow-principal-declining",
+    "predicate": "seniority_alignment",
+    "value": "principal",
+    "polarity": "negative",
+    "confidence": 1.0,
+    "evidence_ids": [
+      "ev-obs-2-hilo"
+    ]
+  },
+  {
+    "claim_id": "cl-skill-servicenow-match",
+    "decision_model_version": "1.0.0",
+    "person_id": "person-sarah",
+    "opportunity_id": "opp-servicenow-principal-declining",
+    "predicate": "skill_match",
+    "value": "ServiceNow",
+    "polarity": "positive",
+    "confidence": 1.0,
+    "evidence_ids": [
+      "ev-obs-1-hilo"
+    ]
+  }
+]
