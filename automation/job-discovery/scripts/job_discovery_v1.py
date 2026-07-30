@@ -20,6 +20,7 @@ from typing import Dict, List, Callable, Any, Optional
 import argparse
 import logging
 import json
+import time
 
 # Ensure repo root on path to import config and filters
 _ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
@@ -55,6 +56,8 @@ except Exception:
     scoring = None  # type: ignore
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
+
+GREENHOUSE_TELEMETRY_DEFAULT_PATH = os.path.join(_ROOT, "logs", "greenhouse_week1_telemetry.jsonl")
 
 REQUIRED_KEYS = {"title", "location", "company", "source", "url", "posted_date"}
 
@@ -285,6 +288,38 @@ def export_scored_csv_with_ts(rows: List[Dict[str, Any]], out_dir: str, ts: str)
     return path
 
 
+def _append_greenhouse_telemetry(
+    cfg_map: Dict[str, Any],
+    *,
+    success: bool,
+    latency_ms: float | None,
+    empty_run_count: int,
+    payload_anomalies: int,
+    error: str | None = None,
+) -> None:
+    path_value = cfg_map.get("GREENHOUSE_TELEMETRY_PATH", GREENHOUSE_TELEMETRY_DEFAULT_PATH)
+    telemetry_path = str(path_value or GREENHOUSE_TELEMETRY_DEFAULT_PATH)
+    os.makedirs(os.path.dirname(telemetry_path) or ".", exist_ok=True)
+    entry = {
+        "logged_at_utc": datetime.now(UTC).isoformat(timespec="seconds"),
+        "source": "greenhouse",
+        "success": bool(success),
+        "latency_ms": latency_ms,
+        "empty_run_count": int(empty_run_count),
+        "payload_anomalies": int(payload_anomalies),
+        "error": error,
+    }
+    with open(telemetry_path, "a", encoding="utf-8") as f:
+        f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+
+
+def _greenhouse_payload_anomalies(rows: List[Dict[str, str]]) -> int:
+    for row in rows:
+        if not row.get("title") or not row.get("url") or not row.get("posted_date"):
+            return 1
+    return 0
+
+
 def main(argv: List[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Job discovery orchestrator")
     parser.add_argument("--out-dir", dest="out_dir", default=None, help="Override output directory")
@@ -356,56 +391,64 @@ def main(argv: List[str] | None = None) -> None:
             logger.info("Scheduling helpers unavailable; proceeding without schedule gating")
 
     # Fetch and filter
-    jobs = discover_jobs()
+    telemetry_enabled = bool(config.get_bool("GREENHOUSE_ENABLED", False))
+    discovery_started = time.perf_counter()
+    jobs: List[Dict[str, str]] = []
     matched: List[Dict[str, str]] = []
-    for job in jobs:
-        if matches_filters(job.get("title", ""), job.get("location", ""), keywords, locations, exclude):
-            matched.append(job)
-
-    print(f"Found {len(jobs)} jobs; {len(matched)} matched filters")
-    # Single timestamp for CSV + summary for determinism
-    ts = run_ts
+    discovery_error: str | None = None
+    summary: Dict[str, Any] | None = None
+    out_json: str | None = None
     out_csv = None
     enriched_json_path = None
     out_scored_csv = None
-    if not args.summary_only:
-        out_csv = export_to_csv_with_ts(matched, out_dir, ts)
+    try:
+        jobs = discover_jobs()
 
-    # Optional enrichment + scoring pipeline (Phase 3A)
-    if args.enrich and not args.summary_only:
-        if enrichment and scoring:
-            # Build config slices for enrichment/scoring (defaults if missing)
-            # Enrichment uses config within extract_features; scoring uses weights/thresholds
-            weights = {}
-            thresholds = {
-                "exceptional": 0.8,
-                "strong": 0.6,
-                "moderate": 0.4,
-            }
-            # Attempt to read weights/thresholds from config if available
-            try:
-                cfg_scoring = config.to_dict().get("scoring", {})
-                if isinstance(cfg_scoring, dict):
-                    weights = cfg_scoring.get("weights", {}) or weights
-                    thresholds = cfg_scoring.get("thresholds", {}) or thresholds
-            except Exception:
-                pass
+        for job in jobs:
+            if matches_filters(job.get("title", ""), job.get("location", ""), keywords, locations, exclude):
+                matched.append(job)
 
-            enriched_rows: List[Dict[str, Any]] = [enrichment.extract_features(j, config.to_dict()) for j in matched]
-            enriched_json_path = export_enriched_json_with_ts(enriched_rows, out_dir, ts)
+        print(f"Found {len(jobs)} jobs; {len(matched)} matched filters")
+        # Single timestamp for CSV + summary for determinism
+        ts = run_ts
+        if not args.summary_only:
+            out_csv = export_to_csv_with_ts(matched, out_dir, ts)
 
-            scored_rows: List[Dict[str, Any]] = []
-            for e in enriched_rows:
-                s = scoring.score_job(e, weights, thresholds)
-                combined = dict(e)
-                combined.update({"score": s.get("score", 0.0), "bucket": s.get("bucket", "Weak")})
-                scored_rows.append(combined)
-            out_scored_csv = export_scored_csv_with_ts(scored_rows, out_dir, ts)
-        else:
-            logger.warning("Enrichment/scoring modules not available; skipping --enrich pipeline.")
+        # Optional enrichment + scoring pipeline (Phase 3A)
+        if args.enrich and not args.summary_only:
+            if enrichment and scoring:
+                # Build config slices for enrichment/scoring (defaults if missing)
+                # Enrichment uses config within extract_features; scoring uses weights/thresholds
+                weights = {}
+                thresholds = {
+                    "exceptional": 0.8,
+                    "strong": 0.6,
+                    "moderate": 0.4,
+                }
+                # Attempt to read weights/thresholds from config if available
+                try:
+                    cfg_scoring = config.to_dict().get("scoring", {})
+                    if isinstance(cfg_scoring, dict):
+                        weights = cfg_scoring.get("weights", {}) or weights
+                        thresholds = cfg_scoring.get("thresholds", {}) or thresholds
+                except Exception:
+                    pass
 
-    # Build summary artifact
-    enabled_sources = {
+                enriched_rows: List[Dict[str, Any]] = [enrichment.extract_features(j, config.to_dict()) for j in matched]
+                enriched_json_path = export_enriched_json_with_ts(enriched_rows, out_dir, ts)
+
+                scored_rows: List[Dict[str, Any]] = []
+                for e in enriched_rows:
+                    s = scoring.score_job(e, weights, thresholds)
+                    combined = dict(e)
+                    combined.update({"score": s.get("score", 0.0), "bucket": s.get("bucket", "Weak")})
+                    scored_rows.append(combined)
+                out_scored_csv = export_scored_csv_with_ts(scored_rows, out_dir, ts)
+            else:
+                logger.warning("Enrichment/scoring modules not available; skipping --enrich pipeline.")
+
+        # Build summary artifact
+        enabled_sources = {
         "linkedin": bool(config.get_bool("LINKEDIN_ENABLED", False)),
         "indeed": bool(config.get_bool("INDEED_ENABLED", False)),
         "greenhouse": bool(config.get_bool("GREENHOUSE_ENABLED", False)),
@@ -416,52 +459,69 @@ def main(argv: List[str] | None = None) -> None:
         "glassdoor": bool(config.get_bool("GLASSDOOR_ENABLED", False)),
         "craigslist": bool(config.get_bool("CRAIGSLIST_ENABLED", False)),
         "goremote": bool(config.get_bool("GOREMOTE_ENABLED", False)),
-    }
-    per_source = {}
-    if hasattr(sources, "get_metrics"):
-        m = sources.get_metrics().to_dict()
-        per_source = {
-            "jobs_fetched": m.get("jobs_fetched", {}),
-            "malformed_entries": m.get("malformed_entries", {}),
-            "retries_attempted": m.get("retries_attempted", 0),
-            "rate_limit_sleeps": m.get("rate_limit_sleeps", 0),
-            "scraper_failures": m.get("scraper_failures", 0),
         }
+        per_source = {}
+        if hasattr(sources, "get_metrics"):
+            m = sources.get_metrics().to_dict()
+            per_source = {
+                "jobs_fetched": m.get("jobs_fetched", {}),
+                "malformed_entries": m.get("malformed_entries", {}),
+                "retries_attempted": m.get("retries_attempted", 0),
+                "rate_limit_sleeps": m.get("rate_limit_sleeps", 0),
+                "scraper_failures": m.get("scraper_failures", 0),
+            }
 
-    if not per_source.get("jobs_fetched"):
-        counts: Dict[str, int] = {}
-        for job in jobs:
-            src = str(job.get("source", "")).strip().lower() or "unknown"
-            counts[src] = counts.get(src, 0) + 1
-        per_source = {
-            "jobs_fetched": counts,
-            "malformed_entries": {},
-            "retries_attempted": 0,
-            "rate_limit_sleeps": 0,
-            "scraper_failures": 0,
+        if not per_source.get("jobs_fetched"):
+            counts: Dict[str, int] = {}
+            for job in jobs:
+                src = str(job.get("source", "")).strip().lower() or "unknown"
+                counts[src] = counts.get(src, 0) + 1
+            per_source = {
+                "jobs_fetched": counts,
+                "malformed_entries": {},
+                "retries_attempted": 0,
+                "rate_limit_sleeps": 0,
+                "scraper_failures": 0,
+            }
+
+        filtered_out = max(0, len(jobs) - len(matched))
+        summary = {
+            "timestamp_utc": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%S+00:00"),
+            "enabled_sources": enabled_sources,
+            "counts": {
+                "total_discovered": len(jobs),
+                "filtered_out": filtered_out,
+                "exported": len(matched),
+            },
+            "per_source": per_source,
         }
-
-    filtered_out = max(0, len(jobs) - len(matched))
-    summary = {
-        "timestamp_utc": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%S+00:00"),
-        "enabled_sources": enabled_sources,
-        "counts": {
-            "total_discovered": len(jobs),
-            "filtered_out": filtered_out,
-            "exported": len(matched),
-        },
-        "per_source": per_source,
-    }
-    out_json = export_summary(out_dir, ts, summary)
-    # Optionally pretty-print a short summary after export
-    print(pretty_print_summary(summary))
-    if not args.summary_only and out_csv:
-        print(f"Exported matched jobs to: {out_csv}")
-    if enriched_json_path:
-        print(f"Exported enriched jobs to: {enriched_json_path}")
-    if out_scored_csv:
-        print(f"Exported scored jobs to: {out_scored_csv}")
-    print(f"Summary: {out_json}")
+        out_json = export_summary(out_dir, ts, summary)
+        # Optionally pretty-print a short summary after export
+        print(pretty_print_summary(summary))
+        if not args.summary_only and out_csv:
+            print(f"Exported matched jobs to: {out_csv}")
+        if enriched_json_path:
+            print(f"Exported enriched jobs to: {enriched_json_path}")
+        if out_scored_csv:
+            print(f"Exported scored jobs to: {out_scored_csv}")
+        print(f"Summary: {out_json}")
+    except Exception as exc:
+        discovery_error = discovery_error or str(exc)
+        raise
+    finally:
+        if telemetry_enabled:
+            greenhouse_rows = [job for job in jobs if str(job.get("source", "")).strip().lower() == "greenhouse"]
+            empty_run_count = 0
+            if discovery_error is None and bool(config.get_bool("GREENHOUSE_ENABLED", False)) and not greenhouse_rows:
+                empty_run_count = 1
+            _append_greenhouse_telemetry(
+                dict(config.to_dict()) if hasattr(config, "to_dict") else {},
+                success=discovery_error is None,
+                latency_ms=round((time.perf_counter() - discovery_started) * 1000, 2),
+                empty_run_count=empty_run_count,
+                payload_anomalies=_greenhouse_payload_anomalies(greenhouse_rows),
+                error=discovery_error,
+            )
 
     # Optional retention prune (Phase 3B)
     try:
