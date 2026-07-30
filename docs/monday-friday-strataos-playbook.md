@@ -42,6 +42,7 @@ Run:
 ```bash
 ./.venv/bin/python automation/job-discovery/scripts/job_discovery_v1.py --out-dir ./output --enrich
 ```
+- Run `./.venv/bin/python automation/job-discovery/scripts/job_discovery_v1.py --out-dir ./output --enrich`; the command appends one JSONL line to `logs/greenhouse_week1_telemetry.jsonl` with `success`, `latency_ms`, `empty_run_count`, and `payload_anomalies` (`empty_run_count` = 1 only for HTTP 200 responses with zero jobs; `payload_anomalies` = 1 only for nonempty HTTP 200 payloads with missing required fields; failures still append a line with `success=false` and `error`).
 
 Review outputs:
 - `output/jobs_discovered_*.csv`
