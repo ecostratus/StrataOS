@@ -25,6 +25,7 @@ This documentation supports the 60-day operating system by providing clear, acce
 - Knowledge Hub: [knowledge-hub.md](knowledge-hub.md)
 - Monday-Friday Playbook: [monday-friday-strataos-playbook.md](monday-friday-strataos-playbook.md)
 - ProgresstoLaunch Checklist & Timeline (Updated, PMFriendly): [progress_to_launch_checklist_timeline.md](progress_to_launch_checklist_timeline.md)
+- Job Search Platform Foundations: [foundations/job-search-platform/README.md](foundations/job-search-platform/README.md)
 - Archived Artifacts: [archived_artifacts.md](archived_artifacts.md) (Archived)
 
 ## Releases
