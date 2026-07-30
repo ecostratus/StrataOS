@@ -1,0 +1,78 @@
+{
+  "comment": "Runtime allow/deny policy for job source execution. If enforce=true, enabled disallowed sources are blocked.",
+  "enforce": true,
+  "allowed_sources": [
+    "greenhouse",
+    "lever",
+    "ashby",
+    "smartrecruiters",
+    "workable"
+  ],
+  "sources": {
+    "greenhouse": {
+      "allowed": true,
+      "mode": "public-api",
+      "rationale": "Public job board endpoint intended for listing jobs",
+      "crawl_constraints": {
+        "respect_rate_limits": true,
+        "requests_per_minute": 60,
+        "retry_max": 3
+      }
+    },
+    "lever": {
+      "allowed": true,
+      "mode": "public-api",
+      "rationale": "Public postings API for company boards",
+      "crawl_constraints": {
+        "respect_rate_limits": true,
+        "requests_per_minute": 60,
+        "retry_max": 3
+      }
+    },
+    "ashby": {
+      "allowed": true,
+      "mode": "public-api",
+      "rationale": "Public posting API when tenant exposes board",
+      "crawl_constraints": {
+        "respect_rate_limits": true,
+        "requests_per_minute": 60,
+        "retry_max": 3
+      }
+    },
+    "linkedin": {
+      "allowed": false,
+      "mode": "restricted",
+      "rationale": "No unrestricted public jobs API; automated scraping may violate terms"
+    },
+    "indeed": {
+      "allowed": false,
+      "mode": "restricted",
+      "rationale": "General public job ingestion is partnership-restricted"
+    },
+    "google_jobs": {
+      "allowed": false,
+      "mode": "restricted",
+      "rationale": "No official public jobs listing API for unrestricted scraping"
+    },
+    "glassdoor": {
+      "allowed": false,
+      "mode": "restricted",
+      "rationale": "No unrestricted public listings API for general scraping"
+    },
+    "craigslist": {
+      "allowed": false,
+      "mode": "conditional",
+      "rationale": "Requires explicit review before automated collection"
+    },
+    "ziprecruiter": {
+      "allowed": false,
+      "mode": "conditional",
+      "rationale": "Partner-based access model"
+    },
+    "goremote": {
+      "allowed": false,
+      "mode": "conditional",
+      "rationale": "Needs source-specific review before enabling"
+    }
+  }
+}

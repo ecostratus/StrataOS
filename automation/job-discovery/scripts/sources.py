@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import os
 import sys
+import json
 from datetime import datetime
 try:  # Python 3.11+
     from datetime import UTC  # type: ignore
@@ -126,6 +127,68 @@ except Exception:  # pragma: no cover - allow tests to run without requests inst
     requests = None  # type: ignore
 
 logger = logging.getLogger(__name__)
+
+
+def _load_source_compliance_policy(cfg: Dict[str, Any]) -> Dict[str, Any]:
+    """Load source compliance policy JSON.
+
+    Policy file controls whether enabled sources are allowed to run.
+    """
+    path = str(cfg.get("SOURCE_COMPLIANCE_POLICY_PATH", "config/source_compliance_policy.json") or "").strip()
+    if not path:
+        return {}
+    if not os.path.isabs(path):
+        path = os.path.join(_ROOT, path)
+    if not os.path.exists(path):
+        return {}
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            payload = json.load(f)
+        if isinstance(payload, dict):
+            return payload
+    except Exception:
+        pass
+    return {}
+
+
+def _policy_allows_source(policy: Dict[str, Any], source_name: str) -> bool:
+    normalized = source_name.strip().lower()
+    if not normalized:
+        return False
+
+    sources_cfg = policy.get("sources")
+    if isinstance(sources_cfg, dict):
+        node = sources_cfg.get(normalized)
+        if isinstance(node, dict) and "allowed" in node:
+            return bool(node.get("allowed", False))
+
+    allowed_sources = policy.get("allowed_sources")
+    if isinstance(allowed_sources, list):
+        normalized_allowed = {
+            str(x).strip().lower()
+            for x in allowed_sources
+            if str(x).strip()
+        }
+        if normalized_allowed:
+            return normalized in normalized_allowed
+
+    # Allow by default when policy does not explicitly classify the source.
+    return True
+
+
+def get_blocked_sources_by_policy(cfg: Dict[str, Any], enabled_sources: List[str]) -> List[str]:
+    """Return enabled source names that are disallowed by compliance policy."""
+    policy = _load_source_compliance_policy(cfg)
+    if not bool(policy.get("enforce", False)):
+        return []
+    blocked: List[str] = []
+    for source_name in enabled_sources:
+        normalized = str(source_name).strip().lower()
+        if not normalized:
+            continue
+        if not _policy_allows_source(policy, normalized):
+            blocked.append(normalized)
+    return sorted(set(blocked))
 
 # Lazily initialized metrics to avoid module-level import failures
 _METRICS = None  # type: ignore
@@ -382,6 +445,16 @@ def fetch_all_sources(cfg: Dict[str, Any]) -> List[Dict[str, Any]]:
         {"enable_key": "GOREMOTE_ENABLED", "adapter": "goremote", "func": "fetch_goremote_jobs"},
     ]
 
+    enabled_from_registry: List[str] = [
+        entry["adapter"]
+        for entry in registry
+        if bool(cfg.get(entry["enable_key"], False))
+    ]
+    blocked = get_blocked_sources_by_policy(cfg, enabled_from_registry)
+    if blocked:
+        blocked_sorted = ", ".join(blocked)
+        raise ValueError(f"Source compliance policy blocked enabled sources: {blocked_sorted}")
+
     load_module_from_path = _load_import_helpers()
     all_jobs: List[Dict[str, Any]] = []
     for entry in registry:
@@ -418,7 +491,6 @@ def fetch_all_sources(cfg: Dict[str, Any]) -> List[Dict[str, Any]]:
     enrichment_enabled = bool(cfg.get("ENRICHMENT_ENABLED", True))
     if enrichment_enabled:
         try:
-            import importlib.util
             import pathlib
             _p = pathlib.Path(__file__).resolve().parent / 'enrichment_transforms.py'
             spec = importlib.util.spec_from_file_location("enrichment_transforms", str(_p))

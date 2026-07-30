@@ -95,10 +95,97 @@ def discover_jobs() -> List[Dict[str, str]]:
     """Collect jobs from enabled sources. Each job has keys:
     title, location, company, source, url, posted_date (YYYY-MM-DD).
     """
+    cfg_map: Dict[str, Any] = dict(config.to_dict()) if hasattr(config, "to_dict") else {}
+
+    def _flag(key: str, default: bool = False) -> bool:
+        if hasattr(config, "get_bool"):
+            return bool(config.get_bool(key, bool(cfg_map.get(key, default))))
+        return bool(cfg_map.get(key, default))
+
+    modern_enable_keys = (
+        "GREENHOUSE_ENABLED",
+        "LEVER_ENABLED",
+        "ASHBY_ENABLED",
+        "ZIPRECRUITER_ENABLED",
+        "GOOGLEJOBS_ENABLED",
+        "GLASSDOOR_ENABLED",
+        "CRAIGSLIST_ENABLED",
+        "GOREMOTE_ENABLED",
+    )
+
+    for key in modern_enable_keys:
+        cfg_map[key] = _flag(key, False)
+
+    runtime_passthrough_keys = (
+        "GREENHOUSE_API_URL",
+        "GREENHOUSE_API_KEY",
+        "LEVER_API_URL",
+        "LEVER_API_KEY",
+        "ASHBY_API_URL",
+        "ASHBY_API_KEY",
+        "INDEED_API_URL",
+        "INDEED_API_KEY",
+        "ZIPRECRUITER_API_URL",
+        "ZIPRECRUITER_API_KEY",
+        "GOOGLEJOBS_API_URL",
+        "GOOGLEJOBS_API_KEY",
+        "GLASSDOOR_API_URL",
+        "GLASSDOOR_API_KEY",
+        "CRAIGSLIST_API_URL",
+        "GOREMOTE_API_URL",
+    )
+    if hasattr(config, "get"):
+        for key in runtime_passthrough_keys:
+            value = config.get(key, cfg_map.get(key))
+            if value is not None:
+                cfg_map[key] = value
+
+    if hasattr(config, "get"):
+        cfg_map["SOURCE_COMPLIANCE_POLICY_PATH"] = config.get(
+            "SOURCE_COMPLIANCE_POLICY_PATH",
+            cfg_map.get("SOURCE_COMPLIANCE_POLICY_PATH", "config/source_compliance_policy.json"),
+        )
+
+    use_modern_path = any(bool(cfg_map.get(k, False)) for k in modern_enable_keys)
+
+    if use_modern_path and hasattr(sources, "fetch_all_sources"):
+        try:
+            canonical_jobs = sources.fetch_all_sources(cfg_map)
+            jobs: List[Dict[str, str]] = []
+            for item in canonical_jobs:
+                posted_value = str(item.get("posted_at", "") or "")
+                posted_date = posted_value[:10] if len(posted_value) >= 10 else datetime.now(UTC).strftime("%Y-%m-%d")
+                jobs.append(
+                    {
+                        "title": str(item.get("title", "") or ""),
+                        "location": str(item.get("location", "") or ""),
+                        "company": str(item.get("company", "") or ""),
+                        "source": str(item.get("source", "") or ""),
+                        "url": str(item.get("url", "") or ""),
+                        "posted_date": posted_date,
+                    }
+                )
+            return jobs
+        except Exception:
+            logger.error("modern source aggregation failed", exc_info=True)
+            return []
+
     jobs: List[Dict[str, str]] = []
+    legacy_enabled_sources: List[str] = []
+    if config.get_bool("LINKEDIN_ENABLED", False):
+        legacy_enabled_sources.append("linkedin")
+    if config.get_bool("INDEED_ENABLED", False):
+        legacy_enabled_sources.append("indeed")
+
+    if legacy_enabled_sources and hasattr(sources, "get_blocked_sources_by_policy"):
+        blocked = sources.get_blocked_sources_by_policy(cfg_map, legacy_enabled_sources)
+        if blocked:
+            blocked_sorted = ", ".join(blocked)
+            raise ValueError(f"Source compliance policy blocked enabled sources: {blocked_sorted}")
+
     if config.get_bool("LINKEDIN_ENABLED", False):
         jobs.extend(_safe_fetch("linkedin", sources.fetch_linkedin_jobs))
-    if config.get_bool("INDEED_ENABLED", True):
+    if config.get_bool("INDEED_ENABLED", False):
         jobs.extend(_safe_fetch("indeed", sources.fetch_indeed_jobs))
     if not jobs:
         # Fallback minimal placeholder (kept for bootstrapping)
@@ -213,10 +300,6 @@ def main(argv: List[str] | None = None) -> None:
         "JOB_FILTER_LOCATIONS",
         "JOB_FILTER_EXCLUDE_KEYWORDS",
         "JOB_FILTER_MAX_AGE_DAYS",
-        "INDEED_API_URL",
-        "INDEED_ENABLED",
-        "LINKEDIN_ENABLED",
-        "LINKEDIN_API_URL",
     ):
         os.environ.pop(key, None)
 
@@ -324,7 +407,15 @@ def main(argv: List[str] | None = None) -> None:
     # Build summary artifact
     enabled_sources = {
         "linkedin": bool(config.get_bool("LINKEDIN_ENABLED", False)),
-        "indeed": bool(config.get_bool("INDEED_ENABLED", True)),
+        "indeed": bool(config.get_bool("INDEED_ENABLED", False)),
+        "greenhouse": bool(config.get_bool("GREENHOUSE_ENABLED", False)),
+        "lever": bool(config.get_bool("LEVER_ENABLED", False)),
+        "ashby": bool(config.get_bool("ASHBY_ENABLED", False)),
+        "ziprecruiter": bool(config.get_bool("ZIPRECRUITER_ENABLED", False)),
+        "google_jobs": bool(config.get_bool("GOOGLEJOBS_ENABLED", False)),
+        "glassdoor": bool(config.get_bool("GLASSDOOR_ENABLED", False)),
+        "craigslist": bool(config.get_bool("CRAIGSLIST_ENABLED", False)),
+        "goremote": bool(config.get_bool("GOREMOTE_ENABLED", False)),
     }
     per_source = {}
     if hasattr(sources, "get_metrics"):
@@ -335,6 +426,19 @@ def main(argv: List[str] | None = None) -> None:
             "retries_attempted": m.get("retries_attempted", 0),
             "rate_limit_sleeps": m.get("rate_limit_sleeps", 0),
             "scraper_failures": m.get("scraper_failures", 0),
+        }
+
+    if not per_source.get("jobs_fetched"):
+        counts: Dict[str, int] = {}
+        for job in jobs:
+            src = str(job.get("source", "")).strip().lower() or "unknown"
+            counts[src] = counts.get(src, 0) + 1
+        per_source = {
+            "jobs_fetched": counts,
+            "malformed_entries": {},
+            "retries_attempted": 0,
+            "rate_limit_sleeps": 0,
+            "scraper_failures": 0,
         }
 
     filtered_out = max(0, len(jobs) - len(matched))

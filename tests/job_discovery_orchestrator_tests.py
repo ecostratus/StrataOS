@@ -22,10 +22,16 @@ import sources  # type: ignore
 def test_discover_jobs_returns_expected_shape(monkeypatch):
     # Force both sources enabled via monkeypatching config getters
     class DummyConfig:
+        def to_dict(self):
+            return {"SOURCE_COMPLIANCE_POLICY_PATH": ""}
+
         def get_bool(self, key, default=False):
             if key in ("LINKEDIN_ENABLED", "INDEED_ENABLED"):
                 return True
             return default
+
+        def get(self, key, default=None):
+            return self.to_dict().get(key, default)
 
     monkeypatch.setattr(orchestrator, "config", DummyConfig())
 
@@ -66,3 +72,33 @@ def test_export_to_csv_writes_file_and_rows():
             assert lines[0] == ["title", "location", "company", "source", "url", "posted_date"]
             # header + 2 rows
             assert len(lines) == 3
+
+
+def test_discover_jobs_prefers_modern_aggregation(monkeypatch):
+    class DummyConfig:
+        def to_dict(self):
+            return {"GREENHOUSE_ENABLED": True}
+
+        def get_bool(self, key, default=False):
+            return default
+
+    def _fake_fetch_all_sources(cfg):
+        return [
+            {
+                "job_id": "abc123",
+                "title": "Software Engineer",
+                "company": "Acme",
+                "location": "Remote",
+                "url": "https://boards.greenhouse.io/acme/jobs/1",
+                "source": "greenhouse",
+                "posted_at": "2026-07-20T11:11:11+00:00",
+            }
+        ]
+
+    monkeypatch.setattr(orchestrator, "config", DummyConfig())
+    monkeypatch.setattr(sources, "fetch_all_sources", _fake_fetch_all_sources)
+
+    jobs = orchestrator.discover_jobs()
+    assert len(jobs) == 1
+    assert jobs[0]["source"] == "greenhouse"
+    assert jobs[0]["posted_date"] == "2026-07-20"
