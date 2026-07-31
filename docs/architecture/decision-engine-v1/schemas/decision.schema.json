@@ -94,8 +94,12 @@
       "required": ["score"],
       "properties": {
         "score": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
-        "known_factors": { "type": "integer", "minimum": 0 },
+        "known_factors": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
         "required_factors": { "type": "integer", "minimum": 0 },
+        "observed_factors": { "type": "integer", "minimum": 0 },
         "gap_analysis": {
           "type": "object",
           "additionalProperties": { "type": "string" }

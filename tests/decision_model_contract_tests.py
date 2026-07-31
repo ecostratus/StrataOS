@@ -10,6 +10,8 @@ import json
 import os
 import sys
 
+import jsonschema
+
 
 _REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 _COMMON_DIR = os.path.join(_REPO_ROOT, "automation", "common")
@@ -128,6 +130,22 @@ def test_snapshot_artifacts_match_golden_files():
     assert run.decision == _load_json("expected_decision.json")
     assert run.recommendation == _load_json("expected_recommendation.json")
     assert run.trace_artifact == _load_json("expected_trace_artifact.json")
+
+
+def test_decision_fixture_conforms_to_canonical_schema():
+    decision = _load_json("expected_decision.json")
+    schema_path = os.path.join(
+        _REPO_ROOT,
+        "docs",
+        "architecture",
+        "decision-engine-v1",
+        "schemas",
+        "decision.schema.json",
+    )
+    with open(schema_path, "r", encoding="utf-8") as f:
+        schema = json.load(f)
+
+    jsonschema.validate(decision, schema)
 
 
 def test_v1_v1_1_migration_recommendation_consistency():
