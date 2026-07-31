@@ -1,0 +1,25 @@
+# StrataOS Automation — Top-level Requirements
+#
+# Install all automation dependencies at once:
+#   pip install -r automation/requirements.txt
+#
+# Individual module requirements are in each module's requirements.txt.
+
+# Web scraping
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+
+# Data processing
+pandas>=2.0.0
+
+# Excel I/O (for SoR sync)
+openpyxl>=3.1.0
+
+# Configuration
+python-dotenv>=1.0.0
+
+# AI / LLM
+openai>=1.0.0
+
+# Scheduling
+schedule>=1.2.0

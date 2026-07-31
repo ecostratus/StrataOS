@@ -1,0 +1,134 @@
+{
+  "name": "StrataOS Pipeline View",
+  "version": "1.0",
+  "description": "Role and application pipeline visualization for the 60-day operating system.",
+  "sor_sheets": ["Roles", "Companies", "Outreach", "Interviews", "StatusHistory"],
+  "refresh": {
+    "schedule": "0 8 * * *",
+    "also_on_demand": true
+  },
+  "sections": [
+    {
+      "id": "active_pipeline",
+      "title": "Active Role Pipeline",
+      "position": { "row": 1, "col": 1, "width": 12, "height": 5 },
+      "widgets": [
+        {
+          "id": "kanban_board",
+          "type": "kanban",
+          "title": "Roles by Status",
+          "source_sheet": "Roles",
+          "columns": [
+            { "key": "Identified",   "label": "Identified",   "color": "#6B7280" },
+            { "key": "Applied",      "label": "Applied",      "color": "#3B82F6" },
+            { "key": "Interviewing", "label": "Interviewing", "color": "#F59E0B" },
+            { "key": "Closed",       "label": "Closed",       "color": "#10B981" }
+          ],
+          "card_fields": ["Title", "CompanyID", "FitScore", "LastUpdated"],
+          "sort_by": "FitScore",
+          "sort_direction": "desc"
+        }
+      ]
+    },
+    {
+      "id": "pipeline_table",
+      "title": "Full Pipeline Detail",
+      "position": { "row": 6, "col": 1, "width": 12, "height": 6 },
+      "widgets": [
+        {
+          "id": "roles_table",
+          "type": "table",
+          "title": "All Active Roles",
+          "source_sheet": "Roles",
+          "filter": { "Status": ["Identified", "Applied", "Interviewing"] },
+          "join": [
+            {
+              "sheet": "Companies",
+              "on": "CompanyID",
+              "fields": ["Name", "Industry", "Location"]
+            }
+          ],
+          "columns": [
+            { "field": "RoleID",      "label": "ID",       "width": 80 },
+            { "field": "Title",       "label": "Role",     "width": 200 },
+            { "field": "Name",        "label": "Company",  "width": 160 },
+            { "field": "Industry",    "label": "Industry", "width": 120 },
+            { "field": "FitScore",    "label": "Fit",      "width": 60,  "format": "number" },
+            { "field": "Status",      "label": "Status",   "width": 100 },
+            { "field": "LastUpdated", "label": "Updated",  "width": 100, "format": "date" }
+          ],
+          "sort_by": "FitScore",
+          "sort_direction": "desc",
+          "max_rows": 50
+        }
+      ]
+    },
+    {
+      "id": "outreach_tracker",
+      "title": "Outreach Tracker",
+      "position": { "row": 12, "col": 1, "width": 6, "height": 4 },
+      "widgets": [
+        {
+          "id": "pending_followups",
+          "type": "table",
+          "title": "Pending Follow-ups",
+          "source_sheet": "Outreach",
+          "filter": { "ResponseType": "None", "NextActionDate": { "lte": "today()" } },
+          "columns": [
+            { "field": "OutreachID",     "label": "ID",          "width": 80 },
+            { "field": "ContactID",      "label": "Contact",     "width": 120 },
+            { "field": "Channel",        "label": "Channel",     "width": 80 },
+            { "field": "MessageType",    "label": "Type",        "width": 100 },
+            { "field": "SentDate",       "label": "Sent",        "width": 90,  "format": "date" },
+            { "field": "NextActionDate", "label": "Action By",   "width": 90,  "format": "date" }
+          ],
+          "sort_by": "NextActionDate",
+          "sort_direction": "asc",
+          "max_rows": 20
+        }
+      ]
+    },
+    {
+      "id": "interview_schedule",
+      "title": "Interview Schedule",
+      "position": { "row": 12, "col": 7, "width": 6, "height": 4 },
+      "widgets": [
+        {
+          "id": "upcoming_interviews",
+          "type": "table",
+          "title": "Upcoming Interviews",
+          "source_sheet": "Interviews",
+          "filter": { "Outcome": "Pending", "ScheduledDate": { "gte": "today()" } },
+          "columns": [
+            { "field": "InterviewID",   "label": "ID",      "width": 80 },
+            { "field": "RoleID",        "label": "Role",    "width": 120 },
+            { "field": "CompanyID",     "label": "Company", "width": 120 },
+            { "field": "Stage",         "label": "Stage",   "width": 120 },
+            { "field": "ScheduledDate", "label": "Date",    "width": 90,  "format": "date" }
+          ],
+          "sort_by": "ScheduledDate",
+          "sort_direction": "asc",
+          "max_rows": 10
+        }
+      ]
+    },
+    {
+      "id": "history_timeline",
+      "title": "Recent Activity",
+      "position": { "row": 16, "col": 1, "width": 12, "height": 3 },
+      "widgets": [
+        {
+          "id": "status_timeline",
+          "type": "timeline",
+          "title": "Status Changes (Last 14 Days)",
+          "source_sheet": "StatusHistory",
+          "filter": { "ChangedAt": { "gte": "today() - 14 days" } },
+          "fields": ["EntityType", "EntityID", "OldStatus", "NewStatus", "ChangedBy", "ChangedAt"],
+          "sort_by": "ChangedAt",
+          "sort_direction": "desc",
+          "max_rows": 30
+        }
+      ]
+    }
+  ]
+}

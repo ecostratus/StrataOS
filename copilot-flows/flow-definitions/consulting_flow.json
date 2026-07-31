@@ -134,6 +134,6 @@
   "audit": {
     "log_execution": true,
     "log_to_excel": true,
-    "sheet": "Audit_Log"
+    "sheet": "ChangeLog"
   }
 }

@@ -38,7 +38,7 @@
       "type": "excel_action",
       "action": "read_range",
       "file": "excel-templates/system-of-record-template.xlsx",
-      "sheet": "Audit_Log",
+      "sheet": "ChangeLog",
       "filter": {
         "date_range": "last_7_days"
       }
@@ -128,7 +128,7 @@
       "type": "excel_action",
       "action": "append_row",
       "file": "excel-templates/system-of-record-template.xlsx",
-      "sheet": "Weekly_Goals",
+      "sheet": "Metrics",
       "data": {
         "week_of": "{{now()}}",
         "applications_target": "{{set_weekly_goals.applications_target}}",
@@ -151,6 +151,6 @@
   "audit": {
     "log_execution": true,
     "log_to_excel": true,
-    "sheet": "Audit_Log"
+    "sheet": "ChangeLog"
   }
 }

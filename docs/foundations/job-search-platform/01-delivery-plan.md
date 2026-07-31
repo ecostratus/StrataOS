@@ -1,5 +1,7 @@
 # Delivery Plan
 
+Canonical source: [Progress-to-Launch Checklist & Timeline](../../progress_to_launch_checklist_timeline.md)
+
 ## Planning Horizon
 
 - Horizon: 12 weeks
