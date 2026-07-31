@@ -1,0 +1,130 @@
+{
+  "name": "StrataOS Metrics Dashboard",
+  "version": "1.0",
+  "description": "KPI visualization configuration for the 60-day operating system.",
+  "sor_sheets": ["Roles", "Outreach", "Interviews", "Consulting", "Metrics", "StatusHistory"],
+  "refresh": {
+    "schedule": "0 8 * * 1",
+    "also_on_demand": true
+  },
+  "sections": [
+    {
+      "id": "executive_summary",
+      "title": "Executive Summary",
+      "position": { "row": 1, "col": 1, "width": 12, "height": 2 },
+      "widgets": [
+        {
+          "id": "timeline_progress",
+          "type": "progress_bar",
+          "title": "60-Day Timeline",
+          "source": "config",
+          "fields": ["start_date", "end_date"],
+          "display": "days_elapsed / days_total"
+        },
+        {
+          "id": "kpi_summary",
+          "type": "metric_grid",
+          "title": "Key Metrics This Week",
+          "metrics": [
+            { "label": "Roles Applied",   "source_sheet": "Roles",     "filter": {"Status": "Applied"},      "aggregation": "count" },
+            { "label": "Interviews",      "source_sheet": "Interviews","filter": {},                          "aggregation": "count" },
+            { "label": "Outreach Sent",   "source_sheet": "Outreach",  "filter": {},                          "aggregation": "count" },
+            { "label": "Responses",       "source_sheet": "Outreach",  "filter": {"ResponseType": ["Positive","Neutral","Negative"]}, "aggregation": "count" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "role_funnel",
+      "title": "Role Pipeline Funnel",
+      "position": { "row": 3, "col": 1, "width": 6, "height": 4 },
+      "widgets": [
+        {
+          "id": "funnel_chart",
+          "type": "funnel",
+          "title": "Roles by Stage",
+          "source_sheet": "Roles",
+          "stages": [
+            { "label": "Identified",   "filter": {"Status": "Identified"} },
+            { "label": "Applied",      "filter": {"Status": "Applied"} },
+            { "label": "Interviewing", "filter": {"Status": "Interviewing"} },
+            { "label": "Closed",       "filter": {"Status": "Closed"} }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "outreach_performance",
+      "title": "Outreach Performance",
+      "position": { "row": 3, "col": 7, "width": 6, "height": 4 },
+      "widgets": [
+        {
+          "id": "response_rate",
+          "type": "gauge",
+          "title": "Response Rate",
+          "source_sheet": "Outreach",
+          "numerator_filter": { "ResponseType": ["Positive", "Neutral", "Negative"] },
+          "denominator": "total_rows",
+          "target": 0.25,
+          "format": "percent"
+        },
+        {
+          "id": "channel_breakdown",
+          "type": "pie",
+          "title": "Outreach by Channel",
+          "source_sheet": "Outreach",
+          "group_by": "Channel"
+        }
+      ]
+    },
+    {
+      "id": "interview_pipeline",
+      "title": "Interview Pipeline",
+      "position": { "row": 7, "col": 1, "width": 6, "height": 3 },
+      "widgets": [
+        {
+          "id": "interview_stages",
+          "type": "bar",
+          "title": "Interviews by Stage",
+          "source_sheet": "Interviews",
+          "group_by": "Stage",
+          "color_by": "Outcome"
+        }
+      ]
+    },
+    {
+      "id": "consulting_pipeline",
+      "title": "Consulting Pipeline",
+      "position": { "row": 7, "col": 7, "width": 6, "height": 3 },
+      "widgets": [
+        {
+          "id": "consulting_value",
+          "type": "metric_grid",
+          "title": "Consulting Pipeline Value",
+          "metrics": [
+            { "label": "Open Engagements",   "source_sheet": "Consulting", "filter": {"Status": "Open"},      "aggregation": "count" },
+            { "label": "In Progress",         "source_sheet": "Consulting", "filter": {"Status": "In Progress"}, "aggregation": "count" },
+            { "label": "Pipeline Value ($)",  "source_sheet": "Consulting", "filter": {"Status": ["Open","In Progress"]}, "aggregation": "sum", "field": "ValueEstimate" },
+            { "label": "Closed Won",          "source_sheet": "Consulting", "filter": {"Status": "Closed Won"}, "aggregation": "count" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "system_health",
+      "title": "System Health",
+      "position": { "row": 10, "col": 1, "width": 12, "height": 2 },
+      "widgets": [
+        {
+          "id": "flow_errors",
+          "type": "table",
+          "title": "Unresolved Flow Errors",
+          "source_sheet": "FlowErrors",
+          "filter": { "Resolved": "No" },
+          "columns": ["FlowName", "Timestamp", "ErrorMessage"],
+          "max_rows": 10
+        }
+      ]
+    }
+  ]
+}

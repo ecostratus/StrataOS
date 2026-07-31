@@ -1,0 +1,106 @@
+{
+  "version": "1.0",
+  "description": "Validation rules for the StrataOS canonical System of Record.",
+  "rules": {
+    "sheet_names": {
+      "description": "Only canonical sheet names are permitted.",
+      "allowed": [
+        "Roles",
+        "Companies",
+        "Contacts",
+        "Outreach",
+        "Interviews",
+        "Consulting",
+        "Metrics",
+        "StatusHistory",
+        "FlowErrors",
+        "ChangeLog"
+      ],
+      "prohibited": [
+        "Jobs",
+        "Applications",
+        "Weekly_Goals",
+        "Audit_Log",
+        "Dashboard"
+      ],
+      "severity": "error"
+    },
+    "id_uniqueness": {
+      "description": "All ID fields must be unique within their sheet.",
+      "fields": {
+        "Roles":         ["RoleID"],
+        "Companies":     ["CompanyID"],
+        "Contacts":      ["ContactID"],
+        "Outreach":      ["OutreachID"],
+        "Interviews":    ["InterviewID"],
+        "Consulting":    ["ConsultingID"],
+        "StatusHistory": ["HistoryID"],
+        "FlowErrors":    ["ErrorID"],
+        "ChangeLog":     ["ChangeID"]
+      },
+      "severity": "error"
+    },
+    "required_fields": {
+      "description": "Required fields must not be null or empty.",
+      "fields": {
+        "Roles":         ["RoleID", "Title", "LastUpdated"],
+        "Companies":     ["CompanyID", "Name"],
+        "Contacts":      ["ContactID", "Name"],
+        "Outreach":      ["OutreachID"],
+        "Interviews":    ["InterviewID"],
+        "Consulting":    ["ConsultingID"],
+        "Metrics":       ["MetricName"],
+        "StatusHistory": ["HistoryID", "EntityID", "ChangedAt"],
+        "FlowErrors":    ["ErrorID", "FlowName", "Timestamp", "ErrorMessage"],
+        "ChangeLog":     ["ChangeID", "SheetName", "ChangedAt"]
+      },
+      "severity": "error"
+    },
+    "foreign_keys": {
+      "description": "FK fields must reference existing IDs in the target sheet.",
+      "references": [
+        { "sheet": "Roles",      "field": "CompanyID",  "target_sheet": "Companies",  "target_field": "CompanyID" },
+        { "sheet": "Contacts",   "field": "CompanyID",  "target_sheet": "Companies",  "target_field": "CompanyID" },
+        { "sheet": "Outreach",   "field": "ContactID",  "target_sheet": "Contacts",   "target_field": "ContactID" },
+        { "sheet": "Outreach",   "field": "CompanyID",  "target_sheet": "Companies",  "target_field": "CompanyID" },
+        { "sheet": "Outreach",   "field": "RoleID",     "target_sheet": "Roles",      "target_field": "RoleID" },
+        { "sheet": "Interviews", "field": "RoleID",     "target_sheet": "Roles",      "target_field": "RoleID" },
+        { "sheet": "Interviews", "field": "CompanyID",  "target_sheet": "Companies",  "target_field": "CompanyID" },
+        { "sheet": "Consulting", "field": "CompanyID",  "target_sheet": "Companies",  "target_field": "CompanyID" }
+      ],
+      "severity": "warning"
+    },
+    "dropdown_values": {
+      "description": "Dropdown fields must use only the defined controlled values.",
+      "fields": {
+        "Roles.Status":                    ["Identified", "Applied", "Interviewing", "Closed"],
+        "Contacts.RelationshipStrength":   ["Weak", "Warm", "Strong"],
+        "Outreach.Channel":                ["Email", "LinkedIn", "Referral", "Other"],
+        "Outreach.MessageType":            ["Intro", "FollowUp", "ThankYou", "Referral Ask"],
+        "Outreach.ResponseType":           ["Positive", "Neutral", "Negative", "None"],
+        "Interviews.Stage":                ["Screen", "Hiring Manager", "Panel", "Final", "Offer"],
+        "Interviews.Outcome":              ["Pass", "Fail", "Pending"],
+        "Consulting.Type":                 ["Discovery", "Proposal", "Implementation", "Retainer", "Training"],
+        "Consulting.Status":               ["Open", "In Progress", "Closed Won", "Closed Lost"],
+        "StatusHistory.EntityType":        ["Role", "Outreach", "Interview", "Consulting"],
+        "FlowErrors.Resolved":             ["Yes", "No"]
+      },
+      "severity": "warning"
+    },
+    "score_range": {
+      "description": "Numeric score fields must be within defined bounds.",
+      "fields": {
+        "Roles.FitScore": { "min": 0, "max": 100 }
+      },
+      "severity": "warning"
+    },
+    "changelog_required": {
+      "description": "Any structural modification to a canonical sheet must produce a ChangeLog entry.",
+      "severity": "error"
+    },
+    "flow_errors_required": {
+      "description": "Any automation error must be logged to the FlowErrors sheet.",
+      "severity": "error"
+    }
+  }
+}

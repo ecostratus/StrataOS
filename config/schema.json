@@ -1,0 +1,161 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "StrataOS Canonical System of Record Schema",
+  "description": "Machine-readable schema for the 60-day operating system System of Record. Exactly 10 sheets are permitted.",
+  "version": "1.0",
+  "canonical_sheets": [
+    "Roles",
+    "Companies",
+    "Contacts",
+    "Outreach",
+    "Interviews",
+    "Consulting",
+    "Metrics",
+    "StatusHistory",
+    "FlowErrors",
+    "ChangeLog"
+  ],
+  "prohibited_sheets": [
+    "Jobs",
+    "Applications",
+    "Weekly_Goals",
+    "Audit_Log",
+    "Dashboard"
+  ],
+  "sheets": {
+    "Roles": {
+      "description": "Target job roles and position definitions",
+      "fields": {
+        "RoleID":      { "type": "string",  "required": true,  "unique": true },
+        "Title":       { "type": "string",  "required": true },
+        "Seniority":   { "type": "string",  "required": false, "dropdown": true },
+        "Function":    { "type": "string",  "required": false },
+        "Source":      { "type": "string",  "required": false },
+        "FitScore":    { "type": "number",  "required": false, "min": 0, "max": 100 },
+        "Status":      { "type": "string",  "required": false, "dropdown": true,
+                         "options": ["Identified", "Applied", "Interviewing", "Closed"] },
+        "CompanyID":   { "type": "string",  "required": false, "fk": "Companies.CompanyID" },
+        "LastUpdated": { "type": "date",    "required": true }
+      }
+    },
+    "Companies": {
+      "description": "Organizations of interest",
+      "fields": {
+        "CompanyID": { "type": "string", "required": true,  "unique": true },
+        "Name":      { "type": "string", "required": true },
+        "Industry":  { "type": "string", "required": false },
+        "Location":  { "type": "string", "required": false },
+        "Size":      { "type": "string", "required": false },
+        "Website":   { "type": "string", "required": false },
+        "Notes":     { "type": "string", "required": false }
+      }
+    },
+    "Contacts": {
+      "description": "Professional network and relationships",
+      "fields": {
+        "ContactID":            { "type": "string", "required": true,  "unique": true },
+        "Name":                 { "type": "string", "required": true },
+        "Role":                 { "type": "string", "required": false },
+        "CompanyID":            { "type": "string", "required": false, "fk": "Companies.CompanyID" },
+        "Email":                { "type": "string", "required": false },
+        "LinkedIn":             { "type": "string", "required": false },
+        "RelationshipStrength": { "type": "string", "required": false, "dropdown": true,
+                                  "options": ["Weak", "Warm", "Strong"] },
+        "Notes":                { "type": "string", "required": false }
+      }
+    },
+    "Outreach": {
+      "description": "Communication tracking and follow-ups",
+      "fields": {
+        "OutreachID":     { "type": "string", "required": true,  "unique": true },
+        "ContactID":      { "type": "string", "required": false, "fk": "Contacts.ContactID" },
+        "CompanyID":      { "type": "string", "required": false, "fk": "Companies.CompanyID" },
+        "RoleID":         { "type": "string", "required": false, "fk": "Roles.RoleID" },
+        "Channel":        { "type": "string", "required": false, "dropdown": true,
+                            "options": ["Email", "LinkedIn", "Referral", "Other"] },
+        "MessageType":    { "type": "string", "required": false, "dropdown": true,
+                            "options": ["Intro", "FollowUp", "ThankYou", "Referral Ask"] },
+        "SentDate":       { "type": "date",   "required": false },
+        "ResponseDate":   { "type": "date",   "required": false },
+        "ResponseType":   { "type": "string", "required": false, "dropdown": true,
+                            "options": ["Positive", "Neutral", "Negative", "None"] },
+        "NextActionDate": { "type": "date",   "required": false },
+        "Notes":          { "type": "string", "required": false }
+      }
+    },
+    "Interviews": {
+      "description": "Interview pipeline and scheduling",
+      "fields": {
+        "InterviewID":   { "type": "string", "required": true,  "unique": true },
+        "RoleID":        { "type": "string", "required": false, "fk": "Roles.RoleID" },
+        "CompanyID":     { "type": "string", "required": false, "fk": "Companies.CompanyID" },
+        "Stage":         { "type": "string", "required": false, "dropdown": true,
+                           "options": ["Screen", "Hiring Manager", "Panel", "Final", "Offer"] },
+        "ScheduledDate": { "type": "date",   "required": false },
+        "CompletedDate": { "type": "date",   "required": false },
+        "Outcome":       { "type": "string", "required": false, "dropdown": true,
+                           "options": ["Pass", "Fail", "Pending"] },
+        "Notes":         { "type": "string", "required": false }
+      }
+    },
+    "Consulting": {
+      "description": "Consulting opportunities and engagements",
+      "fields": {
+        "ConsultingID":   { "type": "string", "required": true,  "unique": true },
+        "CompanyID":      { "type": "string", "required": false, "fk": "Companies.CompanyID" },
+        "Type":           { "type": "string", "required": false, "dropdown": true,
+                            "options": ["Discovery", "Proposal", "Implementation", "Retainer", "Training"] },
+        "Status":         { "type": "string", "required": false, "dropdown": true,
+                            "options": ["Open", "In Progress", "Closed Won", "Closed Lost"] },
+        "ValueEstimate":  { "type": "number", "required": false },
+        "NextActionDate": { "type": "date",   "required": false },
+        "Notes":          { "type": "string", "required": false }
+      }
+    },
+    "Metrics": {
+      "description": "KPIs and performance indicators (populated by automation)",
+      "fields": {
+        "MetricName":  { "type": "string", "required": true },
+        "MetricValue": { "type": "any",    "required": false },
+        "LastUpdated": { "type": "date",   "required": false }
+      }
+    },
+    "StatusHistory": {
+      "description": "Historical state tracking across entities",
+      "fields": {
+        "HistoryID":  { "type": "string",   "required": true,  "unique": true },
+        "EntityType": { "type": "string",   "required": false, "dropdown": true,
+                        "options": ["Role", "Outreach", "Interview", "Consulting"] },
+        "EntityID":   { "type": "string",   "required": true },
+        "OldStatus":  { "type": "string",   "required": false },
+        "NewStatus":  { "type": "string",   "required": false },
+        "ChangedBy":  { "type": "string",   "required": false },
+        "ChangedAt":  { "type": "datetime", "required": true }
+      }
+    },
+    "FlowErrors": {
+      "description": "Automation error logging",
+      "fields": {
+        "ErrorID":      { "type": "string",   "required": true,  "unique": true },
+        "FlowName":     { "type": "string",   "required": true },
+        "Timestamp":    { "type": "datetime", "required": true },
+        "ErrorMessage": { "type": "string",   "required": true },
+        "Payload":      { "type": "string",   "required": false },
+        "Resolved":     { "type": "string",   "required": false, "dropdown": true,
+                          "options": ["Yes", "No"] }
+      }
+    },
+    "ChangeLog": {
+      "description": "Audit trail of system modifications",
+      "fields": {
+        "ChangeID":   { "type": "string",   "required": true,  "unique": true },
+        "SheetName":  { "type": "string",   "required": true },
+        "FieldName":  { "type": "string",   "required": false },
+        "OldValue":   { "type": "string",   "required": false },
+        "NewValue":   { "type": "string",   "required": false },
+        "ChangedBy":  { "type": "string",   "required": false },
+        "ChangedAt":  { "type": "datetime", "required": true }
+      }
+    }
+  }
+}
