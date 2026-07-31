@@ -1,0 +1,122 @@
+name: Metrics Update Flow
+version: "1.0"
+description: >
+  Compute and write KPI metrics to the canonical Metrics sheet. Reads activity
+  data from Roles, Outreach, Interviews, and Consulting sheets. Logs all updates
+  to ChangeLog and errors to FlowErrors.
+
+sor_sheets:
+  read:
+    - Roles
+    - Outreach
+    - Interviews
+    - Consulting
+    - StatusHistory
+  write:
+    - Metrics
+  error_log: FlowErrors
+  change_log: ChangeLog
+
+trigger:
+  type: scheduled
+  schedule: "0 8 * * 1"  # Every Monday at 08:00 UTC
+  also_manual: true
+
+steps:
+  - id: compute_role_metrics
+    type: sor_aggregate
+    source_sheet: Roles
+    metrics:
+      - name: roles_identified
+        aggregation: count
+        filter:
+          Status: Identified
+      - name: roles_applied
+        aggregation: count
+        filter:
+          Status: Applied
+      - name: roles_interviewing
+        aggregation: count
+        filter:
+          Status: Interviewing
+      - name: avg_fit_score
+        aggregation: avg
+        field: FitScore
+
+  - id: compute_outreach_metrics
+    type: sor_aggregate
+    source_sheet: Outreach
+    metrics:
+      - name: outreach_sent
+        aggregation: count
+      - name: outreach_responded
+        aggregation: count
+        filter:
+          ResponseType: [Positive, Neutral, Negative]
+      - name: outreach_response_rate
+        aggregation: ratio
+        numerator_filter:
+          ResponseType: [Positive, Neutral, Negative]
+
+  - id: compute_interview_metrics
+    type: sor_aggregate
+    source_sheet: Interviews
+    metrics:
+      - name: interviews_scheduled
+        aggregation: count
+      - name: interviews_passed
+        aggregation: count
+        filter:
+          Outcome: Pass
+      - name: interview_pass_rate
+        aggregation: ratio
+        numerator_filter:
+          Outcome: Pass
+
+  - id: compute_consulting_metrics
+    type: sor_aggregate
+    source_sheet: Consulting
+    metrics:
+      - name: consulting_open
+        aggregation: count
+        filter:
+          Status: Open
+      - name: consulting_closed_won
+        aggregation: count
+        filter:
+          Status: Closed Won
+      - name: consulting_pipeline_value
+        aggregation: sum
+        field: ValueEstimate
+        filter:
+          Status: [Open, In Progress]
+
+  - id: write_metrics
+    type: sor_write
+    sheet: Metrics
+    mode: upsert_by_metric_name
+    records: "{{ all_computed_metrics }}"
+
+  - id: log_changelog
+    type: sor_write
+    sheet: ChangeLog
+    record:
+      ChangeID: "{{ uuid() }}"
+      SheetName: Metrics
+      FieldName: "(bulk update)"
+      OldValue: ""
+      NewValue: "{{ metrics_summary }}"
+      ChangedBy: "metrics-update-flow"
+      ChangedAt: "{{ now() }}"
+
+  - id: log_error
+    type: sor_write
+    sheet: FlowErrors
+    condition: "any_step.error"
+    record:
+      ErrorID: "{{ uuid() }}"
+      FlowName: "metrics-update-flow"
+      Timestamp: "{{ now() }}"
+      ErrorMessage: "{{ error.message }}"
+      Payload: "{{ error.payload }}"
+      Resolved: "No"
