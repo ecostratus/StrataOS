@@ -3,6 +3,7 @@ from __future__ import annotations
 import csv
 import json
 import os
+import sqlite3
 import tempfile
 from pathlib import Path
 from subprocess import CompletedProcess
@@ -293,3 +294,102 @@ def test_resume_prompt_failure_is_sanitized(monkeypatch, tmp_path: Path):
         assert body["error"]["code"] == "prompt_build_failed"
         assert "raw stdout leak" not in json.dumps(body)
         assert "raw stderr leak" not in json.dumps(body)
+
+
+def test_init_db_adds_phase1_search_columns_and_indexes(monkeypatch, tmp_path: Path):
+    db_path = tmp_path / "jobs.db"
+    monkeypatch.setattr(app_module, "DB_PATH", db_path)
+
+    app_module.init_db()
+
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    try:
+        cols = {str(r["name"]) for r in conn.execute("PRAGMA table_info(jobs)").fetchall()}
+        expected_cols = {
+            "country_code",
+            "state_region",
+            "city",
+            "salary_min",
+            "salary_max",
+            "salary_currency",
+            "job_type",
+            "work_type",
+            "company_normalized",
+            "title_normalized",
+            "posted_at_utc",
+            "search_document",
+        }
+        assert expected_cols.issubset(cols)
+
+        idx_rows = conn.execute("SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='jobs'").fetchall()
+        idx = {str(r["name"]) for r in idx_rows}
+        expected_idx = {
+            "idx_jobs_posted_at_utc",
+            "idx_jobs_location",
+            "idx_jobs_job_type_work_type",
+            "idx_jobs_company_normalized",
+            "idx_jobs_title_normalized",
+        }
+        assert expected_idx.issubset(idx)
+    finally:
+        conn.close()
+
+
+def test_replace_jobs_populates_phase1_normalized_fields(monkeypatch, tmp_path: Path):
+    db_path = tmp_path / "jobs.db"
+    monkeypatch.setattr(app_module, "DB_PATH", db_path)
+    app_module.init_db()
+
+    jobs = [
+        {
+            "title": "Senior Technical Program Manager",
+            "company": "Acme",
+            "location": "Austin, TX, US",
+            "source": "sample",
+            "url": "https://example.com/jobs/1",
+            "posted_date": "2026-07-20",
+            "score": 0.91,
+            "bucket": "Exceptional",
+            "raw_json": {
+                "salary_min": 185000,
+                "salary_max": 220000,
+                "salary_currency": "USD",
+                "job_type": "full-time",
+                "work_type": "hybrid",
+                "description": "TPM role leading platform initiatives",
+            },
+        }
+    ]
+
+    inserted = app_module._replace_jobs_for_run(101, jobs)
+    assert inserted == 1
+
+    conn = app_module.connect_db()
+    try:
+        row = conn.execute(
+            """
+            SELECT country_code, state_region, city, salary_min, salary_max, salary_currency,
+                   job_type, work_type, company_normalized, title_normalized, posted_at_utc,
+                   search_document
+            FROM jobs
+            WHERE run_id = 101
+            LIMIT 1
+            """
+        ).fetchone()
+        assert row is not None
+        payload = dict(row)
+        assert payload["country_code"] == "US"
+        assert payload["state_region"] == "TX"
+        assert payload["city"] == "Austin"
+        assert payload["salary_min"] == 185000
+        assert payload["salary_max"] == 220000
+        assert payload["salary_currency"] == "USD"
+        assert payload["job_type"] == "full-time"
+        assert payload["work_type"] == "hybrid"
+        assert payload["company_normalized"] == "acme"
+        assert payload["title_normalized"] == "senior technical program manager"
+        assert str(payload["posted_at_utc"]).startswith("2026-07-20")
+        assert "TPM role leading platform initiatives" in str(payload["search_document"])
+    finally:
+        conn.close()

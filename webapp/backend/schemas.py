@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class PromptRequest(BaseModel):
@@ -13,8 +13,53 @@ class PromptRequest(BaseModel):
 	no_sources: bool = True
 
 
+class SearchLocationFilter(BaseModel):
+	country: str | None = None
+	state_region: str | None = None
+	city: str | None = None
+
+
+class SearchSalaryFilter(BaseModel):
+	min: float | None = None
+	max: float | None = None
+	currency: str | None = None
+
+
+class SearchRequest(BaseModel):
+	query: str = ""
+	keywords_exclude: list[str] = Field(default_factory=list)
+	companies_include: list[str] = Field(default_factory=list)
+	companies_exclude: list[str] = Field(default_factory=list)
+	location: SearchLocationFilter = Field(default_factory=SearchLocationFilter)
+	salary: SearchSalaryFilter = Field(default_factory=SearchSalaryFilter)
+	job_type: list[str] = Field(default_factory=list)
+	work_type: list[str] = Field(default_factory=list)
+	posted_within_days: int | None = None
+	sort: Literal["relevance", "posted_date", "salary_desc", "salary_asc", "company_asc"] = "relevance"
+	page: int = 1
+	page_size: int = 25
+
+
+class SearchDiagnostics(BaseModel):
+	query_ms: int
+	sort_mode: str
+
+
+class SearchResponse(BaseModel):
+	items: list[dict[str, object]]
+	page: int
+	page_size: int
+	total: int
+	applied_filters: dict[str, object]
+	diagnostics: SearchDiagnostics
+
+
 class SetupOpenAIKeyRequest(BaseModel):
 	api_key: str
+
+
+class JobStatusUpdateRequest(BaseModel):
+	status: Literal["discovered", "applied", "interviewing", "offer", "rejected"]
 
 
 class PromptArtifact(BaseModel):

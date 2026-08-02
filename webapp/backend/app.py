@@ -9,9 +9,11 @@ import sqlite3
 import subprocess
 import sys
 import tempfile
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+from collections.abc import Iterable
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -20,7 +22,17 @@ from fastapi.staticfiles import StaticFiles
 
 from . import generation as generation_module
 from .generation import generate_artifact
-from .schemas import ArtifactResult, PromptArtifact, PromptError, PromptGenerationResponse, PromptRequest, SetupOpenAIKeyRequest
+from .schemas import (
+	ArtifactResult,
+	JobStatusUpdateRequest,
+	PromptArtifact,
+	PromptError,
+	PromptGenerationResponse,
+	PromptRequest,
+	SearchRequest,
+	SearchResponse,
+	SetupOpenAIKeyRequest,
+)
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -54,6 +66,33 @@ BUCKET_COLORS = {
 	"Weak": "#ef4444",
 }
 
+JOB_STATUS_VALUES = ("discovered", "applied", "interviewing", "offer", "rejected")
+DEFAULT_JOB_STATUS = "discovered"
+
+JOBS_MIGRATION_COLUMNS: dict[str, str] = {
+	"status": f"TEXT NOT NULL DEFAULT '{DEFAULT_JOB_STATUS}'",
+	"country_code": "TEXT",
+	"state_region": "TEXT",
+	"city": "TEXT",
+	"salary_min": "REAL",
+	"salary_max": "REAL",
+	"salary_currency": "TEXT",
+	"job_type": "TEXT",
+	"work_type": "TEXT",
+	"company_normalized": "TEXT",
+	"title_normalized": "TEXT",
+	"posted_at_utc": "TEXT",
+	"search_document": "TEXT",
+}
+
+JOBS_INDEXES: dict[str, str] = {
+	"idx_jobs_posted_at_utc": "CREATE INDEX IF NOT EXISTS idx_jobs_posted_at_utc ON jobs(posted_at_utc)",
+	"idx_jobs_location": "CREATE INDEX IF NOT EXISTS idx_jobs_location ON jobs(country_code, state_region, city)",
+	"idx_jobs_job_type_work_type": "CREATE INDEX IF NOT EXISTS idx_jobs_job_type_work_type ON jobs(job_type, work_type)",
+	"idx_jobs_company_normalized": "CREATE INDEX IF NOT EXISTS idx_jobs_company_normalized ON jobs(company_normalized)",
+	"idx_jobs_title_normalized": "CREATE INDEX IF NOT EXISTS idx_jobs_title_normalized ON jobs(title_normalized)",
+}
+
 
 def utc_now() -> str:
 	return datetime.now(timezone.utc).isoformat()
@@ -64,6 +103,122 @@ def connect_db() -> sqlite3.Connection:
 	conn = sqlite3.connect(DB_PATH)
 	conn.row_factory = sqlite3.Row
 	return conn
+
+
+def _existing_job_columns(conn: sqlite3.Connection) -> set[str]:
+	rows = conn.execute("PRAGMA table_info(jobs)").fetchall()
+	return {str(r["name"]) for r in rows}
+
+
+def _ensure_jobs_schema(conn: sqlite3.Connection) -> None:
+	existing = _existing_job_columns(conn)
+	for column, sql_type in JOBS_MIGRATION_COLUMNS.items():
+		if column in existing:
+			continue
+		conn.execute(f"ALTER TABLE jobs ADD COLUMN {column} {sql_type}")
+
+
+def _ensure_jobs_indexes(conn: sqlite3.Connection) -> None:
+	for stmt in JOBS_INDEXES.values():
+		conn.execute(stmt)
+
+
+def _jobs_index_status(conn: sqlite3.Connection) -> dict[str, bool]:
+	rows = conn.execute("SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='jobs'").fetchall()
+	present = {str(r["name"]) for r in rows}
+	return {name: (name in present) for name in JOBS_INDEXES}
+
+
+def _normalize_value(value: Any) -> str:
+	if value is None:
+		return ""
+	return " ".join(str(value).strip().lower().split())
+
+
+def _to_number(value: Any) -> float | None:
+	if value is None or value == "":
+		return None
+	try:
+		return float(value)
+	except Exception:
+		return None
+
+
+def _first_present(mapping: dict[str, Any], keys: Iterable[str]) -> Any:
+	for key in keys:
+		if key in mapping and mapping.get(key) not in (None, ""):
+			return mapping.get(key)
+	return None
+
+
+def _derive_location_parts(location: str) -> tuple[str | None, str | None, str | None]:
+	parts = [p.strip() for p in location.split(",") if p.strip()]
+	if len(parts) >= 3:
+		return parts[-1], parts[-2], ", ".join(parts[:-2])
+	if len(parts) == 2:
+		return None, parts[-1], parts[0]
+	if len(parts) == 1:
+		return None, None, parts[0]
+	return None, None, None
+
+
+def _derive_search_fields(job: dict[str, Any]) -> dict[str, Any]:
+	raw = job.get("raw_json") if isinstance(job.get("raw_json"), dict) else {}
+	title = str(job.get("title") or "")
+	company = str(job.get("company") or "")
+	location = str(job.get("location") or "")
+	source = str(job.get("source") or "")
+	posted_date = str(job.get("posted_date") or "")
+
+	country_code = _first_present(raw, ("country_code", "country", "countryCode"))
+	state_region = _first_present(raw, ("state_region", "state", "region"))
+	city = _first_present(raw, ("city",))
+	if not any((country_code, state_region, city)):
+		derived_country, derived_state, derived_city = _derive_location_parts(location)
+		country_code = country_code or derived_country
+		state_region = state_region or derived_state
+		city = city or derived_city
+
+	salary_min = _to_number(_first_present(raw, ("salary_min", "salaryMin", "min_salary")))
+	salary_max = _to_number(_first_present(raw, ("salary_max", "salaryMax", "max_salary")))
+	salary_currency = _first_present(raw, ("salary_currency", "salaryCurrency", "currency"))
+	job_type = _first_present(raw, ("job_type", "employment_type", "employmentType"))
+	work_type = _first_present(raw, ("work_type", "workType"))
+	if work_type is None:
+		loc_norm = location.lower()
+		if "remote" in loc_norm:
+			work_type = "remote"
+		elif "hybrid" in loc_norm:
+			work_type = "hybrid"
+		elif "onsite" in loc_norm or "on-site" in loc_norm or "on site" in loc_norm:
+			work_type = "onsite"
+
+	posted_at_utc = _first_present(raw, ("posted_at_utc", "postedAtUtc", "posted_at"))
+	if not posted_at_utc and posted_date:
+		posted_at_utc = f"{posted_date}T00:00:00+00:00"
+
+	search_document = " | ".join([
+		title,
+		company,
+		location,
+		source,
+		str(_first_present(raw, ("description", "summary", "snippet")) or ""),
+	])
+
+	return {
+		"country_code": country_code,
+		"state_region": state_region,
+		"city": city,
+		"salary_min": salary_min,
+		"salary_max": salary_max,
+		"salary_currency": salary_currency,
+		"job_type": job_type,
+		"work_type": work_type,
+		"company_normalized": _normalize_value(company),
+		"title_normalized": _normalize_value(title),
+		"posted_at_utc": posted_at_utc,
+		"search_document": search_document,
+	}
 
 
 def init_db() -> None:
@@ -88,6 +243,7 @@ def init_db() -> None:
 			CREATE TABLE IF NOT EXISTS jobs (
 				id INTEGER PRIMARY KEY AUTOINCREMENT,
 				run_id INTEGER NOT NULL,
+				status TEXT NOT NULL DEFAULT 'discovered',
 				title TEXT,
 				company TEXT,
 				location TEXT,
@@ -96,6 +252,18 @@ def init_db() -> None:
 				posted_date TEXT,
 				score REAL,
 				bucket TEXT,
+				country_code TEXT,
+				state_region TEXT,
+				city TEXT,
+				salary_min REAL,
+				salary_max REAL,
+				salary_currency TEXT,
+				job_type TEXT,
+				work_type TEXT,
+				company_normalized TEXT,
+				title_normalized TEXT,
+				posted_at_utc TEXT,
+				search_document TEXT,
 				raw_json TEXT,
 				FOREIGN KEY(run_id) REFERENCES runs(id)
 			);
@@ -112,6 +280,12 @@ def init_db() -> None:
 			);
 			"""
 		)
+		_ensure_jobs_schema(conn)
+		_ensure_jobs_indexes(conn)
+		# Startup guard: index creation should be idempotent and complete.
+		index_status = _jobs_index_status(conn)
+		if not all(index_status.values()):
+			raise RuntimeError(f"Jobs search indexes missing after initialization: {index_status}")
 		conn.commit()
 	finally:
 		conn.close()
@@ -317,13 +491,20 @@ def _replace_jobs_for_run(run_id: int, jobs: list[dict[str, Any]]) -> int:
 	try:
 		conn.execute("DELETE FROM jobs WHERE run_id=?", (run_id,))
 		for job in jobs:
+			derived = _derive_search_fields(job)
 			conn.execute(
 				"""
-				INSERT INTO jobs(run_id, title, company, location, source, url, posted_date, score, bucket, raw_json)
-				VALUES(?,?,?,?,?,?,?,?,?,?)
+				INSERT INTO jobs(
+					run_id, status, title, company, location, source, url, posted_date, score, bucket,
+					country_code, state_region, city, salary_min, salary_max, salary_currency,
+					job_type, work_type, company_normalized, title_normalized, posted_at_utc,
+					search_document, raw_json
+				)
+				VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
 				""",
 				(
 					run_id,
+					job.get("status") or DEFAULT_JOB_STATUS,
 					job.get("title"),
 					job.get("company"),
 					job.get("location"),
@@ -332,6 +513,18 @@ def _replace_jobs_for_run(run_id: int, jobs: list[dict[str, Any]]) -> int:
 					job.get("posted_date"),
 					job.get("score"),
 					job.get("bucket"),
+					derived.get("country_code"),
+					derived.get("state_region"),
+					derived.get("city"),
+					derived.get("salary_min"),
+					derived.get("salary_max"),
+					derived.get("salary_currency"),
+					derived.get("job_type"),
+					derived.get("work_type"),
+					derived.get("company_normalized"),
+					derived.get("title_normalized"),
+					derived.get("posted_at_utc"),
+					derived.get("search_document"),
 					json.dumps(job.get("raw_json") or {}, ensure_ascii=False),
 				),
 			)
@@ -355,6 +548,139 @@ def _get_job(job_id: int) -> dict[str, Any]:
 		return payload
 	finally:
 		conn.close()
+
+
+def _normalize_items(items: list[str]) -> list[str]:
+	normalized = [_normalize_value(item) for item in items]
+	return [item for item in normalized if item]
+
+
+def _build_search_applied_filters(payload: SearchRequest, page: int, page_size: int) -> dict[str, object]:
+	return {
+		"query": _normalize_value(payload.query),
+		"keywords_exclude": _normalize_items(payload.keywords_exclude),
+		"companies_include": _normalize_items(payload.companies_include),
+		"companies_exclude": _normalize_items(payload.companies_exclude),
+		"location": {
+			"country": _normalize_value(payload.location.country),
+			"state_region": _normalize_value(payload.location.state_region),
+			"city": _normalize_value(payload.location.city),
+		},
+		"salary": {
+			"min": payload.salary.min,
+			"max": payload.salary.max,
+			"currency": _normalize_value(payload.salary.currency),
+		},
+		"job_type": _normalize_items(payload.job_type),
+		"work_type": _normalize_items(payload.work_type),
+		"posted_within_days": payload.posted_within_days,
+		"sort": payload.sort,
+		"page": page,
+		"page_size": page_size,
+	}
+
+
+def _build_jobs_search_where(payload: SearchRequest) -> tuple[list[str], list[Any]]:
+	where: list[str] = ["1=1"]
+	params: list[Any] = []
+
+	query_terms = _normalize_value(payload.query).split()
+	for term in query_terms:
+		like = f"%{term}%"
+		where.append(
+			"(" \
+			"LOWER(COALESCE(search_document, '')) LIKE ? " \
+			"OR LOWER(COALESCE(title, '')) LIKE ? " \
+			"OR LOWER(COALESCE(company, '')) LIKE ?" \
+			")"
+		)
+		params.extend([like, like, like])
+
+	for term in _normalize_items(payload.keywords_exclude):
+		where.append("LOWER(COALESCE(search_document, '')) NOT LIKE ?")
+		params.append(f"%{term}%")
+
+	companies_include = _normalize_items(payload.companies_include)
+	if companies_include:
+		placeholders = ",".join("?" for _ in companies_include)
+		where.append(f"LOWER(COALESCE(company_normalized, company, '')) IN ({placeholders})")
+		params.extend(companies_include)
+
+	companies_exclude = _normalize_items(payload.companies_exclude)
+	if companies_exclude:
+		placeholders = ",".join("?" for _ in companies_exclude)
+		where.append(f"LOWER(COALESCE(company_normalized, company, '')) NOT IN ({placeholders})")
+		params.extend(companies_exclude)
+
+	country = _normalize_value(payload.location.country)
+	if country:
+		where.append("LOWER(COALESCE(country_code, '')) = ?")
+		params.append(country)
+
+	state_region = _normalize_value(payload.location.state_region)
+	if state_region:
+		where.append("LOWER(COALESCE(state_region, '')) = ?")
+		params.append(state_region)
+
+	city = _normalize_value(payload.location.city)
+	if city:
+		where.append("LOWER(COALESCE(city, '')) = ?")
+		params.append(city)
+
+	if payload.salary.min is not None:
+		where.append("COALESCE(salary_max, salary_min) >= ?")
+		params.append(payload.salary.min)
+
+	if payload.salary.max is not None:
+		where.append("COALESCE(salary_min, salary_max) <= ?")
+		params.append(payload.salary.max)
+
+	currency = _normalize_value(payload.salary.currency)
+	if currency:
+		where.append("LOWER(COALESCE(salary_currency, '')) = ?")
+		params.append(currency)
+
+	job_type = _normalize_items(payload.job_type)
+	if job_type:
+		placeholders = ",".join("?" for _ in job_type)
+		where.append(f"LOWER(COALESCE(job_type, '')) IN ({placeholders})")
+		params.extend(job_type)
+
+	work_type = _normalize_items(payload.work_type)
+	if work_type:
+		placeholders = ",".join("?" for _ in work_type)
+		where.append(f"LOWER(COALESCE(work_type, '')) IN ({placeholders})")
+		params.extend(work_type)
+
+	if payload.posted_within_days is not None and payload.posted_within_days > 0:
+		where.append("julianday('now') - julianday(COALESCE(posted_at_utc, posted_date)) <= ?")
+		params.append(payload.posted_within_days)
+
+	return where, params
+
+
+def _jobs_sort_clause(sort_mode: str) -> str:
+	if sort_mode == "posted_date":
+		return "COALESCE(posted_at_utc, posted_date) DESC, id DESC"
+	if sort_mode == "salary_desc":
+		return "(salary_max IS NULL) ASC, salary_max DESC, id DESC"
+	if sort_mode == "salary_asc":
+		return "(salary_min IS NULL) ASC, salary_min ASC, id DESC"
+	if sort_mode == "company_asc":
+		return "LOWER(COALESCE(company, '')) ASC, id DESC"
+	return "COALESCE(score, 0) DESC, COALESCE(posted_at_utc, posted_date) DESC, id DESC"
+
+
+def _decode_jobs_rows(rows: list[sqlite3.Row]) -> list[dict[str, object]]:
+	items: list[dict[str, object]] = []
+	for row in rows:
+		item: dict[str, object] = dict(row)
+		try:
+			item["raw_json"] = json.loads(str(item.get("raw_json") or "{}"))
+		except Exception:
+			item["raw_json"] = {}
+		items.append(item)
+	return items
 app = FastAPI(title="StrataOS Control Center API", version="1.0.0")
 
 app.add_middleware(
@@ -455,13 +781,27 @@ def list_runs(limit: int = 30) -> list[dict[str, Any]]:
 
 
 @app.get("/api/jobs")
-def list_jobs(limit: int = 100, run_id: int | None = None) -> list[dict[str, Any]]:
+def list_jobs(limit: int = 100, run_id: int | None = None, status: str | None = None) -> list[dict[str, Any]]:
+	status_filter = _normalize_value(status)
+	if status_filter and status_filter not in JOB_STATUS_VALUES:
+		raise HTTPException(status_code=400, detail=f"Unsupported status: {status}")
+
 	conn = connect_db()
 	try:
-		if run_id is None:
+		if run_id is None and not status_filter:
 			rows = conn.execute(
 				"SELECT * FROM jobs ORDER BY id DESC LIMIT ?",
 				(limit,),
+			).fetchall()
+		elif run_id is None and status_filter:
+			rows = conn.execute(
+				"SELECT * FROM jobs WHERE status=? ORDER BY id DESC LIMIT ?",
+				(status_filter, limit),
+			).fetchall()
+		elif run_id is not None and status_filter:
+			rows = conn.execute(
+				"SELECT * FROM jobs WHERE run_id=? AND status=? ORDER BY id DESC LIMIT ?",
+				(run_id, status_filter, limit),
 			).fetchall()
 		else:
 			rows = conn.execute(
@@ -481,9 +821,72 @@ def list_jobs(limit: int = 100, run_id: int | None = None) -> list[dict[str, Any
 		conn.close()
 
 
+@app.get("/api/jobs/statuses")
+def list_job_statuses() -> dict[str, list[str]]:
+	return {"items": list(JOB_STATUS_VALUES)}
+
+
+@app.patch("/api/jobs/{job_id}/status")
+def update_job_status(job_id: int, request: JobStatusUpdateRequest) -> dict[str, Any]:
+	next_status = _normalize_value(request.status)
+	if next_status not in JOB_STATUS_VALUES:
+		raise HTTPException(status_code=400, detail=f"Unsupported status: {request.status}")
+
+	conn = connect_db()
+	try:
+		updated = conn.execute(
+			"UPDATE jobs SET status=? WHERE id=?",
+			(next_status, job_id),
+		)
+		if updated.rowcount == 0:
+			raise HTTPException(status_code=404, detail="Job not found")
+		conn.commit()
+	finally:
+		conn.close()
+
+	return _get_job(job_id)
+
+
 @app.get("/api/jobs/{job_id}")
 def get_job(job_id: int) -> dict[str, Any]:
 	return _get_job(job_id)
+
+
+@app.post("/api/jobs/search", response_model=SearchResponse)
+def search_jobs(request: SearchRequest) -> SearchResponse:
+	page = max(1, request.page)
+	page_size = max(1, min(250, request.page_size))
+	offset = (page - 1) * page_size
+
+	where_parts, params = _build_jobs_search_where(request)
+	where_sql = " AND ".join(where_parts)
+	sort_sql = _jobs_sort_clause(request.sort)
+
+	started = time.perf_counter()
+	conn = connect_db()
+	try:
+		total_row = conn.execute(
+			f"SELECT COUNT(*) AS total FROM jobs WHERE {where_sql}",
+			params,
+		).fetchone()
+		total = int(total_row["total"]) if total_row else 0
+
+		rows = conn.execute(
+			f"SELECT * FROM jobs WHERE {where_sql} ORDER BY {sort_sql} LIMIT ? OFFSET ?",
+			[*params, page_size, offset],
+		).fetchall()
+	finally:
+		conn.close()
+
+	query_ms = int((time.perf_counter() - started) * 1000)
+	return SearchResponse(
+		items=_decode_jobs_rows(rows),
+		page=page,
+		page_size=page_size,
+		total=total,
+		applied_filters=_build_search_applied_filters(request, page, page_size),
+		diagnostics={"query_ms": query_ms, "sort_mode": request.sort},
+	)
 
 
 def _create_prompt(prompt_type: str, request: PromptRequest) -> PromptGenerationResponse:
