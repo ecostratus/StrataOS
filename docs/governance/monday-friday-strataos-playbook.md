@@ -123,9 +123,9 @@ Optional reset for a clean next week baseline:
 ```
 
 Review docs:
-- `docs/governance-model.md`
-- `docs/progress_to_launch_checklist_timeline.md`
-- `docs/weekly-cadence.md`
+- `docs/governance/governance-model.md`
+- `docs/phases/progress_to_launch_checklist_timeline.md`
+- `docs/governance/weekly-cadence.md`
 
 ## Success Criteria (weekly)
 - New qualified roles discovered and scored each Monday

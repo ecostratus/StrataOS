@@ -17,6 +17,6 @@ clean-cache:
 	@echo "Cache cleared (.__pycache__, .pytest_cache)"
 
 next-changelog:
-	@mkdir -p docs/releases
-	@echo "# v0.3.6 - Draft\n\n## Summary\n- Placeholder for upcoming features\n\n## Planned Work\n- Snapshot test expansion\n- Metrics aggregation and dashboarding\n- Resume Tailoring v1 behavior extensions\n\n## Notes\n- TBD" > docs/releases/v0.3.6-draft.md
-	@echo "Draft release notes created: docs/releases/v0.3.6-draft.md"
+	@mkdir -p releases
+	@echo "# v0.3.6 - Draft\n\n## Summary\n- Placeholder for upcoming features\n\n## Planned Work\n- Snapshot test expansion\n- Metrics aggregation and dashboarding\n- Resume Tailoring v1 behavior extensions\n\n## Notes\n- TBD" > releases/v0.3.6-draft.md
+	@echo "Draft release notes created: releases/v0.3.6-draft.md"

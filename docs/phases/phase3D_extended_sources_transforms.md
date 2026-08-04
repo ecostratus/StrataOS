@@ -12,7 +12,7 @@ This document is a placeholder for forward-phase planning and does not contain i
 - Extended sources and enrichment transforms may be revisited post-Phase 3C activation.
 
 ## References
-- Canonical source: [docs/progress_to_launch_checklist_timeline.md](progress_to_launch_checklist_timeline.md)
+- Canonical source: [docs/phases/progress_to_launch_checklist_timeline.md](progress_to_launch_checklist_timeline.md)
 - Historical context archived: [../reference/archived_artifacts.md](../reference/archived_artifacts.md) (Archived)
 
 ## Superseded By

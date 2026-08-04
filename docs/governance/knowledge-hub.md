@@ -19,11 +19,11 @@ This is the central index for operational outputs, findings, dashboards, and wee
 - CLI: `./.venv/bin/python automation/common/metrics_cli.py --summary`
 
 ### Strategy and Findings Documents
-- `docs/weekly-cadence.md`: weekly operating rhythm.
-- `docs/monday-friday-strataos-playbook.md`: 20-30 minute daily execution playbook.
-- `docs/risk-map.md`: risk tracking and mitigations.
-- `docs/governance-model.md`: decision and governance framework.
-- `docs/progress_to_launch_checklist_timeline.md`: active program status and timeline.
+- `docs/governance/weekly-cadence.md`: weekly operating rhythm.
+- `docs/governance/monday-friday-strataos-playbook.md`: 20-30 minute daily execution playbook.
+- `docs/governance/risk-map.md`: risk tracking and mitigations.
+- `docs/governance/governance-model.md`: decision and governance framework.
+- `docs/phases/progress_to_launch_checklist_timeline.md`: active program status and timeline.
 
 ## Dashboard Status
 
