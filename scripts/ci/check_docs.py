@@ -28,7 +28,7 @@ FORBIDDEN_PHASE_REFS = ("Phase 3D", "Phase 3E")
 FORBIDDEN_CURRENT_WORDS = ("current", "active", "in progress", "now", "shipping")
 EXCEPTION_WORDS = ("FUTURE", "post-Phase 3C")
 
-CANONICAL_CHECKLIST = "docs/progress_to_launch_checklist_timeline.md"
+CANONICAL_CHECKLIST = "docs/phases/progress_to_launch_checklist_timeline.md"
 ARCHIVE_DOC = "docs/archived_artifacts.md"
 
 PHASE_DOCS = (
@@ -211,7 +211,7 @@ def check_future_phase_headers(md_file: str, failures: list[str]):
             )
 
 def check_version_tags(failures: list[str]):
-    for rel in ("docs/phase3A_enrichment_scoring.md", "docs/phase3B_scheduling_storage.md"):
+    for rel in ("docs/phases/phase3A_enrichment_scoring.md", "docs/phases/phase3B_scheduling_storage.md"):
         path = os.path.join(REPO_ROOT, rel)
         if not os.path.exists(path):
             failures.append(f"[Version Tag Missing] {rel}  File not found")

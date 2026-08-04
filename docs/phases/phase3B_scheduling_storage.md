@@ -50,4 +50,4 @@ Canonical source: [ProgresstoLaunch Checklist & Timeline](progress_to_launch_che
 ## Cross-Links
 - Phase 3A: [docs/phase3A_enrichment_scoring.md](phase3A_enrichment_scoring.md)
 - Overview: [README.md](../README.md)
-- Config: [config/README.md](../config/README.md)
+- Config: [config/README.md](../../config/README.md)

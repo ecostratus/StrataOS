@@ -13,7 +13,7 @@ LAYER_REQUIREMENTS = {
     "job-discovery": {
         "paths": [
             "automation/job-discovery/scripts/job_discovery_v1.py",
-            "docs/job_discovery_sop.md",
+            "docs/phases/job_discovery_sop.md",
         ],
         "tests": ["tests/job_discovery*_tests.py", "tests/integration/test_multi_source_*.py"],
     },
@@ -21,7 +21,7 @@ LAYER_REQUIREMENTS = {
         "paths": [
             "automation/enrichment/scripts/enrichment.py",
             "automation/enrichment/scripts/scoring.py",
-            "docs/phase3A_enrichment_scoring.md",
+            "docs/phases/phase3A_enrichment_scoring.md",
         ],
         "tests": ["tests/enrichment/test_*.py", "tests/phase3A_enrichment_tests.py"],
     },
@@ -29,7 +29,7 @@ LAYER_REQUIREMENTS = {
         "paths": [
             "automation/storage/sqlite_store.py",
             "automation/storage/json_store.py",
-            "docs/phase3B_scheduling_storage.md",
+            "docs/phases/phase3B_scheduling_storage.md",
         ],
         "tests": ["tests/storage/test_*.py"],
     },

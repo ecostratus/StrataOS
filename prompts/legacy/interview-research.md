@@ -73,6 +73,6 @@ The generated materials are reviewed by the user before being linked to an **Int
 
 ## References
 
-- [docs/SCHEMA.md](../docs/SCHEMA.md) — Interviews sheet field definitions
-- [copilot-flows/interview-prep-flow.yml](../copilot-flows/interview-prep-flow.yml) — Orchestration flow
-- [automation/interview-prep/scripts/interview_prep_v1.py](../automation/interview-prep/scripts/interview_prep_v1.py) — Python implementation
+- [docs/SCHEMA.md](../../docs/reference/SCHEMA.md) — Interviews sheet field definitions
+- [copilot-flows/interview-prep-flow.yml](../../copilot-flows/interview-prep-flow.yml) — Orchestration flow
+- [automation/interview-prep/scripts/interview_prep_v1.py](../../automation/interview-prep/scripts/interview_prep_v1.py) — Python implementation

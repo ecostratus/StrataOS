@@ -146,6 +146,6 @@ All errors are logged to **FlowErrors**. All structural changes are tracked in *
 ## References
 
 - [SCHEMA.md](SCHEMA.md) — Full field definitions
-- [REPO_NORMALIZATION.md](../REPO_NORMALIZATION.md) — Normalization audit and compliance
-- [excel-templates/system-of-record-schema.md](../excel-templates/system-of-record-schema.md) — Excel schema
-- [config/schema.json](../config/schema.json) — Machine-readable schema
+- [REPO_NORMALIZATION.md](../../REPO_NORMALIZATION.md) — Normalization audit and compliance
+- [excel-templates/system-of-record-schema.md](../../excel-templates/system-of-record-schema.md) — Excel schema
+- [config/schema.json](../../config/schema.json) — Machine-readable schema

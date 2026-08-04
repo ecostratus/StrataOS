@@ -69,6 +69,6 @@ The generated message is reviewed by the user before being logged as a record in
 
 ## References
 
-- [docs/SCHEMA.md](../docs/SCHEMA.md) — Outreach sheet field definitions
-- [copilot-flows/outreach-flow.yml](../copilot-flows/outreach-flow.yml) — Orchestration flow
-- [automation/outreach/scripts/outreach_generator_v1.py](../automation/outreach/scripts/outreach_generator_v1.py) — Python implementation
+- [docs/SCHEMA.md](../../docs/reference/SCHEMA.md) — Outreach sheet field definitions
+- [copilot-flows/outreach-flow.yml](../../copilot-flows/outreach-flow.yml) — Orchestration flow
+- [automation/outreach/scripts/outreach_generator_v1.py](../../automation/outreach/scripts/outreach_generator_v1.py) — Python implementation

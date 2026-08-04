@@ -2,7 +2,7 @@
 
 **Version:** 1.0  
 **Status:** Authoritative  
-**Source:** [excel-templates/system-of-record-schema.md](../excel-templates/system-of-record-schema.md)
+**Source:** [excel-templates/system-of-record-schema.md](../../excel-templates/system-of-record-schema.md)
 
 ---
 
@@ -10,8 +10,8 @@
 
 This document is the canonical field-level schema reference for the StrataOS System of Record (SoR). The SoR consists of exactly **10 sheets** implemented as Excel Tables.
 
-For governance rules and change management, see [excel-templates/system-of-record-schema.md](../excel-templates/system-of-record-schema.md).  
-For machine-readable definitions, see [config/schema.json](../config/schema.json).
+For governance rules and change management, see [excel-templates/system-of-record-schema.md](../../excel-templates/system-of-record-schema.md).  
+For machine-readable definitions, see [config/schema.json](../../config/schema.json).
 
 ---
 
@@ -206,7 +206,7 @@ The following names are **not** part of the canonical SoR and must never appear:
 
 ## References
 
-- [excel-templates/system-of-record-schema.md](../excel-templates/system-of-record-schema.md) — Full authoritative schema
-- [config/schema.json](../config/schema.json) — Machine-readable schema
-- [config/validation-rules.json](../config/validation-rules.json) — Validation rule definitions
+- [excel-templates/system-of-record-schema.md](../../excel-templates/system-of-record-schema.md) — Full authoritative schema
+- [config/schema.json](../../config/schema.json) — Machine-readable schema
+- [config/validation-rules.json](../../config/validation-rules.json) — Validation rule definitions
 - [ARCHITECTURE.md](ARCHITECTURE.md) — System architecture

@@ -264,9 +264,9 @@ chmod +x scripts/setup_github_auth.sh
 
 After setup, you can:
 
-1. Review the [master brief](master-brief.md) to understand objectives
-2. Check the [operating constraints](operating-constraints.md)
-3. Review the [governance model](governance-model.md)
+1. Review the [master brief](../docs/governance/master-brief.md) to understand objectives
+2. Check the [operating constraints](../docs/governance/operating-constraints.md)
+3. Review the [governance model](../docs/governance/governance-model.md)
 4. Start using automation scripts for your 60-day plan
 
 ## Additional Resources

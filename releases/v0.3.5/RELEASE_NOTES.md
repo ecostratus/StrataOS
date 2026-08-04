@@ -30,7 +30,7 @@ Note: Phase 3E content is FUTURE-only (post-Phase 3C) and not current. This docu
 - Sample context support; timestamped outputs under `output/`
 - Tests surface in VS Code Problems; docs updated with checklist & quick links
 
-Quickstart: [ProgresstoLaunch Checklist & Timeline](../progress_to_launch_checklist_timeline.md)
+Quickstart: [ProgresstoLaunch Checklist & Timeline](../../docs/phases/progress_to_launch_checklist_timeline.md)
 
 ## Overview
 
@@ -182,7 +182,7 @@ Run with VS Code task "Run Python tests" (errors surface in Problems), or via te
 - Enrichment: [automation/job-discovery/scripts/enrichment_transforms.py](../../automation/job-discovery/scripts/enrichment_transforms.py)
 - Outreach script: [automation/outreach/scripts/outreach_generator_v1.py](../../automation/outreach/scripts/outreach_generator_v1.py)
 - Resume script: [automation/resume-tailoring/scripts/resume_tailor_v1.py](../../automation/resume-tailoring/scripts/resume_tailor_v1.py)
-- Checklist & Timeline: [docs/progress_to_launch_checklist_timeline.md](../progress_to_launch_checklist_timeline.md)
+- Checklist & Timeline: [docs/progress_to_launch_checklist_timeline.md](../../docs/phases/progress_to_launch_checklist_timeline.md)
 - Tasks: [.vscode/tasks.json](../../.vscode/tasks.json)
 - Sample env: [config/env.sample.json](../../config/env.sample.json)
 
@@ -222,5 +222,5 @@ Run with VS Code task "Run Python tests" (errors surface in Problems), or via te
 	- Combined runner: [automation/common/run_prompts.py](../../automation/common/run_prompts.py)
 	- Outreach script: [automation/outreach/scripts/outreach_generator_v1.py](../../automation/outreach/scripts/outreach_generator_v1.py)
 	- Resume script: [automation/resume-tailoring/scripts/resume_tailor_v1.py](../../automation/resume-tailoring/scripts/resume_tailor_v1.py)
-	- Checklist: [docs/progress_to_launch_checklist_timeline.md](../progress_to_launch_checklist_timeline.md)
+	- Checklist: [docs/progress_to_launch_checklist_timeline.md](../../docs/phases/progress_to_launch_checklist_timeline.md)
 	- Env sample: [config/env.sample.json](../../config/env.sample.json)

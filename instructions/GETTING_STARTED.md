@@ -67,7 +67,7 @@ pip install -r automation/consulting-funnel/scripts/requirements.txt
 1. Open `excel-templates/system-of-record-template.xlsx` in Microsoft Excel.
 2. Review the 10 canonical sheets: Roles, Companies, Contacts, Outreach, Interviews, Consulting, Metrics, StatusHistory, FlowErrors, ChangeLog.
 3. Save a working copy — do **not** rename or delete any sheets.
-4. See [docs/SCHEMA.md](SCHEMA.md) for field definitions.
+4. See [docs/SCHEMA.md](../docs/reference/SCHEMA.md) for field definitions.
 
 ---
 
@@ -106,7 +106,7 @@ pytest tests/schema-validation/ -v
 pytest --cov=automation tests/
 ```
 
-See [docs/TESTING.md](TESTING.md) for the full testing guide.
+See [docs/TESTING.md](../docs/reference/TESTING.md) for the full testing guide.
 
 ---
 
@@ -124,7 +124,7 @@ See [docs/TESTING.md](TESTING.md) for the full testing guide.
 
 ## Next Steps
 
-- Read [docs/ARCHITECTURE.md](ARCHITECTURE.md) to understand the system design.
-- Review [docs/SCHEMA.md](SCHEMA.md) for the canonical data model.
+- Read [docs/ARCHITECTURE.md](../docs/reference/ARCHITECTURE.md) to understand the system design.
+- Review [docs/SCHEMA.md](../docs/reference/SCHEMA.md) for the canonical data model.
 - Explore [automation/README.md](../automation/README.md) for automation module details.
 - Check [REPO_NORMALIZATION.md](../REPO_NORMALIZATION.md) for compliance standards.

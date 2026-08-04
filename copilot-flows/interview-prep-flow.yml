@@ -52,7 +52,7 @@ steps:
 
   - id: research_company
     type: ai_prompt
-    prompt_template: prompts/interview-research.md
+    prompt_template: prompts/interview/interview_prep_prompt_v1.md
     inputs:
       - role_id
       - company_id

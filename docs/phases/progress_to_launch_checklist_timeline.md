@@ -10,7 +10,7 @@ Status: Canonical Execution Reference (GovernanceConstrained)
 This document provides a PMfriendly execution view of the Personal Operating System. It reflects sealed phase boundaries, importhardened baselines, and governanceconstrained active scope.
 
 Governance Authority:
-All phase semantics, sealed artifacts, and drift rules are defined in docs/governance-model.md.
+All phase semantics, sealed artifacts, and drift rules are defined in ../governance/governance-model.md.
 Where conflicts arise, the governance model supersedes this checklist.
 
 ## Phase Status & Versions
@@ -41,7 +41,7 @@ Normalization helpers: automation/common/normalization.py
 
 Config loader & samples: config/config_loader.py, config/env.sample.json
 
-Field mapping reference: docs/field_mapping_reference.md
+Field mapping reference: ../reference/field_mapping_reference.md
 
 Job discovery orchestrator: automation/job-discovery/scripts/job_discovery_v1.py
 
@@ -107,7 +107,7 @@ Governance model updated to define sealed authority
 
 ## Governance Reference
 Phase authority, sealed artifacts, drift rules, and CI activation constraints are defined in
-docs/governance-model.md and supersede this checklist.
+../governance/governance-model.md and supersede this checklist.
 
 ## Summary of Fixes Applied
 Removed ambiguity between Phase 3C vs 3F vs 3A/3B
@@ -127,4 +127,4 @@ DRAFT  NOT ACTIVE
 Governance text only.
 No implementation, activation, or commits implied.
 ``` 
-- Superseded Phase 3D/3E narratives are preserved under [Archived Artifacts](archived_artifacts.md) (Archived).
+- Superseded Phase 3D/3E narratives are preserved under [Archived Artifacts](../reference/archived_artifacts.md) (Archived).

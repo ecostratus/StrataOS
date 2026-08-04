@@ -2,7 +2,7 @@ import json
 import os
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-REF = os.path.join(ROOT, "docs", "field_mapping_reference.md")
+REF = os.path.join(ROOT, "docs", "reference", "field_mapping_reference.md")
 FIX_DIR = os.path.join(ROOT, "tests", "fixtures")
 
 

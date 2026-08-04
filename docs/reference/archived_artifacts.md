@@ -14,7 +14,7 @@ This section preserves superseded documents verbatim to maintain historical accu
 Date: January 10, 2026
 
 ## Overview
-Phase 3E delivers enrichment transforms, prompt wiring, a minimal deterministic renderer, CLI scripts for outreach/resume, a combined runner, and docs/tasks for discoverability. This document summarizes whats done, whats next, and how to run the flows.
+This archived Phase 3E artifact covers enrichment transforms, prompt wiring, a minimal deterministic renderer, CLI scripts for outreach/resume, a combined runner, and docs/tasks for discoverability. This document summarizes whats done, whats next, and how to run the flows.
 
 ## Objectives
 - Expand enrichment (seniority, domain tags, stack, skills) with cloud, CI/CD, NoSQL, ML libraries coverage.
@@ -96,26 +96,26 @@ make logs-open-events
 ```
 
 ## Key Artifacts & Quick Links
-- Combined runner: [automation/common/run_prompts.py](../automation/common/run_prompts.py)
-- Prompt renderer: [automation/common/prompt_renderer.py](../automation/common/prompt_renderer.py)
-- Enrichment transforms: [automation/job-discovery/scripts/enrichment_transforms.py](../automation/job-discovery/scripts/enrichment_transforms.py)
-- Outreach script: [automation/outreach/scripts/outreach_generator_v1.py](../automation/outreach/scripts/outreach_generator_v1.py)
-- Resume script: [automation/resume-tailoring/scripts/resume_tailor_v1.py](../automation/resume-tailoring/scripts/resume_tailor_v1.py)
-- Outreach prompt: [prompts/outreach/outreach_prompt_v1.md](../prompts/outreach/outreach_prompt_v1.md)
-- Resume prompt: [prompts/resume/resume_tailor_prompt_v1.md](../prompts/resume/resume_tailor_prompt_v1.md)
-- VS Code tasks: [.vscode/tasks.json](../.vscode/tasks.json)
-- Sample env config: [config/env.sample.json](../config/env.sample.json)
-- Logging utility: [automation/common/logging.py](../automation/common/logging.py)
-- Metrics module: [automation/common/metrics.py](../automation/common/metrics.py)
-- Metrics CLI: [automation/common/metrics_cli.py](../automation/common/metrics_cli.py)
-- Makefile utilities: [Makefile](../Makefile)
+- Combined runner: [automation/common/run_prompts.py](../../automation/common/run_prompts.py)
+- Prompt renderer: [automation/common/prompt_renderer.py](../../automation/common/prompt_renderer.py)
+- Enrichment transforms: [automation/job-discovery/scripts/enrichment_transforms.py](../../automation/job-discovery/scripts/enrichment_transforms.py)
+- Outreach script: [automation/outreach/scripts/outreach_generator_v1.py](../../automation/outreach/scripts/outreach_generator_v1.py)
+- Resume script: [automation/resume-tailoring/scripts/resume_tailor_v1.py](../../automation/resume-tailoring/scripts/resume_tailor_v1.py)
+- Outreach prompt: [prompts/outreach/outreach_prompt_v1.md](../../prompts/outreach/outreach_prompt_v1.md)
+- Resume prompt: [prompts/resume/resume_tailor_prompt_v1.md](../../prompts/resume/resume_tailor_prompt_v1.md)
+- VS Code tasks: [.vscode/tasks.json](../../.vscode/tasks.json)
+- Sample env config: [config/env.sample.json](../../config/env.sample.json)
+- Logging utility: [automation/common/logging.py](../../automation/common/logging.py)
+- Metrics module: [automation/common/metrics.py](../../automation/common/metrics.py)
+- Metrics CLI: [automation/common/metrics_cli.py](../../automation/common/metrics_cli.py)
+- Makefile utilities: [Makefile](../../Makefile)
 
 ## Environment Notes
 - Enrichment import path issues in direct Python REPL can occur when running outside the package layout; scripts use dynamic, file-based import fallbacks.
 - Local pytest may require environment setup; CI should validate tests when dependencies are present.
 
 ## Release Context
-- Phase 3E finalized in v0.3.5: deterministic renderer, enrichment wiring, CLI/runner, snapshot tests, and telemetry. See [releases/v0.3.5-Phase3E-CLI-PromptRendering.md](releases/v0.3.5-Phase3E-CLI-PromptRendering.md) for details and the Verification Checklist.
+- Phase 3E finalized in v0.3.5: deterministic renderer, enrichment wiring, CLI/runner, snapshot tests, and telemetry. See [releases/v0.3.5/RELEASE_NOTES.md](../../releases/v0.3.5/RELEASE_NOTES.md) for details and the Verification Checklist.
 
 ---
 
@@ -229,7 +229,7 @@ Notes:
 - Keep behavior opt-in; default pipeline must remain unchanged.
 
 #### Config Examples
-Add Phase 3A scoring configuration in [config/env.sample.json](../config/env.sample.json):
+Add Phase 3A scoring configuration in [config/env.sample.json](../../config/env.sample.json):
 
 ```json
 {
@@ -348,15 +348,15 @@ Artifacts (deterministic filenames using the run timestamp):
 
 #### Phase 3D: Extended Sources & Enrichment Transforms
 
-Note: Downstream phases (3D/3E) are FUTURE-only (post-Phase 3C). See the canonical checklist for the current state: [progress_to_launch_checklist_timeline.md](progress_to_launch_checklist_timeline.md).
+Note: Downstream phases (3D/3E) are FUTURE-only (post-Phase 3C). See the canonical checklist for the current state: [../phases/progress_to_launch_checklist_timeline.md](../phases/progress_to_launch_checklist_timeline.md).
 
 ## Quick Links
-- [Combined Runner README](../automation/common/README.md)
-- [Combined Runner Script](../automation/common/run_prompts.py)
-- [Outreach Prompt](../prompts/outreach/outreach_prompt_v1.md)
-- [Resume Prompt](../prompts/resume/resume_tailor_prompt_v1.md)
-- [Outreach Script](../automation/outreach/scripts/outreach_generator_v1.py)
-- [Resume Script](../automation/resume-tailoring/scripts/resume_tailor_v1.py)
+- [Combined Runner README](../../automation/common/README.md)
+- [Combined Runner Script](../../automation/common/run_prompts.py)
+- [Outreach Prompt](../../prompts/outreach/outreach_prompt_v1.md)
+- [Resume Prompt](../../prompts/resume/resume_tailor_prompt_v1.md)
+- [Outreach Script](../../automation/outreach/scripts/outreach_generator_v1.py)
+- [Resume Script](../../automation/resume-tailoring/scripts/resume_tailor_v1.py)
 
 ## Goals
 - Add new job sources and expand enrichment transforms while reusing the stable normalization boundary from Phase 3C.
@@ -396,7 +396,7 @@ Note: Downstream phases (3D/3E) are FUTURE-only (post-Phase 3C). See the canonic
   - Returns a single canonical list with fields: `job_id`, `title`, `company`, `location`, `url`, `source`, `posted_at`.
 
   ### Enrichment Contract (Phase 3E)
-  - Enrichment is applied post-dedup and ordering via pure transforms in [automation/job-discovery/scripts/enrichment_transforms.py](../automation/job-discovery/scripts/enrichment_transforms.py).
+  - Enrichment is applied post-dedup and ordering via pure transforms in [automation/job-discovery/scripts/enrichment_transforms.py](../../automation/job-discovery/scripts/enrichment_transforms.py).
   - Added fields (deterministic, stable):
     - `seniority`: one of `intern`, `junior`, `mid`, `senior`, `staff`, `principal`, `lead`, `manager`.
     - `domain_tags`: array of tags inferred from role (e.g., `backend`, `frontend`, `mobile`, `data`, `devops`, `security`).
@@ -467,7 +467,7 @@ Flags:
 - `--prompt`: override template path (optional)
 - `--no-sources`: skip job discovery (optional; uses sample job)
 
-Quick note: For a one-command workflow that runs both outreach and resume prompt generation, see the combined runner README at [automation/common/README.md](../automation/common/README.md).
+Quick note: For a one-command workflow that runs both outreach and resume prompt generation, see the combined runner README at [automation/common/README.md](../../automation/common/README.md).
 
 ### Adapter Registry
 Orchestrator maintains a stable registry mapping enable keys to adapter fetch functions. New adapters can be added without changing orchestrator semantics if they follow the canonical mapping and optin gating.

@@ -25,7 +25,7 @@ Artifacts:
 - Scored CSV: `jobs_scored_{YYYYMMDD_HHMMSS}.csv`
 
 Configuration:
-- See scoring and enrichment examples in [docs/phase3A_enrichment_scoring.md](../../../docs/phase3A_enrichment_scoring.md)
+- See scoring and enrichment examples in [docs/phases/phase3A_enrichment_scoring.md](../../../docs/phases/phase3A_enrichment_scoring.md)
 - Sample config keys in [config/env.sample.json](../../../config/env.sample.json)
 
 Notes:

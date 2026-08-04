@@ -22,12 +22,13 @@ The docs folder serves as the central knowledge base for:
 This documentation supports the 60-day operating system by providing clear, accessible information for understanding and using the system effectively.
 
 ## Quick Links
-- Knowledge Hub: [knowledge-hub.md](knowledge-hub.md)
-- Monday-Friday Playbook: [monday-friday-strataos-playbook.md](monday-friday-strataos-playbook.md)
-- ProgresstoLaunch Checklist & Timeline (Updated, PMFriendly): [progress_to_launch_checklist_timeline.md](progress_to_launch_checklist_timeline.md)
-- Releases index: [releases/README.md](releases/README.md)
+- Knowledge Hub: [governance/knowledge-hub.md](governance/knowledge-hub.md)
+- Monday-Friday Playbook: [governance/monday-friday-strataos-playbook.md](governance/monday-friday-strataos-playbook.md)
+- ProgresstoLaunch Checklist & Timeline (Updated, PMFriendly): [phases/progress_to_launch_checklist_timeline.md](phases/progress_to_launch_checklist_timeline.md)
+- Releases index: [../releases/README.md](../releases/README.md)
+- Phase 3G instructions: [../instructions/phase3g/README.md](../instructions/phase3g/README.md)
 - Job Search Platform Foundations: [foundations/job-search-platform/README.md](foundations/job-search-platform/README.md)
-- Archived Artifacts: [archived_artifacts.md](archived_artifacts.md) (Archived)
+- Archived Artifacts: [reference/archived_artifacts.md](reference/archived_artifacts.md) (Archived)
 
 ## Releases
 Current published release: [v0.3.6-Phase3F-ResumeTailoring](https://github.com/ecostratus/StrataOS/releases/tag/v0.3.6-Phase3F-ResumeTailoring)
@@ -43,7 +44,7 @@ Published releases:
 - [v0.3.6 (Phase 3F  Import Hardening)](https://github.com/ecostratus/StrataOS/releases/tag/v0.3.6-Phase3F-ResumeTailoring)
 
 Draft hardening notes:
-- [v0.3.7 (Phase 3G  Interview Prep Hardening)](releases/v0.3.7-Phase3G-InterviewPrep-Hardening.md)
+- [v0.3.7 (Phase 3G  Interview Prep Hardening)](../releases/v0.3.7/RELEASE_NOTES.md)
 
 See the top-level [changelog.md](../changelog.md) for detailed history.
 

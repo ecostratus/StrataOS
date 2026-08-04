@@ -55,7 +55,7 @@ steps:
 
   - id: generate_message
     type: ai_prompt
-    prompt_template: prompts/outreach-email.md
+    prompt_template: prompts/outreach/outreach_prompt_v1.md
     inputs:
       - recipient_name
       - recipient_role

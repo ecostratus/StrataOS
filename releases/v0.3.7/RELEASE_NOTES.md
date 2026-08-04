@@ -5,9 +5,11 @@ Date: January 11, 2026
 Status: Draft hardening note  not a published release baseline yet.
 
 ## Summary
+
 Hardens interview-prep modules for import robustness and deterministic behavior. Applies two-stage imports (dotted  dynamic fallback), function-scoped loaders, and repo-root-relative dynamic loading. Adds logging + metrics events and tests (dynamic import + snapshots).
 
 ## Planned Changes
+
 - Two-stage imports across interview-prep scripts and shared utilities.
 - Deterministic context assembly and template selection.
 - Logging + metrics events (start, context_loaded, variant_selected, rendered, saved).
@@ -15,10 +17,18 @@ Hardens interview-prep modules for import robustness and deterministic behavior.
 - Dynamic import tests for interview modules.
 
 ## Validation
+
 - Tests: `pytest -q --tb=short` (include snapshot + dynamic import).
 - Docs CI: `python3 scripts/ci/check_docs.py`.
 - Runner smoke test for interview-prep entry.
 
 ## Boundaries
+
 - Preserve Phase 3C normalization boundaries.
 - No changes to schema, orchestrator flags, or public APIs.
+
+## Retained Artifacts
+
+- Execution checklist: [instructions/phase3g/phase3G_execution_checklist.md](../../instructions/phase3g/phase3G_execution_checklist.md)
+- Kickoff: [instructions/phase3g/phase3G_kickoff.md](../../instructions/phase3g/phase3G_kickoff.md)
+- Super prompt: [instructions/phase3g/phase3G_hardening_super_prompt.md](../../instructions/phase3g/phase3G_hardening_super_prompt.md)

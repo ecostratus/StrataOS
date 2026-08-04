@@ -18,12 +18,10 @@ This repository provides a structured framework designed to be:
 
 ```
 .
- docs/                           # Core documentation and governance
-    master-brief.md            # Overall objectives and approach
-    operating-constraints.md   # System boundaries and rules
-    weekly-cadence.md          # Weekly operating rhythm
-    governance-model.md        # Decision-making framework
-    risk-map.md                # Risk assessment and mitigation
+ docs/                           # Core documentation, governance, references, and phases
+     governance/                 # Governance, cadence, and planning baseline
+     reference/                  # Reference docs, contracts, and archived artifacts
+     phases/                     # Phase plans, SOPs, and execution checklists
 
  automation/                     # Python automation pipelines
     job-discovery/             # Job scraping and scoring
@@ -75,7 +73,7 @@ This repository provides a structured framework designed to be:
 
 ### 1. Developer Setup & Authentication
 
-For complete setup instructions including GitHub CLI authentication, see **[Developer Setup Guide](docs/developer-setup.md)**.
+For complete setup instructions including GitHub CLI authentication, see **[Developer Setup Guide](instructions/developer-setup.md)**.
 
 Quick authentication:
 ```bash
@@ -90,13 +88,13 @@ gh auth login
 Start by understanding the system:
 ```bash
 # Read the master brief to understand objectives
-cat docs/master-brief.md
+cat docs/governance/master-brief.md
 
 # Review operating constraints
-cat docs/operating-constraints.md
+cat docs/governance/operating-constraints.md
 
 # Understand the governance model
-cat docs/governance-model.md
+cat docs/governance/governance-model.md
 ```
 
 ### 3. Configure Your Environment
@@ -172,17 +170,17 @@ python automation/job-discovery/scripts/job_discovery_v1.py --out-dir ./output
 ## Documentation
 
 ### Essential Reading
-- **[Developer Setup Guide](docs/developer-setup.md)** - Complete setup instructions including GitHub CLI authentication
-- **[Knowledge Hub](docs/knowledge-hub.md)** - Where results/findings live, dashboard status, and weekly strategy launch
-- **[Monday-Friday Playbook](docs/monday-friday-strataos-playbook.md)** - 20-30 minute daily execution loop
+- **[Developer Setup Guide](instructions/developer-setup.md)** - Complete setup instructions including GitHub CLI authentication
+- **[Knowledge Hub](docs/governance/knowledge-hub.md)** - Where results/findings live, dashboard status, and weekly strategy launch
+- **[Monday-Friday Playbook](docs/governance/monday-friday-strataos-playbook.md)** - 20-30 minute daily execution loop
 
 ### Technical Documentation
 - **[Copilot Flows Architecture](copilot-flows/high-level-architecture.md)** - System design
 - **[Excel Schema](excel-templates/system-of-record-schema.md)** - Data structure
 - **[API Endpoints](config/endpoints.md)** - External service integration
 - **[Testing Guide](tests/README.md)** - How to test the system
- - **[ProgresstoLaunch Checklist & Timeline (Updated, PMFriendly)](docs/progress_to_launch_checklist_timeline.md)** - Single source of truth for status and run steps
- - **[Archived Artifacts](docs/archived_artifacts.md)** (Archived) - Superseded checklists and planning narratives
+ - **[ProgresstoLaunch Checklist & Timeline (Updated, PMFriendly)](docs/phases/progress_to_launch_checklist_timeline.md)** - Single source of truth for status and run steps
+ - **[Archived Artifacts](docs/reference/archived_artifacts.md)** (Archived) - Superseded checklists and planning narratives
 
 ### Specifications
 Each automation module includes detailed specifications:
@@ -278,7 +276,7 @@ Run in development mode (frontend hot reload at `http://127.0.0.1:5173`, backend
     - Matched CSV: `jobs_discovered_{YYYYMMDD_HHMMSS}.csv`
     - Enriched JSON: `jobs_enriched_{YYYYMMDD_HHMMSS}.json`
     - Scored CSV: `jobs_scored_{YYYYMMDD_HHMMSS}.csv`
-- Configure scoring and enrichment in [config/env.sample.json](config/env.sample.json) and see examples in [docs/phase3A_enrichment_scoring.md](docs/phase3A_enrichment_scoring.md).
+- Configure scoring and enrichment in [config/env.sample.json](config/env.sample.json) and see examples in [docs/phases/phase3A_enrichment_scoring.md](docs/phases/phase3A_enrichment_scoring.md).
 - Role scoring prompt default:
     - `prompts/scoring/role_scoring_prompt_v2.md`
     - `prompts/scoring/role_scoring_prompt_v1.md` remains available for backward comparison.
@@ -309,8 +307,8 @@ Run in development mode (frontend hot reload at `http://127.0.0.1:5173`, backend
 - Summary: A human-readable preview is printed at the end of the run. It shows totals, enabled sources, per-source jobs, malformed counts, retries, rate-limit sleeps, and failures. The full JSON summary is saved to `jobs_discovered_<timestamp>.summary.json`.
 
 ## Documentation Index
-- SOP: [docs/job_discovery_sop.md](docs/job_discovery_sop.md)
-- Field Mapping Reference: [docs/field_mapping_reference.md](docs/field_mapping_reference.md)
+- SOP: [docs/phases/job_discovery_sop.md](docs/phases/job_discovery_sop.md)
+- Field Mapping Reference: [docs/reference/field_mapping_reference.md](docs/reference/field_mapping_reference.md)
 - Fixtures Overview: [tests/fixtures/README.md](tests/fixtures/README.md)
 - No results: verify endpoint URLs, tokens, and source enable flags.
 - Low export count: adjust filters (keywords, locations, excludes).
@@ -435,7 +433,7 @@ These adapters are disabled by default to prevent behavioral drift.
 - Typical keys for Phase 3A:
     - `weights`: `role_fit`, `stack`, `remote` (proportions; sum not required to equal 1.0)
     - `thresholds`: `exceptional`, `strong`, `moderate`, `weak` in [0,1]
-- See examples and details in [docs/phase3A_enrichment_scoring.md](docs/phase3A_enrichment_scoring.md).
+- See examples and details in [docs/phases/phase3A_enrichment_scoring.md](docs/phases/phase3A_enrichment_scoring.md).
 
 Minimal example (see full sample in config/env.sample.json):
 

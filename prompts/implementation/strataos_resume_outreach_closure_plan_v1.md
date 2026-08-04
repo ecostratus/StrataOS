@@ -1,6 +1,6 @@
 # StrataOS Resume/Outreach Closure Implementation Plan v1
 
-Canonical source: docs/progress_to_launch_checklist_timeline.md
+Canonical source: docs/phases/progress_to_launch_checklist_timeline.md
 
 ## Goal
 

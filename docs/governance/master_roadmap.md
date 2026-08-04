@@ -13,4 +13,4 @@ Date: January 11, 2026
 - Continue increasing test coverage and operational polish without changing public surfaces.
 
 ## References
-- Progress-to-Launch checklist timeline: [docs/progress_to_launch_checklist_timeline.md](progress_to_launch_checklist_timeline.md)
+- Progress-to-Launch checklist timeline: [docs/../phases/progress_to_launch_checklist_timeline.md](../phases/progress_to_launch_checklist_timeline.md)

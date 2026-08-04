@@ -118,5 +118,5 @@ Do **not** create fixtures referencing prohibited sheet names.
 
 - [docs/ARCHITECTURE.md](ARCHITECTURE.md) — System architecture
 - [docs/SCHEMA.md](SCHEMA.md) — Canonical data model
-- [config/validation-rules.json](../config/validation-rules.json) — Validation rules
-- [tests/README.md](../tests/README.md) — Test suite overview
+- [config/validation-rules.json](../../config/validation-rules.json) — Validation rules
+- [tests/README.md](../../tests/README.md) — Test suite overview

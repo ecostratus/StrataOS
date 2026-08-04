@@ -80,6 +80,6 @@ A **StatusHistory** entry is created and a **ChangeLog** entry is logged for any
 
 ## References
 
-- [docs/SCHEMA.md](../docs/SCHEMA.md) — Roles sheet field definitions
-- [automation/resume-tailoring/scripts/resume_tailor_v1.py](../automation/resume-tailoring/scripts/resume_tailor_v1.py) — Python implementation
-- [prompts/resume/resume_tailor_prompt_v1.md](resume/resume_tailor_prompt_v1.md) — Detailed prompt version history
+- [docs/SCHEMA.md](../../docs/reference/SCHEMA.md) — Roles sheet field definitions
+- [automation/resume-tailoring/scripts/resume_tailor_v1.py](../../automation/resume-tailoring/scripts/resume_tailor_v1.py) — Python implementation
+- [prompts/../resume/resume_tailor_prompt_v1.md](../resume/resume_tailor_prompt_v1.md) — Detailed prompt version history

@@ -13,7 +13,7 @@ This document is a placeholder for forward-phase planning and does not contain i
 
 ## References
 - Canonical source: [docs/progress_to_launch_checklist_timeline.md](progress_to_launch_checklist_timeline.md)
-- Historical context archived: [archived_artifacts.md](archived_artifacts.md) (Archived)
+- Historical context archived: [../reference/archived_artifacts.md](../reference/archived_artifacts.md) (Archived)
 
 ## Superseded By
 - Phase 3C normalization boundary

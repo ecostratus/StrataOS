@@ -12,8 +12,8 @@ Version: v0.3.0-Phase3C-Normalization
 Canonical source: [ProgresstoLaunch Checklist & Timeline](progress_to_launch_checklist_timeline.md)
 
 Quick Links:
-- Top-level overview: [docs/README.md](README.md)
-- Configuration details: [config/README.md](../config/README.md)
+- Top-level overview: [docs/README.md](../README.md)
+- Configuration details: [config/README.md](../../config/README.md)
 
 ## Goals
 - Enrich canonical job records with derived features (e.g., normalized role keywords, seniority, tech stack hints, remote friendliness).

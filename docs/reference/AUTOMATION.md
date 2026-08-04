@@ -113,7 +113,7 @@ python3 automation/validation/schema_validator.py --sheet Roles --data output/ro
 
 ## Configuration
 
-All modules read from `config/env.json`. See [config/README.md](../config/README.md) for available keys.
+All modules read from `config/env.json`. See [config/README.md](../../config/README.md) for available keys.
 
 ---
 
@@ -132,5 +132,5 @@ All modules read from `config/env.json`. See [config/README.md](../config/README
 
 - [docs/ARCHITECTURE.md](ARCHITECTURE.md) — System architecture
 - [docs/SCHEMA.md](SCHEMA.md) — Canonical data model
-- [config/validation-rules.json](../config/validation-rules.json) — Validation rules
-- [automation/validation/schema_validator.py](../automation/validation/schema_validator.py) — Schema validator
+- [config/validation-rules.json](../../config/validation-rules.json) — Validation rules
+- [automation/validation/schema_validator.py](../../automation/validation/schema_validator.py) — Schema validator

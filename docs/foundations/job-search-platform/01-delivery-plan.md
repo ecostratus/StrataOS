@@ -1,6 +1,6 @@
 # Delivery Plan
 
-Canonical source: [Progress-to-Launch Checklist & Timeline](../../progress_to_launch_checklist_timeline.md)
+Canonical source: [Progress-to-Launch Checklist & Timeline](../../phases/progress_to_launch_checklist_timeline.md)
 
 ## Planning Horizon
 

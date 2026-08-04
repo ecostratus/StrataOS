@@ -2,21 +2,21 @@
 
 Purpose: Produce a PASS / CONDITIONAL PASS / FAIL verdict for v0.3.5, with evidence and readiness notes for v0.3.6 hardening only.
 
-Canonical Source: See [docs/progress_to_launch_checklist_timeline.md](../progress_to_launch_checklist_timeline.md).
+Canonical Source: See [docs/progress_to_launch_checklist_timeline.md](../../docs/phases/progress_to_launch_checklist_timeline.md).
 
 ## Scope & Boundaries
 - Current boundary: Phase 3C (Normalization)  v0.3.0-Phase3C-Normalization.
 - Phase 3A/3B: COMPLETE and bounded by Phase 3C.
-- Phase 3D/3E: FUTURE-only (post-Phase 3C); implementation content exists only as stubs; originals preserved under [archived_artifacts.md](../archived_artifacts.md).
+- Phase 3D/3E: FUTURE-only (post-Phase 3C); implementation content exists only as stubs; originals preserved under [archived_artifacts.md](../../docs/reference/archived_artifacts.md).
 
 ## Evidence Checklist
-- v0.3.5 release notes: [docs/releases/v0.3.5-Phase3E-CLI-PromptRendering.md](v0.3.5-Phase3E-CLI-PromptRendering.md).
+- v0.3.5 release notes: [docs/releases/RELEASE_NOTES.md](RELEASE_NOTES.md).
 - Combined runner: [automation/common/run_prompts.py](../../automation/common/run_prompts.py).
 - Prompt renderer: [automation/common/prompt_renderer.py](../../automation/common/prompt_renderer.py).
 - Outreach script: [automation/outreach/scripts/outreach_generator_v1.py](../../automation/outreach/scripts/outreach_generator_v1.py).
 - Resume script: [automation/resume-tailoring/scripts/resume_tailor_v1.py](../../automation/resume-tailoring/scripts/resume_tailor_v1.py).
 - Sample env config: [config/env.sample.json](../../config/env.sample.json).
-- Canonical checklist: [docs/progress_to_launch_checklist_timeline.md](../progress_to_launch_checklist_timeline.md).
+- Canonical checklist: [docs/progress_to_launch_checklist_timeline.md](../../docs/phases/progress_to_launch_checklist_timeline.md).
 
 ## Verification Steps
 
@@ -76,7 +76,7 @@ Expected: All tests pass.
 CONDITIONAL PASS  Docs CI passed; full Python test suite passed; release notes validated and links corrected. Combined runner currently encounters import errors due to hyphenated package paths when run directly; workaround is `PYTHONPATH=$PWD`. A hardening fix is scheduled for v0.3.6. Evidence:
 - Docs CI: `python3 scripts/ci/check_docs.py`  passed.
 - Tests: `./.venv/bin/python -m pytest -q --tb=short`  passed.
-- Release notes: [docs/releases/v0.3.5-Phase3E-CLI-PromptRendering.md](v0.3.5-Phase3E-CLI-PromptRendering.md)  updated with FUTURE-only disclaimer and Known Issues.
+- Release notes: [docs/releases/RELEASE_NOTES.md](RELEASE_NOTES.md)  updated with FUTURE-only disclaimer and Known Issues.
 - Outputs: Intended under `output/outreach` and `output/resume` (timestamped); generation blocked by import path issue; workaround documented.
 
 ## Verdict Template

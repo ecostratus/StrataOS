@@ -4,7 +4,7 @@
 **Objective**: Separate measurement (alignment) from interpretation (confidence); distinguish evidence quality from decision quality  
 **Architectural Milestone**: Transition from **automation engine** to **decision-support system**  
 **Blockers**: None (schema deployed)
-**Canonical Source**: [Progress-to-Launch Checklist & Timeline](../../progress_to_launch_checklist_timeline.md)
+**Canonical Source**: [Progress-to-Launch Checklist & Timeline](../../phases/progress_to_launch_checklist_timeline.md)
 
 ---
 
