@@ -47,9 +47,11 @@ OPENAI_KEY_PLACEHOLDER = "YOUR_OPENAI_API_KEY_HERE"
 DISCOVERY_SCRIPT = ROOT / "automation" / "job-discovery" / "scripts" / "job_discovery_v1.py"
 RESUME_SCRIPT = ROOT / "automation" / "resume-tailoring" / "scripts" / "resume_tailor_v1.py"
 OUTREACH_SCRIPT = ROOT / "automation" / "outreach" / "scripts" / "outreach_generator_v1.py"
+CONSULTING_SCRIPT = ROOT / "automation" / "consulting-funnel" / "scripts" / "consulting_offer_v1.py"
 
 DEFAULT_RESUME_CONTEXT = ROOT / "config" / "resume_context.sample.json"
 DEFAULT_OUTREACH_CONTEXT = ROOT / "config" / "outreach_context.sample.json"
+DEFAULT_CONSULTING_CONTEXT = ROOT / "config" / "consulting_context.sample.json"
 
 PYTHON_BIN = os.environ.get("STRATAOS_PYTHON", sys.executable)
 
@@ -890,49 +892,67 @@ def search_jobs(request: SearchRequest) -> SearchResponse:
 
 
 def _create_prompt(prompt_type: str, request: PromptRequest) -> PromptGenerationResponse:
-	if prompt_type not in {"resume", "outreach"}:
+	if prompt_type not in {"resume", "outreach", "consulting"}:
 		raise HTTPException(status_code=400, detail="Unsupported prompt type")
 
 	if prompt_type == "resume":
 		script_path = RESUME_SCRIPT
 		default_context = DEFAULT_RESUME_CONTEXT
 		output_dir = OUTPUT_DIR / "resume"
+	elif prompt_type == "consulting":
+		script_path = CONSULTING_SCRIPT
+		default_context = DEFAULT_CONSULTING_CONTEXT
+		output_dir = OUTPUT_DIR / "consulting"
 	else:
 		script_path = OUTREACH_SCRIPT
 		default_context = DEFAULT_OUTREACH_CONTEXT
 		output_dir = OUTPUT_DIR / "outreach"
 
+	# Consulting engagements carry all context in context_path — job_json not required
 	job_payload: dict[str, Any] | None = request.job_json
-	if request.job_id is not None:
-		job_payload = _get_job(request.job_id).get("raw_json") or {}
-	if not job_payload:
-		raise HTTPException(status_code=400, detail="Provide job_id or job_json")
+	if prompt_type != "consulting":
+		if request.job_id is not None:
+			job_payload = _get_job(request.job_id).get("raw_json") or {}
+		if not job_payload:
+			raise HTTPException(status_code=400, detail="Provide job_id or job_json")
 
 	output_dir.mkdir(parents=True, exist_ok=True)
 	context_path = Path(request.context_path) if request.context_path else default_context
 
-	with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False, encoding="utf-8") as tmp:
-		json.dump(job_payload, tmp, ensure_ascii=False)
-		tmp_job_path = tmp.name
-
-	command = [
-		PYTHON_BIN,
-		str(script_path),
-		"--context",
-		str(context_path),
-		"--output-dir",
-		str(output_dir),
-		"--job-json",
-		tmp_job_path,
-	]
-	if request.no_sources:
-		command.append("--no-sources")
+	# Consulting uses context_path only; resume/outreach also pass a job JSON file
+	if prompt_type == "consulting":
+		command = [
+			PYTHON_BIN,
+			str(script_path),
+			"--context",
+			str(context_path),
+			"--output-dir",
+			str(output_dir),
+		]
+		tmp_job_path = None
+	else:
+		with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False, encoding="utf-8") as tmp:
+			json.dump(job_payload, tmp, ensure_ascii=False)
+			tmp_job_path = tmp.name
+		command = [
+			PYTHON_BIN,
+			str(script_path),
+			"--context",
+			str(context_path),
+			"--output-dir",
+			str(output_dir),
+			"--job-json",
+			tmp_job_path,
+		]
+		if request.no_sources:
+			command.append("--no-sources")
 
 	proc = _run_subprocess(command)
-	try:
-		os.unlink(tmp_job_path)
-	except Exception:
-		pass
+	if tmp_job_path:
+		try:
+			os.unlink(tmp_job_path)
+		except Exception:
+			pass
 
 	saved_path = _extract_saved_prompt_path(proc.stdout)
 	prompt_text = ""
@@ -986,13 +1006,22 @@ def _create_prompt(prompt_type: str, request: PromptRequest) -> PromptGeneration
 			),
 		)
 
+	# Save generated artifact alongside the prompt so post-generation checks have a target
+	artifact_path: str | None = None
+	if saved_path and artifact_result.content:
+		try:
+			artifact_path = saved_path.replace("_prompt_", "_artifact_")
+			Path(artifact_path).write_text(artifact_result.content, encoding="utf-8")
+		except Exception:
+			artifact_path = None
+
 	return PromptGenerationResponse(
 		status="ok",
 		prompt_run_id=prompt_run_id,
 		prompt_type=prompt_type,
 		artifact=PromptArtifact(type=prompt_type, content=artifact_result.content or ""),
 		prompt_text=prompt_text,
-		output_path=saved_path,
+		output_path=artifact_path or saved_path,
 		error=None,
 	)
 
@@ -1005,6 +1034,11 @@ def create_resume_prompt(request: PromptRequest) -> PromptGenerationResponse:
 @app.post("/api/prompts/outreach", response_model=PromptGenerationResponse)
 def create_outreach_prompt(request: PromptRequest) -> PromptGenerationResponse:
 	return _create_prompt("outreach", request)
+
+
+@app.post("/api/prompts/consulting", response_model=PromptGenerationResponse)
+def create_consulting_prompt(request: PromptRequest) -> PromptGenerationResponse:
+	return _create_prompt("consulting", request)
 
 
 @app.get("/api/activity")

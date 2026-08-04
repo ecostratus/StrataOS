@@ -14,5 +14,6 @@ Initial top-10 source profiles for integration planning.
 - monster.md
 - careerbuilder.md
 - wellfound.md
+- boolean-xray-discovery.md
 
 Each profile is an initial assessment and should be validated during implementation discovery.

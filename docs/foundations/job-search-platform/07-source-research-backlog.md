@@ -28,6 +28,7 @@ Track candidate sources for jobs, recruiter discovery, and optional apply workfl
 | P2 | Built In | Tech job board | Public web | Regional tech jobs | Yes | Planned | Consider geo coverage strategy |
 | P3 | Company career microsites | Corporate careers | Web scraping by pattern | Niche targeted companies | Yes | Planned | Build reusable extractor toolkit |
 | P3 | Recruiter directories | Recruiter discovery | Public and paid sources | Outreach list building | Yes | Discovery | Define acceptable usage boundaries |
+| P2 | Boolean/X-ray discovery via search API + enrichment API | Recruiter discovery | API and partner | Hiring-manager discovery and contact enrichment | Yes | Proposed | Use a search API for public-index lookups and an approved enrichment API for contact resolution; avoid scraping LinkedIn directly |
 
 ## Deep Research Backlog
 
