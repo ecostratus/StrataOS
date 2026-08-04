@@ -11,7 +11,7 @@ _SCRIPTS_DIR = os.path.join(_REPO_ROOT, "automation", "job-discovery", "scripts"
 if _SCRIPTS_DIR not in sys.path:
     sys.path.insert(0, _SCRIPTS_DIR)
 
-from filters import normalize_terms, matches_filters  # type: ignore
+from filters import normalize_terms, matches_filters, matches_tag_filters  # type: ignore
 
 
 def test_positive_match():
@@ -68,4 +68,33 @@ def test_malformed_job_entries_only_valid_match():
     # Only the first entry should match both keyword and location
     assert len(matches) == 1
     assert matches[0]["title"] == "Software Engineer"
+
+
+def test_tag_filters_include_and_exclude_behavior():
+    assert matches_tag_filters(
+        role_tags=["engineer"],
+        stack_tags=["python", "aws"],
+        include_role_tags=["engineer"],
+        exclude_role_tags=[],
+        include_stack_tags=["python"],
+        exclude_stack_tags=["java"],
+    )
+
+    assert not matches_tag_filters(
+        role_tags=["designer"],
+        stack_tags=["python"],
+        include_role_tags=["engineer"],
+        exclude_role_tags=[],
+        include_stack_tags=[],
+        exclude_stack_tags=[],
+    )
+
+    assert not matches_tag_filters(
+        role_tags=["engineer"],
+        stack_tags=["go"],
+        include_role_tags=[],
+        exclude_role_tags=["engineer"],
+        include_stack_tags=[],
+        exclude_stack_tags=[],
+    )
 

@@ -40,6 +40,36 @@ def matches_filters(title: str, location: str, keywords: List[str], locations: L
     return True
 
 
+def matches_tag_filters(
+    role_tags: List[str],
+    stack_tags: List[str],
+    include_role_tags: List[str],
+    exclude_role_tags: List[str],
+    include_stack_tags: List[str],
+    exclude_stack_tags: List[str],
+) -> bool:
+    """Return True if role/stack tags satisfy include/exclude constraints."""
+    role_set = {str(x).strip().lower() for x in role_tags if str(x).strip()}
+    stack_set = {str(x).strip().lower() for x in stack_tags if str(x).strip()}
+
+    inc_role = {str(x).strip().lower() for x in include_role_tags if str(x).strip()}
+    exc_role = {str(x).strip().lower() for x in exclude_role_tags if str(x).strip()}
+    inc_stack = {str(x).strip().lower() for x in include_stack_tags if str(x).strip()}
+    exc_stack = {str(x).strip().lower() for x in exclude_stack_tags if str(x).strip()}
+
+    if inc_role and role_set.isdisjoint(inc_role):
+        return False
+    if inc_stack and stack_set.isdisjoint(inc_stack):
+        return False
+
+    if exc_role and not role_set.isdisjoint(exc_role):
+        return False
+    if exc_stack and not stack_set.isdisjoint(exc_stack):
+        return False
+
+    return True
+
+
 def filter_jobs(jobs: Iterable[dict[str, Any]], config: dict[str, Any]) -> List[dict[str, Any]]:
     """
     Example filter function using normalize_terms.

@@ -44,7 +44,7 @@ _SCHEDULING_DIR = os.path.join(_ROOT, "automation", "scheduling")
 if _SCHEDULING_DIR not in sys.path:
     sys.path.insert(0, _SCHEDULING_DIR)
 
-from filters import normalize_terms, matches_filters  # type: ignore
+from filters import normalize_terms, matches_filters, matches_tag_filters  # type: ignore
 import sources  # type: ignore
 from logging_utils import set_jsonl_sink, set_suppress_stdout_if_jsonl  # type: ignore
 from summary_utils import pretty_print_summary  # type: ignore
@@ -335,6 +335,10 @@ def main(argv: List[str] | None = None) -> None:
         "JOB_FILTER_LOCATIONS",
         "JOB_FILTER_EXCLUDE_KEYWORDS",
         "JOB_FILTER_MAX_AGE_DAYS",
+        "JOB_FILTER_INCLUDE_ROLE_TAGS",
+        "JOB_FILTER_EXCLUDE_ROLE_TAGS",
+        "JOB_FILTER_INCLUDE_STACK_TAGS",
+        "JOB_FILTER_EXCLUDE_STACK_TAGS",
     ):
         os.environ.pop(key, None)
 
@@ -351,12 +355,29 @@ def main(argv: List[str] | None = None) -> None:
     keywords = normalize_terms(config.get_list("JOB_FILTER_KEYWORDS", ["software engineer", "developer"]) or [])
     locations = normalize_terms(config.get_list("JOB_FILTER_LOCATIONS", ["Remote"]) or [])
     exclude = normalize_terms(config.get_list("JOB_FILTER_EXCLUDE_KEYWORDS", ["volunteer"]) or [])
+    include_role_tags = normalize_terms(config.get_list("JOB_FILTER_INCLUDE_ROLE_TAGS", []) or [])
+    exclude_role_tags = normalize_terms(config.get_list("JOB_FILTER_EXCLUDE_ROLE_TAGS", []) or [])
+    include_stack_tags = normalize_terms(config.get_list("JOB_FILTER_INCLUDE_STACK_TAGS", []) or [])
+    exclude_stack_tags = normalize_terms(config.get_list("JOB_FILTER_EXCLUDE_STACK_TAGS", []) or [])
+    has_tag_filters = any(
+        [include_role_tags, exclude_role_tags, include_stack_tags, exclude_stack_tags]
+    )
 
     print("Job discovery v1  starting")
     print(
         f"Env: {environment} | Log: {log_level} | "
         f"Keywords: {', '.join(keywords) or '-'} | Locations: {', '.join(locations) or '-'} | Exclude: {', '.join(exclude) or '-'}"
     )
+    if has_tag_filters:
+        print(
+            "Tag filters enabled | "
+            f"Include role: {', '.join(include_role_tags) or '-'} | "
+            f"Exclude role: {', '.join(exclude_role_tags) or '-'} | "
+            f"Include stack: {', '.join(include_stack_tags) or '-'} | "
+            f"Exclude stack: {', '.join(exclude_stack_tags) or '-'}"
+        )
+        if not enrichment:
+            logger.warning("Tag filters requested but enrichment module unavailable; skipping tag filter checks")
 
     # Reset per-run source metrics
     if hasattr(sources, "reset_metrics"):
@@ -404,8 +425,21 @@ def main(argv: List[str] | None = None) -> None:
     try:
         jobs = discover_jobs()
 
+        tag_filtered_out = 0
         for job in jobs:
             if matches_filters(job.get("title", ""), job.get("location", ""), keywords, locations, exclude):
+                if has_tag_filters and enrichment:
+                    feature_view = enrichment.extract_features(job, config.to_dict())
+                    if not matches_tag_filters(
+                        feature_view.get("role_tags", []),
+                        feature_view.get("stack_tags", []),
+                        include_role_tags,
+                        exclude_role_tags,
+                        include_stack_tags,
+                        exclude_stack_tags,
+                    ):
+                        tag_filtered_out += 1
+                        continue
                 matched.append(job)
 
         print(f"Found {len(jobs)} jobs; {len(matched)} matched filters")
@@ -488,9 +522,16 @@ def main(argv: List[str] | None = None) -> None:
         summary = {
             "timestamp_utc": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%S+00:00"),
             "enabled_sources": enabled_sources,
+            "tag_filters": {
+                "include_role_tags": include_role_tags,
+                "exclude_role_tags": exclude_role_tags,
+                "include_stack_tags": include_stack_tags,
+                "exclude_stack_tags": exclude_stack_tags,
+            },
             "counts": {
                 "total_discovered": len(jobs),
                 "filtered_out": filtered_out,
+                "tag_filtered_out": tag_filtered_out,
                 "exported": len(matched),
             },
             "per_source": per_source,

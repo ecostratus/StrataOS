@@ -92,6 +92,12 @@ def is_remote_friendly(
     return False
 
 
+def _safe_ratio(numerator: int, denominator: int) -> float:
+    if denominator <= 0:
+        return 0.0
+    return max(0.0, min(1.0, float(numerator) / float(denominator)))
+
+
 def extract_features(job: Dict[str, Any], config: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     """
     Extract deterministic enrichment features from a canonical job record.
@@ -102,7 +108,7 @@ def extract_features(job: Dict[str, Any], config: Optional[Dict[str, Any]] = Non
       enrichment.remote_aliases: List[str]
       enrichment.seniority_patterns: Dict[str, str]
     Returns an enriched dict including normalized_title, seniority, stack_tags,
-    role_tags, and remote_friendly.
+    role_tags, remote_friendly, and graded relevance features used by scoring.
     """
     cfg = (config or {}).get("enrichment", {})
     kw = cfg.get("keywords", {})
@@ -131,8 +137,20 @@ def extract_features(job: Dict[str, Any], config: Optional[Dict[str, Any]] = Non
     norm_title = normalize_title(title)
     seniority = infer_seniority(title, seniority_patterns)
     stack_tags = detect_stack(title, description, stack_keywords)
+    stack_title_tags = detect_stack(title, None, stack_keywords)
     role_tags = detect_role_tags(title, role_keywords)
     remote = is_remote_friendly(title, description, remote_aliases)
+
+    role_match_ratio = _safe_ratio(len(role_tags), len(role_keywords))
+    stack_match_ratio = _safe_ratio(len(stack_tags), len(stack_keywords))
+    stack_title_match_ratio = _safe_ratio(len(stack_title_tags), len(stack_keywords))
+
+    components: List[float] = []
+    if role_keywords:
+        components.append(role_match_ratio)
+    if stack_keywords:
+        components.append(stack_title_match_ratio)
+    title_relevance = (sum(components) / float(len(components))) if components else 0.0
 
     enriched = dict(job)  # shallow copy, preserve canonical fields
     enriched.update(
@@ -140,8 +158,12 @@ def extract_features(job: Dict[str, Any], config: Optional[Dict[str, Any]] = Non
             "normalized_title": norm_title,
             "seniority": seniority,
             "stack_tags": stack_tags,
+            "stack_title_tags": stack_title_tags,
             "role_tags": role_tags,
             "remote_friendly": remote,
+            "role_match_ratio": role_match_ratio,
+            "stack_match_ratio": stack_match_ratio,
+            "title_relevance": title_relevance,
         }
     )
     return enriched

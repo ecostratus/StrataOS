@@ -338,19 +338,21 @@
     {
       "label": "Run job discovery v1",
       "type": "shell",
-      "command": "python3",
+      "command": "${workspaceFolder}/.venv/bin/python",
       "args": ["automation/job-discovery/scripts/job_discovery_v1.py"],
+      "dependsOn": "Setup Python env",
       "problemMatcher": []
     },
     {
       "label": "Run job discovery v1 (out-dir)",
       "type": "shell",
-      "command": "python3",
+      "command": "${workspaceFolder}/.venv/bin/python",
       "args": [
         "automation/job-discovery/scripts/job_discovery_v1.py",
         "--out-dir",
         "${workspaceFolder}/output"
       ],
+      "dependsOn": "Setup Python env",
       "problemMatcher": []
     },
     {
