@@ -46,7 +46,7 @@ This repository provides a structured framework designed to be:
     style-guide.md             # Prompt engineering standards
     resume/                    # Resume tailoring prompts
     outreach/                  # Outreach message prompts
-    scoring/                   # Job scoring prompts
+    scoring/                   # Job scoring prompts (default: role_scoring_prompt_v2.md)
     consulting/                # Consulting proposal prompts
     interview/                 # Interview prep prompts
     review/                    # Weekly review prompts
@@ -279,6 +279,17 @@ Run in development mode (frontend hot reload at `http://127.0.0.1:5173`, backend
     - Enriched JSON: `jobs_enriched_{YYYYMMDD_HHMMSS}.json`
     - Scored CSV: `jobs_scored_{YYYYMMDD_HHMMSS}.csv`
 - Configure scoring and enrichment in [config/env.sample.json](config/env.sample.json) and see examples in [docs/phase3A_enrichment_scoring.md](docs/phase3A_enrichment_scoring.md).
+- Role scoring prompt default:
+    - `prompts/scoring/role_scoring_prompt_v2.md`
+    - `prompts/scoring/role_scoring_prompt_v1.md` remains available for backward comparison.
+
+### Role Scoring Prompt Changelog (v1 -> v2)
+- Default prompt version is now `v2`.
+- v2 introduces evidence-first scoring with explicit citation requirements per dimension.
+- v2 adds a Missing Data Rule with hard caps when salary/benefits/location-growth details are not disclosed.
+- v2 supports candidate goal-based weight overrides with explicit redistribution and justification.
+- v2 separates qualification risk signaling in Role Fit (Underqualified vs Overqualified vs Aligned).
+- v2 enforces recommendation text to match score bands exactly and includes a stronger pre-output quality checklist.
 
 ### Logging and JSONL Emission
 - Default logs print to stdout.

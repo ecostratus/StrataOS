@@ -19,6 +19,11 @@ The prompts folder stores:
 - Decision-making frameworks
 - Custom instruction sets
 
+### Scoring Prompts
+
+- Default role scoring prompt: `prompts/scoring/role_scoring_prompt_v2.md`
+- Legacy comparison prompt: `prompts/scoring/role_scoring_prompt_v1.md`
+
 ## Usage
 
 These prompts ensure consistent and effective AI interactions throughout the 60-day operating system, enabling better outcomes through well-crafted instructions.
