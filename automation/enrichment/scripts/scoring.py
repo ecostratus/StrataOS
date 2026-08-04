@@ -31,6 +31,12 @@ def _feature_value(enriched: Dict[str, Any], key: str) -> float:
     - For numeric: clamp into [0,1]
     - Fallback: 0.0
     """
+    # Prefer explicit ratio features when available for graded scoring.
+    if key == "role_tags" and isinstance(enriched.get("role_match_ratio"), (int, float)):
+        return max(0.0, min(1.0, float(enriched.get("role_match_ratio", 0.0))))
+    if key == "stack_tags" and isinstance(enriched.get("stack_match_ratio"), (int, float)):
+        return max(0.0, min(1.0, float(enriched.get("stack_match_ratio", 0.0))))
+
     v = enriched.get(key)
     if isinstance(v, bool):
         return 1.0 if v else 0.0
@@ -51,9 +57,10 @@ def score_job(
     Example feature keys: 'role_fit' (or derived from 'role_tags'), 'stack', 'remote'.
     Generic behavior:
       - If weight exists for a key, try direct key; else try derived mapping:
-        - 'role_fit'  feature from 'role_tags'
-        - 'stack'  feature from 'stack_tags'
+        - 'role_fit'  feature from 'role_tags' (ratio-aware when available)
+        - 'stack'  feature from 'stack_tags' (ratio-aware when available)
         - 'remote'  feature from 'remote_friendly'
+        - 'title_fit'/'title_relevance'  feature from 'title_relevance'
       - Otherwise, if a weight key matches an enriched boolean/list field, use it directly.
     Returns dict with 'score' and 'bucket'.
     """
@@ -70,6 +77,8 @@ def score_job(
             feature_key = "stack_tags"
         elif k == "remote":
             feature_key = "remote_friendly"
+        elif k in {"title_fit", "title_relevance"}:
+            feature_key = "title_relevance"
 
         contrib = _feature_value(enriched, feature_key) * float(wt)
         total += contrib

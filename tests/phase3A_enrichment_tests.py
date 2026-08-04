@@ -53,6 +53,9 @@ def test_extract_features_config_driven():
     assert enriched["stack_tags"] == ["python"]
     assert enriched["role_tags"] == ["engineer"]
     assert enriched["remote_friendly"] is True
+    assert 0.0 <= enriched["role_match_ratio"] <= 1.0
+    assert 0.0 <= enriched["stack_match_ratio"] <= 1.0
+    assert 0.0 <= enriched["title_relevance"] <= 1.0
 
 
 def test_scoring_basic():
@@ -60,12 +63,41 @@ def test_scoring_basic():
         "role_tags": ["engineer"],
         "stack_tags": ["python", "aws"],
         "remote_friendly": True,
+        "role_match_ratio": 1.0,
+        "stack_match_ratio": 1.0,
+        "title_relevance": 1.0,
     }
-    weights = {"role_fit": 0.4, "stack": 0.4, "remote": 0.2}
+    weights = {"role_fit": 0.35, "stack": 0.35, "remote": 0.15, "title_relevance": 0.15}
     thresholds = {"exceptional": 0.85, "strong": 0.7, "moderate": 0.5}
     s = score_job(enriched, weights, thresholds)
     assert 0.0 <= s["score"] <= 1.0
     assert s["bucket"] in {"Exceptional", "Strong", "Moderate", "Weak"}
+
+
+def test_scoring_uses_graded_ratios():
+    weights = {"role_fit": 0.35, "stack": 0.35, "remote": 0.15, "title_relevance": 0.15}
+    thresholds = {"exceptional": 0.85, "strong": 0.7, "moderate": 0.5}
+
+    lower = {
+        "role_tags": ["engineer"],
+        "stack_tags": ["python"],
+        "remote_friendly": True,
+        "role_match_ratio": 0.5,
+        "stack_match_ratio": 0.5,
+        "title_relevance": 0.5,
+    }
+    higher = {
+        "role_tags": ["engineer"],
+        "stack_tags": ["python", "aws"],
+        "remote_friendly": True,
+        "role_match_ratio": 1.0,
+        "stack_match_ratio": 1.0,
+        "title_relevance": 1.0,
+    }
+
+    low_score = score_job(lower, weights, thresholds)
+    high_score = score_job(higher, weights, thresholds)
+    assert high_score["score"] > low_score["score"]
 
 
 def test_bucket_score_thresholds():
