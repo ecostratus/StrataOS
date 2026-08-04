@@ -42,6 +42,9 @@ export default function App() {
   const [setupApiKey, setSetupApiKey] = useState("");
   const [setupSaving, setSetupSaving] = useState(false);
   const [setupError, setSetupError] = useState("");
+  const [showLowRelevance, setShowLowRelevance] = useState(false);
+  const [minBucket, setMinBucket] = useState("Moderate");
+  const [requireRoleTags, setRequireRoleTags] = useState(true);
 
   const selectedJob = useMemo(
     () => jobs.find((job) => job.id === selectedJobId) || null,
@@ -49,8 +52,14 @@ export default function App() {
   );
 
   const loadAll = async () => {
+    const jobsParams = new URLSearchParams({
+      limit: "120",
+      include_low_relevance: showLowRelevance ? "true" : "false",
+      require_role_tags: requireRoleTags ? "true" : "false",
+      min_bucket: minBucket,
+    });
     const [jobsData, runsData, activityData, scoring] = await Promise.all([
-      api.get("/api/jobs?limit=120"),
+      api.get(`/api/jobs?${jobsParams.toString()}`),
       api.get("/api/runs?limit=25"),
       api.get("/api/activity?limit=80"),
       api.get("/api/metadata/scoring")
@@ -59,7 +68,14 @@ export default function App() {
     setRuns(runsData);
     setActivity(activityData);
     setBucketColors(scoring.bucketColors || {});
-    if (!selectedJobId && jobsData.length) setSelectedJobId(jobsData[0].id);
+    if (!selectedJobId && jobsData.length) {
+      setSelectedJobId(jobsData[0].id);
+      return;
+    }
+
+    if (selectedJobId && !jobsData.some((job) => job.id === selectedJobId)) {
+      setSelectedJobId(jobsData.length ? jobsData[0].id : null);
+    }
   };
 
   useEffect(() => {
@@ -80,7 +96,6 @@ export default function App() {
     };
 
     checkSetupStatus();
-    loadAll().catch((err) => setStatus(String(err)));
     const timer = setInterval(() => {
       api.get("/api/activity?limit=80").then(setActivity).catch(() => {});
     }, 6000);
@@ -89,6 +104,10 @@ export default function App() {
       clearInterval(timer);
     };
   }, []);
+
+  useEffect(() => {
+    loadAll().catch((err) => setStatus(String(err)));
+  }, [showLowRelevance, minBucket, requireRoleTags]);
 
   const runDiscovery = async () => {
     setLoadingRun(true);
@@ -327,6 +346,54 @@ export default function App() {
 
         <section className="grid gap-4 lg:grid-cols-3">
           <div className="card overflow-hidden lg:col-span-2">
+            <div className="border-b border-slate-200 bg-slate-50 px-4 py-3">
+              <div className="text-sm font-semibold text-slate-800">Filters</div>
+              <div className="mt-3 grid gap-3 md:grid-cols-3">
+                <label className="flex items-center gap-2 text-sm text-slate-700">
+                  <input
+                    id="show-low-relevance"
+                    type="checkbox"
+                    checked={showLowRelevance}
+                    onChange={(event) => setShowLowRelevance(event.target.checked)}
+                    className="h-4 w-4 rounded border-slate-300 text-teal-700 focus:ring-teal-600"
+                  />
+                  <span>Show low relevance jobs</span>
+                </label>
+
+                <label className="text-sm text-slate-700" htmlFor="min-bucket-select">
+                  <span className="mb-1 block">Minimum bucket</span>
+                  <select
+                    id="min-bucket-select"
+                    value={minBucket}
+                    onChange={(event) => setMinBucket(event.target.value)}
+                    disabled={showLowRelevance}
+                    className="w-full rounded border border-slate-300 px-2 py-1.5 text-sm text-slate-900 disabled:opacity-60"
+                  >
+                    <option value="Weak">Weak</option>
+                    <option value="Moderate">Moderate</option>
+                    <option value="Strong">Strong</option>
+                    <option value="Exceptional">Exceptional</option>
+                  </select>
+                </label>
+
+                <label className="flex items-center gap-2 text-sm text-slate-700">
+                  <input
+                    id="require-role-tags"
+                    type="checkbox"
+                    checked={requireRoleTags}
+                    onChange={(event) => setRequireRoleTags(event.target.checked)}
+                    disabled={showLowRelevance}
+                    className="h-4 w-4 rounded border-slate-300 text-teal-700 focus:ring-teal-600 disabled:opacity-60"
+                  />
+                  <span>Require role tags</span>
+                </label>
+              </div>
+              {showLowRelevance ? (
+                <p className="mt-2 text-xs text-slate-600">
+                  Low relevance mode is on, so minimum bucket and role-tag requirement are bypassed.
+                </p>
+              ) : null}
+            </div>
             <div className="border-b border-slate-200 px-4 py-3 font-semibold">Jobs and Runs</div>
             <div className="max-h-[380px] overflow-auto">
               <table className="w-full text-sm">

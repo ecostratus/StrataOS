@@ -31,6 +31,7 @@ on:
 
 jobs:
   run-playbook:
+    if: ${{ false }}
     runs-on: ubuntu-latest
     permissions:
       contents: read

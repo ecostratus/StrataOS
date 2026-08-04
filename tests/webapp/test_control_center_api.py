@@ -114,6 +114,7 @@ def test_control_center_api_smoke(monkeypatch, tmp_path: Path):
                             "company": "Acme",
                             "location": "Remote",
                             "url": "https://example.com/job/1",
+                            "role_tags": ["engineer"],
                             "skills": ["Python", "Kubernetes"],
                         }
                     ]
@@ -272,7 +273,20 @@ def test_resume_prompt_failure_is_sanitized(monkeypatch, tmp_path: Path):
                     },
                 ],
             )
-            (output_dir / f"jobs_enriched_{ts}.json").write_text(json.dumps([{"title": "Senior Platform Engineer", "company": "Acme", "location": "Remote", "url": "https://example.com/job/1"}]), encoding="utf-8")
+            (output_dir / f"jobs_enriched_{ts}.json").write_text(
+                json.dumps(
+                    [
+                        {
+                            "title": "Senior Platform Engineer",
+                            "company": "Acme",
+                            "location": "Remote",
+                            "url": "https://example.com/job/1",
+                            "role_tags": ["engineer"],
+                        }
+                    ]
+                ),
+                encoding="utf-8",
+            )
             (output_dir / f"jobs_discovered_{ts}.summary.json").write_text(json.dumps({"counts": {"total_discovered": 1, "exported": 1}}), encoding="utf-8")
             return CompletedProcess(command, 0, stdout="discovery complete\n", stderr="")
 
@@ -393,3 +407,165 @@ def test_replace_jobs_populates_phase1_normalized_fields(monkeypatch, tmp_path: 
         assert "TPM role leading platform initiatives" in str(payload["search_document"])
     finally:
         conn.close()
+
+
+def test_list_jobs_applies_default_relevance_filters(monkeypatch, tmp_path: Path):
+    db_path = tmp_path / "jobs.db"
+    monkeypatch.setattr(app_module, "DB_PATH", db_path)
+    app_module.init_db()
+
+    jobs = [
+        {
+            "title": "Custodian",
+            "company": "Facilities Co",
+            "location": "Remote",
+            "source": "sample",
+            "url": "https://example.com/jobs/custodian",
+            "posted_date": "2026-07-20",
+            "score": 0.2,
+            "bucket": "Weak",
+            "raw_json": {"role_tags": []},
+        },
+        {
+            "title": "Software Engineer",
+            "company": "Tech Co",
+            "location": "Remote",
+            "source": "sample",
+            "url": "https://example.com/jobs/eng",
+            "posted_date": "2026-07-20",
+            "score": 0.82,
+            "bucket": "Strong",
+            "raw_json": {"role_tags": ["engineer"]},
+        },
+    ]
+    inserted = app_module._replace_jobs_for_run(201, jobs)
+    assert inserted == 2
+
+    with TestClient(app_module.app) as client:
+        response = client.get("/api/jobs?run_id=201")
+        assert response.status_code == 200
+        payload = response.json()
+        assert len(payload) == 1
+        assert payload[0]["title"] == "Software Engineer"
+
+
+def test_list_jobs_can_include_low_relevance_when_requested(monkeypatch, tmp_path: Path):
+    db_path = tmp_path / "jobs.db"
+    monkeypatch.setattr(app_module, "DB_PATH", db_path)
+    app_module.init_db()
+
+    jobs = [
+        {
+            "title": "Custodian",
+            "company": "Facilities Co",
+            "location": "Remote",
+            "source": "sample",
+            "url": "https://example.com/jobs/custodian",
+            "posted_date": "2026-07-20",
+            "score": 0.2,
+            "bucket": "Weak",
+            "raw_json": {"role_tags": []},
+        },
+        {
+            "title": "Software Engineer",
+            "company": "Tech Co",
+            "location": "Remote",
+            "source": "sample",
+            "url": "https://example.com/jobs/eng",
+            "posted_date": "2026-07-20",
+            "score": 0.82,
+            "bucket": "Strong",
+            "raw_json": {"role_tags": ["engineer"]},
+        },
+    ]
+    inserted = app_module._replace_jobs_for_run(202, jobs)
+    assert inserted == 2
+
+    with TestClient(app_module.app) as client:
+        response = client.get("/api/jobs?run_id=202&include_low_relevance=true")
+        assert response.status_code == 200
+        payload = response.json()
+        assert len(payload) == 2
+
+
+def test_search_jobs_applies_default_relevance_filters(monkeypatch, tmp_path: Path):
+    db_path = tmp_path / "jobs.db"
+    monkeypatch.setattr(app_module, "DB_PATH", db_path)
+    app_module.init_db()
+
+    jobs = [
+        {
+            "title": "Custodian",
+            "company": "Facilities Co",
+            "location": "Remote",
+            "source": "sample",
+            "url": "https://example.com/jobs/custodian",
+            "posted_date": "2026-07-20",
+            "score": 0.2,
+            "bucket": "Weak",
+            "raw_json": {"role_tags": []},
+        },
+        {
+            "title": "Platform Engineer",
+            "company": "Tech Co",
+            "location": "Remote",
+            "source": "sample",
+            "url": "https://example.com/jobs/platform",
+            "posted_date": "2026-07-20",
+            "score": 0.9,
+            "bucket": "Exceptional",
+            "raw_json": {"role_tags": ["engineer"]},
+        },
+    ]
+    inserted = app_module._replace_jobs_for_run(203, jobs)
+    assert inserted == 2
+
+    with TestClient(app_module.app) as client:
+        response = client.post("/api/jobs/search", json={"query": ""})
+        assert response.status_code == 200
+        payload = response.json()
+        assert payload["total"] == 1
+        assert len(payload["items"]) == 1
+        assert payload["items"][0]["title"] == "Platform Engineer"
+
+
+def test_search_jobs_can_include_low_relevance_when_requested(monkeypatch, tmp_path: Path):
+    db_path = tmp_path / "jobs.db"
+    monkeypatch.setattr(app_module, "DB_PATH", db_path)
+    app_module.init_db()
+
+    jobs = [
+        {
+            "title": "Custodian",
+            "company": "Facilities Co",
+            "location": "Remote",
+            "source": "sample",
+            "url": "https://example.com/jobs/custodian",
+            "posted_date": "2026-07-20",
+            "score": 0.2,
+            "bucket": "Weak",
+            "raw_json": {"role_tags": []},
+        },
+        {
+            "title": "Platform Engineer",
+            "company": "Tech Co",
+            "location": "Remote",
+            "source": "sample",
+            "url": "https://example.com/jobs/platform",
+            "posted_date": "2026-07-20",
+            "score": 0.9,
+            "bucket": "Exceptional",
+            "raw_json": {"role_tags": ["engineer"]},
+        },
+    ]
+    inserted = app_module._replace_jobs_for_run(204, jobs)
+    assert inserted == 2
+
+    with TestClient(app_module.app) as client:
+        response = client.post(
+            "/api/jobs/search",
+            json={"query": "", "include_low_relevance": True},
+        )
+        assert response.status_code == 200
+        payload = response.json()
+        assert payload["total"] == 2

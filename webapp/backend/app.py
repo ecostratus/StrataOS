@@ -70,6 +70,7 @@ BUCKET_COLORS = {
 
 JOB_STATUS_VALUES = ("discovered", "applied", "interviewing", "offer", "rejected")
 DEFAULT_JOB_STATUS = "discovered"
+BUCKET_ORDER = ("Weak", "Moderate", "Strong", "Exceptional")
 
 JOBS_MIGRATION_COLUMNS: dict[str, str] = {
 	"status": f"TEXT NOT NULL DEFAULT '{DEFAULT_JOB_STATUS}'",
@@ -576,15 +577,62 @@ def _build_search_applied_filters(payload: SearchRequest, page: int, page_size: 
 		"job_type": _normalize_items(payload.job_type),
 		"work_type": _normalize_items(payload.work_type),
 		"posted_within_days": payload.posted_within_days,
+		"include_low_relevance": payload.include_low_relevance,
+		"require_role_tags": payload.require_role_tags,
+		"min_bucket": payload.min_bucket,
 		"sort": payload.sort,
 		"page": page,
 		"page_size": page_size,
 	}
 
 
+def _normalize_bucket_threshold(value: str | None, default: str = "Moderate") -> str:
+	raw = (value or default).strip().lower()
+	mapping = {
+		"weak": "Weak",
+		"moderate": "Moderate",
+		"strong": "Strong",
+		"exceptional": "Exceptional",
+	}
+	normalized = mapping.get(raw)
+	if not normalized:
+		raise HTTPException(status_code=400, detail=f"Unsupported bucket threshold: {value}")
+	return normalized
+
+
+def _append_default_relevance_where(
+	where: list[str],
+	params: list[Any],
+	*,
+	include_low_relevance: bool,
+	require_role_tags: bool,
+	min_bucket: str,
+) -> None:
+	if include_low_relevance:
+		return
+
+	if require_role_tags:
+		where.append("COALESCE(json_array_length(json_extract(raw_json, '$.role_tags')), 0) > 0")
+
+	normalized_bucket = _normalize_bucket_threshold(min_bucket)
+	min_index = BUCKET_ORDER.index(normalized_bucket)
+	allowed_buckets = BUCKET_ORDER[min_index:]
+	if allowed_buckets and len(allowed_buckets) < len(BUCKET_ORDER):
+		placeholders = ",".join("?" for _ in allowed_buckets)
+		where.append(f"COALESCE(bucket, '') IN ({placeholders})")
+		params.extend(allowed_buckets)
+
+
 def _build_jobs_search_where(payload: SearchRequest) -> tuple[list[str], list[Any]]:
 	where: list[str] = ["1=1"]
 	params: list[Any] = []
+	_append_default_relevance_where(
+		where,
+		params,
+		include_low_relevance=payload.include_low_relevance,
+		require_role_tags=payload.require_role_tags,
+		min_bucket=payload.min_bucket,
+	)
 
 	query_terms = _normalize_value(payload.query).split()
 	for term in query_terms:
@@ -783,33 +831,41 @@ def list_runs(limit: int = 30) -> list[dict[str, Any]]:
 
 
 @app.get("/api/jobs")
-def list_jobs(limit: int = 100, run_id: int | None = None, status: str | None = None) -> list[dict[str, Any]]:
+def list_jobs(
+	limit: int = 100,
+	run_id: int | None = None,
+	status: str | None = None,
+	include_low_relevance: bool = False,
+	require_role_tags: bool = True,
+	min_bucket: str = Query(default="Moderate"),
+) -> list[dict[str, Any]]:
 	status_filter = _normalize_value(status)
 	if status_filter and status_filter not in JOB_STATUS_VALUES:
 		raise HTTPException(status_code=400, detail=f"Unsupported status: {status}")
+	normalized_min_bucket = _normalize_bucket_threshold(min_bucket)
 
 	conn = connect_db()
 	try:
-		if run_id is None and not status_filter:
-			rows = conn.execute(
-				"SELECT * FROM jobs ORDER BY id DESC LIMIT ?",
-				(limit,),
-			).fetchall()
-		elif run_id is None and status_filter:
-			rows = conn.execute(
-				"SELECT * FROM jobs WHERE status=? ORDER BY id DESC LIMIT ?",
-				(status_filter, limit),
-			).fetchall()
-		elif run_id is not None and status_filter:
-			rows = conn.execute(
-				"SELECT * FROM jobs WHERE run_id=? AND status=? ORDER BY id DESC LIMIT ?",
-				(run_id, status_filter, limit),
-			).fetchall()
-		else:
-			rows = conn.execute(
-				"SELECT * FROM jobs WHERE run_id=? ORDER BY id DESC LIMIT ?",
-				(run_id, limit),
-			).fetchall()
+		where: list[str] = ["1=1"]
+		params: list[Any] = []
+		if run_id is not None:
+			where.append("run_id=?")
+			params.append(run_id)
+		if status_filter:
+			where.append("status=?")
+			params.append(status_filter)
+		_append_default_relevance_where(
+			where,
+			params,
+			include_low_relevance=include_low_relevance,
+			require_role_tags=require_role_tags,
+			min_bucket=normalized_min_bucket,
+		)
+		where_sql = " AND ".join(where)
+		rows = conn.execute(
+			f"SELECT * FROM jobs WHERE {where_sql} ORDER BY id DESC LIMIT ?",
+			[*params, limit],
+		).fetchall()
 		payload = []
 		for row in rows:
 			item = dict(row)

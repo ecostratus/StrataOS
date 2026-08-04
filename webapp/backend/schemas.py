@@ -35,6 +35,9 @@ class SearchRequest(BaseModel):
 	job_type: list[str] = Field(default_factory=list)
 	work_type: list[str] = Field(default_factory=list)
 	posted_within_days: int | None = None
+	include_low_relevance: bool = False
+	require_role_tags: bool = True
+	min_bucket: Literal["Weak", "Moderate", "Strong", "Exceptional"] = "Moderate"
 	sort: Literal["relevance", "posted_date", "salary_desc", "salary_asc", "company_asc"] = "relevance"
 	page: int = 1
 	page_size: int = 25
