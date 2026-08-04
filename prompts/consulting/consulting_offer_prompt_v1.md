@@ -129,26 +129,27 @@ Focus on knowledge transfer and skill building
 
 **Pricing Structure**
 
-Option 1: [Recommended]
-- Total Investment: $[Amount]
-- Structure: [Fixed price / Time & Materials / Value-based]
-- Breakdown:
-  - [Component 1]: $[Amount]
-  - [Component 2]: $[Amount]
+Present only the pricing structure(s) explicitly provided in the context. If only one pricing model is provided (e.g., T&M rate only), present only that one option — do not invent or infer a second pricing model, a fixed-price total, or an alternative structure. If the context states "T&M only" or similar, present that and omit the Option 2 block entirely.
 
-Option 2: [Alternative]
-- Total Investment: $[Amount]
-- Structure: [Different approach]
-- Breakdown:
-  - [Component 1]: $[Amount]
-  - [Component 2]: $[Amount]
+{{#if pricing_model_option1}}
+Option 1: {{pricing_model_option1}}
+- Structure: {{pricing_structure_option1}}
+- Rate or investment: {{pricing_detail_option1}}
+{{/if}}
+
+{{#if pricing_model_option2}}
+Option 2: {{pricing_model_option2}}
+- Structure: {{pricing_structure_option2}}
+- Rate or investment: {{pricing_detail_option2}}
+{{/if}}
+
+If no pricing option fields are provided, present the engagement rate from context as T&M only, state the hourly rate, and note that a project estimate can be provided based on confirmed weekly hours.
 
 **Payment Schedule**
-- Upon signing: [%] ($[Amount])
-- [Milestone/Month]: [%] ($[Amount])
-- Upon completion: [%] ($[Amount])
 
-**Payment Terms**: Net [15/30] days
+Use only the payment structure explicitly provided in the context (e.g., {{payment_schedule_notes}}). If no payment schedule is specified in context, do NOT invent percentages or milestone amounts — instead write: "Payment schedule to be agreed upon contract execution. Standard terms: invoice on milestone completion, Net 30."
+
+**Payment Terms**: Net {{payment_terms_days|default:"30"}} days
 
 ### 5. Terms & Conditions
 

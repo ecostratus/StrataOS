@@ -101,8 +101,10 @@ For each role:
 - Certifications and tools
 
 **Education**
-- Degree, Institution, Year
-- Relevant coursework if applicable
+- Degree and Institution only — copy exactly as written in the base resume
+- Do not include graduation years or dates under any circumstances, even if they are inferable from other dates in the resume
+- Do not add relevant coursework unless it appears verbatim in the base resume
+- If no Education section is present in the base resume, omit this section entirely. Do not invent or infer a degree, institution, or year.
 
 ### 2. Keyword Analysis
 

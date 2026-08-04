@@ -1,0 +1,38 @@
+{
+  "company_name": "Confidential Fortune 300 Life Sciences Client (via boutique advisory firm)",
+  "job_title": "Principal, Enterprise Platform Governance & CMDB Strategy",
+  "job_description": "Fortune 300 life sciences organization mid-way through a multi-year ServiceNow platform consolidation needs a Principal-level advisor to own CMDB/CSDM governance strategy and rebuild executive confidence in configuration data quality following a series of failed automation rollouts tied to unreliable CI data. Assessment-first engagement: first 6 weeks focused on platform health audit and technical debt evaluation, transitioning into governance framework design and executive roadmap delivery.\n\nKey Responsibilities:\n- Conduct a ground-up assessment of the existing CMDB/CSDM implementation, service mapping accuracy, and discovery governance across IT, HR, and Compliance domains.\n- Design a governance-by-design operating model for configuration data ownership, data quality SLAs, and platform maturity standards.\n- Translate platform risk and technical debt findings into an executive-ready investment roadmap for CIO/VP stakeholders.\n- Partner with Enterprise Architecture and Security teams to align CMDB governance with AI-readiness and observability initiatives already underway.\n- Establish platform health KPIs and executive dashboards to sustain governance visibility post-engagement.\n\nIdeal Background:\n- 10+ years leading ServiceNow platform governance or CMDB/CSDM strategy at Fortune 500 scale, ideally in a regulated industry (healthcare, life sciences, or similar).\n- Demonstrated experience assessing inherited platforms with significant technical debt and rebuilding executive trust in configuration data.\n- Track record advising CIO/VP/SVP stakeholders and translating technical platform risk into investment decisions.\n- Comfortable operating independently as a senior advisor in a trusted-advisor engagement, not staff augmentation.",
+  "tailoring_focus": "CMDB governance, CSDM strategy, ServiceNow platform health, technical debt assessment, executive advisory, CIO/VP stakeholder alignment, AI-readiness, regulated industry, configuration data quality",
+  "seniority": "Principal / Executive",
+  "domain_tags": [
+    "CMDB",
+    "CSDM",
+    "ServiceNow",
+    "Platform Governance",
+    "Technical Debt",
+    "Enterprise Architecture",
+    "AI Readiness",
+    "Observability"
+  ],
+  "stack": [
+    "ServiceNow",
+    "CMDB",
+    "CSDM",
+    "Discovery",
+    "Service Mapping",
+    "ITOM",
+    "ITSM"
+  ],
+  "skills": [
+    "Platform governance",
+    "Executive advisory",
+    "CIO/VP stakeholder alignment",
+    "Technical debt evaluation",
+    "Configuration data quality",
+    "Operating model design",
+    "Investment roadmap",
+    "Platform health KPIs",
+    "Regulated industry experience"
+  ],
+  "master_resume": "JAMES NAPHEN\nEnterprise Platform Governance & Transformation Leader\nCMDB / CSDM Strategy, Platform Health, and Executive Decision Support\nSan Francisco Bay Area | james.naphen@gmail.com | 781-962-8700 | linkedin.com/in/jamesnaphen\n\nSUMMARY\nEnterprise platform governance executive specializing in transforming complex technology ecosystems into trusted operational platforms that enable executive decision-making, AI readiness, and enterprise scale. Fifteen-plus years of stabilizing, governing, and maturing ServiceNow environments for Fortune 500 organizations, with a focus on assessing inherited platforms with significant technical debt and rebuilding executive confidence in enterprise configuration data. Known for providing clear, evidence-based recommendations that enable executive teams to make confident platform investment and modernization decisions. Recognized for translating complex platform health, governance, and technical risk into executive decision frameworks that accelerate organizational alignment and investment decisions. While much of this work has been delivered through the ServiceNow platform, the underlying disciplines are enterprise operating model design, trusted data, governance, and organizational change.\n\nSELECTED ENTERPRISE ENGAGEMENTS\nRepublic Services, Starbucks, Gilead Sciences, IBM, Sony Interactive Entertainment, Stryker, Stanford University, Oracle, and ServiceNow.\n\nCORE EXPERTISE\nPlatform Governance: CMDB Governance, CSDM Strategy and Operating Models, Configuration Data Quality, Discovery Governance, Service Mapping Strategy, Platform Maturity Assessment, Technical Debt Evaluation, Platform Risk Reduction\nEnterprise Strategy: Enterprise Architecture, Operating Model Design, AI Readiness Foundations, Governance Frameworks, Multi-tenant and Cross-Domain Platform Strategy\nExecutive Leadership: Executive Reporting, Executive Decision Support, Stakeholder Alignment with CIO, VP, and Executive Sponsor audiences, Organizational Change\n\nPROFESSIONAL EXPERIENCE\n\nFounder and Principal, Enterprise Platform Strategy — EcoStratus Technologies, Aug 2012 to Present\n- Led the enterprise assessment that established the governance baseline for CMDB, CSDM, ITOM maturity, service mapping, and platform health across a Fortune 300 organization, providing executive leadership with a trusted foundation for prioritizing modernization efforts.\n- Leading enterprise governance strategy for CMDB, CSDM, ITOM maturity, service mapping, and platform health across a Fortune 300 enterprise, establishing executive visibility into platform risk, data quality, and organizational readiness.\n- Conduct ground-up assessments of inherited platforms, validating configuration data, integration quality, and governance before recommending strategic investment or modernization.\n- Designed governance-by-design operating models and CMDB health frameworks that improved scalability, upgrade readiness, and long-term platform sustainability across regulated and high-availability environments.\n- Led enterprise platform governance engagements across Fortune 500 organizations, including Republic Services, Starbucks, Sony Interactive, Stryker, and Gilead Sciences, improving platform adoption and reducing operational cost and complexity.\n\nPrincipal Technical Product Manager and Platform Architect — Starbucks Corporation, Dec 2024 to Feb 2026\n- Directed enterprise platform governance across IT, HR, and Operations for a 350K-plus user global environment, holding decision authority over platform standards, data quality requirements, and concept-to-launch execution.\n- Strengthened CMDB health, identity and access foundations, service mapping, observability, and metadata quality to support AI-first, security-aware operations, forming the governance layer underneath 750K plus annual automated service interactions.\n- Partnered directly with VP and SVP leadership to sequence 30-plus initiatives into an executive-approved FY25 to FY26 platform investment roadmap, aligning platform capability to funding, adoption, and operational KPIs.\n- Authored the enterprise AIOps and Event Intelligence governance strategy, consolidating observability and remediation workflows and improving executive confidence in platform reliability and incident data.\n\nEDUCATION\nExecutive MBA Program, Graduate Coursework — MIT Sloan\nM.S., Leadership and Project Management — Northeastern University\nB.S., Interdisciplinary Studies — Fitchburg State University"
+}

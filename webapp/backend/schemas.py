@@ -63,7 +63,7 @@ class JobStatusUpdateRequest(BaseModel):
 
 
 class PromptArtifact(BaseModel):
-	type: Literal["resume", "outreach"]
+	type: Literal["resume", "outreach", "consulting"]
 	content: str
 
 
@@ -75,7 +75,7 @@ class PromptError(BaseModel):
 class PromptGenerationResponse(BaseModel):
 	status: Literal["ok", "error"]
 	prompt_run_id: int
-	prompt_type: Literal["resume", "outreach"]
+	prompt_type: Literal["resume", "outreach", "consulting"]
 	artifact: PromptArtifact | None = None
 	prompt_text: str = ""
 	output_path: str | None = None
