@@ -5,7 +5,12 @@ Two-stage import hardening:
 - Replace module-level import of normalization with function-scoped loader.
 """
 
+import re
 from typing import List, Iterable, Any, Optional
+
+
+def _normalize_phrase_text(value: str) -> str:
+    return re.sub(r"[^a-z0-9]+", " ", (value or "").lower()).strip()
 
 def _load_normalize_terms():
     try:
@@ -20,17 +25,42 @@ def _load_normalize_terms():
         return mod.normalize_terms
 
 
-def matches_filters(title: str, location: str, keywords: List[str], locations: List[str], exclude_keywords: List[str]) -> bool:
-    """Return True if the job matches include/exclude filters."""
+def matches_filters(
+    title: str,
+    location: str,
+    keywords: List[str],
+    locations: List[str],
+    exclude_keywords: List[str],
+    search_text: str = "",
+    title_terms: List[str] | None = None,
+    title_exclude_keywords: List[str] | None = None,
+) -> bool:
+    """Return True if the job matches include/exclude filters.
+
+    Matching uses title first and can optionally include additional searchable
+    text (for example, description snippets) when available.
+    """
     t = (title or "").lower()
     loc = (location or "").lower()
+    extra = (search_text or "").lower()
+    combined = " ".join([t, extra]).strip()
+    t_phrase = _normalize_phrase_text(t)
+    combined_phrase = _normalize_phrase_text(combined)
+    title_terms = title_terms or []
+    title_exclude_keywords = title_exclude_keywords or []
+
+    if title_exclude_keywords and any(ex in t for ex in title_exclude_keywords):
+        return False
 
     # Exclusions take precedence
-    if exclude_keywords and any(ex in t for ex in exclude_keywords):
+    if exclude_keywords and any(ex in combined or _normalize_phrase_text(ex) in combined_phrase for ex in exclude_keywords):
         return False
 
     # Require at least one keyword match if keywords provided
-    if keywords and not any(kw in t for kw in keywords):
+    if (keywords or title_terms) and not (
+        any(kw in combined or _normalize_phrase_text(kw) in combined_phrase for kw in keywords)
+        or any(term in t or _normalize_phrase_text(term) in t_phrase for term in title_terms)
+    ):
         return False
 
     # Location match: allow location term in either the location field or title

@@ -10,6 +10,7 @@ from __future__ import annotations
 import csv
 import os
 import sys
+from pathlib import Path
 from datetime import datetime
 try:  # Python 3.11+
     from datetime import UTC  # type: ignore
@@ -58,8 +59,58 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
 GREENHOUSE_TELEMETRY_DEFAULT_PATH = os.path.join(_ROOT, "logs", "greenhouse_week1_telemetry.jsonl")
+SKIP_LIVE_FETCH_FIXTURES = (
+    Path(_ROOT) / "tests" / "fixtures" / "job_discovery" / "track_ac_boundary_fixture.json",
+    Path(_ROOT) / "tests" / "fixtures" / "job_discovery" / "track_b_precedence_fixture.json",
+    Path(_ROOT) / "tests" / "fixtures" / "job_discovery" / "real_world_track_mix_fixture.json",
+)
 
 REQUIRED_KEYS = {"title", "location", "company", "source", "url", "posted_date"}
+
+_PROFILE_TRACK_TITLE_FAMILY_TERMS = {
+    "track_a_risk_governance": (
+        "governance",
+        "risk",
+        "compliance",
+        "audit",
+        "trust",
+        "privacy",
+        "grc",
+        "policy",
+        "responsible ai",
+        "ai governance",
+    ),
+    "track_b_platform_stabilization": (
+        "technical program manager",
+        "technical program management",
+        "program manager",
+        "program management",
+        "tpm",
+        "technical solutions operations",
+        "platform operations",
+        "reliability",
+        "site reliability",
+        "sre",
+        "infrastructure",
+        "operations",
+    ),
+    "track_c_ai_product_cpo": (
+        "product manager",
+        "product management",
+        "group product manager",
+        "principal product manager",
+        "senior product manager",
+        "director product management",
+        "chief product",
+        "cpo",
+    ),
+}
+
+_PROFILE_TRACK_PRECEDENCE = {
+    "track_a_risk_governance": 3,
+    "track_c_ai_product_cpo": 2,
+    "track_b_platform_stabilization": 1,
+}
 
 
 def _validate_job(job: Dict[str, Any]) -> bool:
@@ -92,6 +143,72 @@ def _safe_fetch(name: str, func: Callable[[], List[Dict[str, Any]]]) -> List[Dic
     except Exception:
         logger.error("source '%s' failed", name, exc_info=True)
         return []
+
+
+def _build_profile_tracks(filters_cfg: Dict[str, Any]) -> tuple[List[Dict[str, Any]], List[str]]:
+    title_terms = normalize_terms(filters_cfg.get("title_terms", []) or [])
+    raw_profile_tracks = filters_cfg.get("profile_tracks", []) or []
+    profile_tracks: List[Dict[str, Any]] = []
+    if isinstance(raw_profile_tracks, list):
+        for idx, item in enumerate(raw_profile_tracks):
+            if not isinstance(item, dict):
+                continue
+            track_name = str(item.get("name", "") or "").strip() or f"track_{idx + 1}"
+            track_label = str(item.get("label", "") or "").strip() or track_name
+            track_signals = normalize_terms(item.get("signals", []) or [])
+            track_title_terms = normalize_terms(item.get("title_terms", []) or [])
+            track_title_qualifiers = normalize_terms(item.get("title_qualifiers", []) or [])
+            track_title_required_terms = normalize_terms(item.get("title_required_terms", []) or [])
+            try:
+                track_min_hits = int(item.get("min_hits", 1) or 1)
+            except Exception:
+                track_min_hits = 1
+            if track_signals or track_title_terms or track_title_qualifiers or track_title_required_terms:
+                profile_tracks.append(
+                    {
+                        "name": track_name,
+                        "label": track_label,
+                        "signals": track_signals,
+                        "title_terms": track_title_terms,
+                        "title_qualifiers": track_title_qualifiers,
+                        "title_required_terms": track_title_required_terms,
+                        "min_hits": max(1, track_min_hits),
+                    }
+                )
+                title_terms.extend(term for term in track_title_terms if term not in title_terms)
+    return profile_tracks, title_terms
+
+
+def _select_profile_track(
+    title: str,
+    combined_text: str,
+    profile_tracks: List[Dict[str, Any]],
+) -> tuple[Dict[str, Any] | None, int, str]:
+    title_text = str(title or "").lower()
+    combined = str(combined_text or "").lower()
+    best_track: Dict[str, Any] | None = None
+    best_score: tuple[int, int, int, int] = (-1, -1, -1, -1)
+    for index, track in enumerate(profile_tracks):
+        qualifiers = track.get("title_qualifiers", []) or []
+        if qualifiers and not any(q in title_text for q in qualifiers):
+            continue
+        required_terms = track.get("title_required_terms", []) or []
+        if required_terms and not any(term in title_text for term in required_terms):
+            continue
+        signal_hits = sum(1 for sig in track["signals"] if sig and sig in combined)
+        track_name = str(track.get("name", "") or "")
+        family_terms = _PROFILE_TRACK_TITLE_FAMILY_TERMS.get(track_name, ())
+        family_hits = sum(1 for term in family_terms if term and term in title_text)
+        family_rank = _PROFILE_TRACK_PRECEDENCE.get(track_name, 0) if family_hits else 0
+        if family_hits == 0 and signal_hits < track["min_hits"]:
+            continue
+        candidate_score = (family_rank, family_hits, signal_hits, -index)
+        if candidate_score > best_score:
+            best_score = candidate_score
+            best_track = track
+    if best_track is None:
+        return None, 0, ""
+    return best_track, best_score[2], str(best_track.get("label", "") or "")
 
 
 def discover_jobs() -> List[Dict[str, str]]:
@@ -151,13 +268,30 @@ def discover_jobs() -> List[Dict[str, str]]:
 
     use_modern_path = any(bool(cfg_map.get(k, False)) for k in modern_enable_keys)
 
+    skip_live_fetch = bool(config.get_bool("SKIP_LIVE_FETCH", False)) if hasattr(config, "get_bool") else False
+
     if use_modern_path and hasattr(sources, "fetch_all_sources"):
         try:
-            canonical_jobs = sources.fetch_all_sources(cfg_map)
+            if skip_live_fetch:
+                canonical_jobs = _load_skip_live_fetch_jobs()
+                print(f"Skip-live-fetch mode enabled | Loaded {len(canonical_jobs)} fixture jobs")
+            else:
+                canonical_jobs = sources.fetch_all_sources(cfg_map)
             jobs: List[Dict[str, str]] = []
             for item in canonical_jobs:
                 posted_value = str(item.get("posted_at", "") or "")
                 posted_date = posted_value[:10] if len(posted_value) >= 10 else datetime.now(UTC).strftime("%Y-%m-%d")
+                search_text = " ".join(
+                    part
+                    for part in [
+                        str(item.get("description", "") or ""),
+                        str(item.get("content", "") or ""),
+                        str(item.get("summary", "") or ""),
+                        str(item.get("team", "") or ""),
+                        str(item.get("department", "") or ""),
+                    ]
+                    if part
+                )
                 jobs.append(
                     {
                         "title": str(item.get("title", "") or ""),
@@ -166,6 +300,8 @@ def discover_jobs() -> List[Dict[str, str]]:
                         "source": str(item.get("source", "") or ""),
                         "url": str(item.get("url", "") or ""),
                         "posted_date": posted_date,
+                        "search_text": search_text,
+                        "fixture_expected_match": item.get("fixture_expected_match", None),
                     }
                 )
             return jobs
@@ -222,6 +358,8 @@ def export_to_csv(rows: List[Dict[str, str]], out_dir: str) -> str:
         "url",
         "posted_date",
     ]
+    optional_fieldnames = ["profile_track", "profile_signal_hits"]
+    fieldnames.extend([name for name in optional_fieldnames if any(name in r for r in rows)])
     with open(path, "w", encoding="utf-8", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
@@ -241,6 +379,8 @@ def export_to_csv_with_ts(rows: List[Dict[str, str]], out_dir: str, ts: str) -> 
         "url",
         "posted_date",
     ]
+    optional_fieldnames = ["profile_track", "profile_signal_hits"]
+    fieldnames.extend([name for name in optional_fieldnames if any(name in r for r in rows)])
     with open(path, "w", encoding="utf-8", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
@@ -320,12 +460,50 @@ def _greenhouse_payload_anomalies(rows: List[Dict[str, str]]) -> int:
     return 0
 
 
+def _load_skip_live_fetch_jobs() -> List[Dict[str, str]]:
+    jobs: List[Dict[str, str]] = []
+    for fixture_path in SKIP_LIVE_FETCH_FIXTURES:
+        if not fixture_path.exists():
+            continue
+        try:
+            payload = json.loads(fixture_path.read_text(encoding="utf-8"))
+        except Exception:
+            logger.warning("skip-live-fetch fixture could not be read", extra={"path": str(fixture_path)}, exc_info=True)
+            continue
+        if not isinstance(payload, list):
+            continue
+        for item in payload:
+            if not isinstance(item, dict):
+                continue
+            title = str(item.get("title", "") or "").strip()
+            company = str(item.get("company", "") or "").strip()
+            source = str(item.get("source", "") or "fixture").strip() or "fixture"
+            url = str(item.get("url", "") or "").strip()
+            search_text = str(item.get("search_text", "") or "").strip()
+            if not title or not url:
+                continue
+            jobs.append(
+                {
+                    "title": title,
+                    "company": company,
+                    "location": "Remote",
+                    "source": source,
+                    "url": url,
+                    "posted_date": datetime.now(UTC).strftime("%Y-%m-%d"),
+                    "description": search_text,
+                    "fixture_expected_match": bool(item.get("expected_should_match", True)),
+                }
+            )
+    return jobs
+
+
 def main(argv: List[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Job discovery orchestrator")
     parser.add_argument("--out-dir", dest="out_dir", default=None, help="Override output directory")
     parser.add_argument("--summary-only", dest="summary_only", action="store_true", help="Run discovery without CSV export")
     parser.add_argument("--enrich", dest="enrich", action="store_true", help="Run enrichment + scoring and export artifacts")
     parser.add_argument("--schedule", dest="schedule", action="store_true", help="Enable scheduling gate (Phase 3B)")
+    parser.add_argument("--skip-live-fetch", dest="skip_live_fetch", action="store_true", help="Use deterministic fixtures instead of live source fetches")
     args = parser.parse_args(argv)
 
     # Uvicorn and parent shells can retain stale env values across hot reloads.
@@ -341,6 +519,8 @@ def main(argv: List[str] | None = None) -> None:
         "JOB_FILTER_EXCLUDE_STACK_TAGS",
     ):
         os.environ.pop(key, None)
+    if args.skip_live_fetch:
+        os.environ["SKIP_LIVE_FETCH"] = "true"
 
     json_cfg = os.path.join(_ROOT, "config", "env.json")
     if not os.path.exists(json_cfg):
@@ -350,6 +530,15 @@ def main(argv: List[str] | None = None) -> None:
     environment = config.get("SYSTEM_ENVIRONMENT", "development")
     log_level = config.get("SYSTEM_LOG_LEVEL", "INFO")
     out_dir = str(args.out_dir or config.get("SYSTEM_OUTPUT_DIRECTORY", "output"))
+    cfg_root = config.to_dict()
+
+    def _cfg_bool(key: str) -> bool:
+        value = cfg_root.get(key, None)
+        if isinstance(value, bool):
+            return value
+        if value is not None:
+            return bool(value)
+        return bool(config.get_bool(key, False))
 
     # Filters from config
     keywords = normalize_terms(config.get_list("JOB_FILTER_KEYWORDS", ["software engineer", "developer"]) or [])
@@ -359,6 +548,43 @@ def main(argv: List[str] | None = None) -> None:
     exclude_role_tags = normalize_terms(config.get_list("JOB_FILTER_EXCLUDE_ROLE_TAGS", []) or [])
     include_stack_tags = normalize_terms(config.get_list("JOB_FILTER_INCLUDE_STACK_TAGS", []) or [])
     exclude_stack_tags = normalize_terms(config.get_list("JOB_FILTER_EXCLUDE_STACK_TAGS", []) or [])
+    filters_cfg = cfg_root.get("job_discovery", {}).get("filters", {})
+    title_exclude = normalize_terms(filters_cfg.get("title_exclude_keywords", []) or [])
+    title_terms = normalize_terms(filters_cfg.get("title_terms", []) or [])
+    profile_signals = normalize_terms(filters_cfg.get("profile_signals", []) or [])
+    try:
+        profile_signals_min = int(filters_cfg.get("profile_signals_min", 0) or 0)
+    except Exception:
+        profile_signals_min = 0
+    raw_profile_tracks = filters_cfg.get("profile_tracks", []) or []
+    profile_tracks: List[Dict[str, Any]] = []
+    if isinstance(raw_profile_tracks, list):
+        for idx, item in enumerate(raw_profile_tracks):
+            if not isinstance(item, dict):
+                continue
+            track_name = str(item.get("name", "") or "").strip() or f"track_{idx + 1}"
+            track_label = str(item.get("label", "") or "").strip() or track_name
+            track_signals = normalize_terms(item.get("signals", []) or [])
+            track_title_terms = normalize_terms(item.get("title_terms", []) or [])
+            track_title_qualifiers = normalize_terms(item.get("title_qualifiers", []) or [])
+            track_title_required_terms = normalize_terms(item.get("title_required_terms", []) or [])
+            try:
+                track_min_hits = int(item.get("min_hits", 1) or 1)
+            except Exception:
+                track_min_hits = 1
+            if track_signals or track_title_terms or track_title_qualifiers or track_title_required_terms:
+                profile_tracks.append(
+                    {
+                        "name": track_name,
+                        "label": track_label,
+                        "signals": track_signals,
+                        "title_terms": track_title_terms,
+                        "title_qualifiers": track_title_qualifiers,
+                        "title_required_terms": track_title_required_terms,
+                        "min_hits": max(1, track_min_hits),
+                    }
+                )
+                title_terms.extend(term for term in track_title_terms if term not in title_terms)
     has_tag_filters = any(
         [include_role_tags, exclude_role_tags, include_stack_tags, exclude_stack_tags]
     )
@@ -366,7 +592,7 @@ def main(argv: List[str] | None = None) -> None:
     print("Job discovery v1  starting")
     print(
         f"Env: {environment} | Log: {log_level} | "
-        f"Keywords: {', '.join(keywords) or '-'} | Locations: {', '.join(locations) or '-'} | Exclude: {', '.join(exclude) or '-'}"
+        f"Keywords: {', '.join(keywords) or '-'} | Title terms: {', '.join(title_terms) or '-'} | Locations: {', '.join(locations) or '-'} | Exclude: {', '.join(exclude) or '-'} | Title exclude: {', '.join(title_exclude) or '-'}"
     )
     if has_tag_filters:
         print(
@@ -378,6 +604,23 @@ def main(argv: List[str] | None = None) -> None:
         )
         if not enrichment:
             logger.warning("Tag filters requested but enrichment module unavailable; skipping tag filter checks")
+    if profile_tracks:
+        for track in profile_tracks:
+            print(
+                "Profile track enabled | "
+                f"{track['label']} | "
+                f"Min hits: {track['min_hits']} | "
+                f"Signals: {', '.join(track['signals'])} | "
+                f"Title terms: {', '.join(track.get('title_terms', [])) or '-'} | "
+                f"Title qualifiers: {', '.join(track.get('title_qualifiers', [])) or '-'} | "
+                f"Title required: {', '.join(track.get('title_required_terms', [])) or '-'}"
+            )
+    elif profile_signals and profile_signals_min > 0:
+        print(
+            "Profile signals enabled | "
+            f"Min hits: {profile_signals_min} | "
+            f"Signals: {', '.join(profile_signals)}"
+        )
 
     # Reset per-run source metrics
     if hasattr(sources, "reset_metrics"):
@@ -412,7 +655,7 @@ def main(argv: List[str] | None = None) -> None:
             logger.info("Scheduling helpers unavailable; proceeding without schedule gating")
 
     # Fetch and filter
-    telemetry_enabled = bool(config.get_bool("GREENHOUSE_ENABLED", False))
+    telemetry_enabled = _cfg_bool("GREENHOUSE_ENABLED")
     discovery_started = time.perf_counter()
     jobs: List[Dict[str, str]] = []
     matched: List[Dict[str, str]] = []
@@ -426,8 +669,46 @@ def main(argv: List[str] | None = None) -> None:
         jobs = discover_jobs()
 
         tag_filtered_out = 0
+        profile_filtered_out = 0
+        track_match_counts: Dict[str, int] = {track["name"]: 0 for track in profile_tracks}
         for job in jobs:
-            if matches_filters(job.get("title", ""), job.get("location", ""), keywords, locations, exclude):
+            if matches_filters(
+                job.get("title", ""),
+                job.get("location", ""),
+                keywords,
+                locations,
+                exclude,
+                job.get("search_text", ""),
+                title_terms,
+                title_exclude,
+            ):
+                combined = " ".join(
+                    [
+                        str(job.get("title", "") or ""),
+                        str(job.get("search_text", "") or ""),
+                    ]
+                ).lower()
+                selected_track_name = ""
+                selected_track_hits = 0
+                selected_track_label = ""
+                if profile_tracks:
+                    best_track, best_hits, selected_track_label = _select_profile_track(
+                        job.get("title", ""),
+                        combined,
+                        profile_tracks,
+                    )
+                    if best_track is None:
+                        profile_filtered_out += 1
+                        continue
+                    selected_track_name = str(best_track["name"])
+                    selected_track_hits = best_hits
+                    track_match_counts[selected_track_name] = track_match_counts.get(selected_track_name, 0) + 1
+                elif profile_signals and profile_signals_min > 0:
+                    signal_hits = sum(1 for sig in profile_signals if sig and sig in combined)
+                    if signal_hits < profile_signals_min:
+                        profile_filtered_out += 1
+                        continue
+                    selected_track_hits = signal_hits
                 if has_tag_filters and enrichment:
                     feature_view = enrichment.extract_features(job, config.to_dict())
                     if not matches_tag_filters(
@@ -440,9 +721,43 @@ def main(argv: List[str] | None = None) -> None:
                     ):
                         tag_filtered_out += 1
                         continue
-                matched.append(job)
+                matched_job = dict(job)
+                if selected_track_label:
+                    matched_job["profile_track"] = selected_track_label
+                if selected_track_hits:
+                    matched_job["profile_signal_hits"] = str(selected_track_hits)
+                matched.append(matched_job)
+
+        fixture_expectations: Dict[str, bool] = {}
+        for job in jobs:
+            raw_expected = job.get("fixture_expected_match", None)
+            if raw_expected is None:
+                continue
+            expected = True
+            if isinstance(raw_expected, bool):
+                expected = raw_expected
+            else:
+                expected = str(raw_expected).strip().lower() not in {"false", "0", "no"}
+            fixture_expectations[str(job.get("url", ""))] = expected
 
         print(f"Found {len(jobs)} jobs; {len(matched)} matched filters")
+        if fixture_expectations:
+            matched_urls = {str(row.get("url", "")) for row in matched}
+            expected_true = {url for url, should_match in fixture_expectations.items() if should_match}
+            expected_false = {url for url, should_match in fixture_expectations.items() if not should_match}
+            false_negatives = sorted(expected_true - matched_urls)
+            false_positives = sorted(expected_false & matched_urls)
+            print(
+                "Fixture expectations | "
+                f"expected_match={len(expected_true)} | "
+                f"expected_no_match={len(expected_false)} | "
+                f"false_negatives={len(false_negatives)} | "
+                f"false_positives={len(false_positives)}"
+            )
+            for url in false_negatives[:5]:
+                print(f"  false_negative: {url}")
+            for url in false_positives[:5]:
+                print(f"  false_positive: {url}")
         # Single timestamp for CSV + summary for determinism
         ts = run_ts
         if not args.summary_only:
@@ -483,16 +798,16 @@ def main(argv: List[str] | None = None) -> None:
 
         # Build summary artifact
         enabled_sources = {
-        "linkedin": bool(config.get_bool("LINKEDIN_ENABLED", False)),
-        "indeed": bool(config.get_bool("INDEED_ENABLED", False)),
-        "greenhouse": bool(config.get_bool("GREENHOUSE_ENABLED", False)),
-        "lever": bool(config.get_bool("LEVER_ENABLED", False)),
-        "ashby": bool(config.get_bool("ASHBY_ENABLED", False)),
-        "ziprecruiter": bool(config.get_bool("ZIPRECRUITER_ENABLED", False)),
-        "google_jobs": bool(config.get_bool("GOOGLEJOBS_ENABLED", False)),
-        "glassdoor": bool(config.get_bool("GLASSDOOR_ENABLED", False)),
-        "craigslist": bool(config.get_bool("CRAIGSLIST_ENABLED", False)),
-        "goremote": bool(config.get_bool("GOREMOTE_ENABLED", False)),
+        "linkedin": _cfg_bool("LINKEDIN_ENABLED"),
+        "indeed": _cfg_bool("INDEED_ENABLED"),
+        "greenhouse": _cfg_bool("GREENHOUSE_ENABLED"),
+        "lever": _cfg_bool("LEVER_ENABLED"),
+        "ashby": _cfg_bool("ASHBY_ENABLED"),
+        "ziprecruiter": _cfg_bool("ZIPRECRUITER_ENABLED"),
+        "google_jobs": _cfg_bool("GOOGLEJOBS_ENABLED"),
+        "glassdoor": _cfg_bool("GLASSDOOR_ENABLED"),
+        "craigslist": _cfg_bool("CRAIGSLIST_ENABLED"),
+        "goremote": _cfg_bool("GOREMOTE_ENABLED"),
         }
         per_source = {}
         if hasattr(sources, "get_metrics"):
@@ -532,8 +847,18 @@ def main(argv: List[str] | None = None) -> None:
                 "total_discovered": len(jobs),
                 "filtered_out": filtered_out,
                 "tag_filtered_out": tag_filtered_out,
+                "profile_filtered_out": profile_filtered_out,
                 "exported": len(matched),
             },
+            "profile_tracks": [
+                {
+                    "name": track["name"],
+                    "label": track["label"],
+                    "min_hits": track["min_hits"],
+                    "matched": track_match_counts.get(track["name"], 0),
+                }
+                for track in profile_tracks
+            ],
             "per_source": per_source,
         }
         out_json = export_summary(out_dir, ts, summary)
@@ -553,7 +878,7 @@ def main(argv: List[str] | None = None) -> None:
         if telemetry_enabled:
             greenhouse_rows = [job for job in jobs if str(job.get("source", "")).strip().lower() == "greenhouse"]
             empty_run_count = 0
-            if discovery_error is None and bool(config.get_bool("GREENHOUSE_ENABLED", False)) and not greenhouse_rows:
+            if discovery_error is None and _cfg_bool("GREENHOUSE_ENABLED") and not greenhouse_rows:
                 empty_run_count = 1
             _append_greenhouse_telemetry(
                 dict(config.to_dict()) if hasattr(config, "to_dict") else {},

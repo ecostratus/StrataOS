@@ -356,6 +356,27 @@
       "problemMatcher": []
     },
     {
+      "label": "Run source preflight",
+      "type": "shell",
+      "command": "${workspaceFolder}/.venv/bin/python",
+      "args": [
+        "automation/job-discovery/scripts/source_preflight.py"
+      ],
+      "dependsOn": "Setup Python env",
+      "problemMatcher": []
+    },
+    {
+      "label": "Run source preflight (dual-pass)",
+      "type": "shell",
+      "command": "${workspaceFolder}/.venv/bin/python",
+      "args": [
+        "automation/job-discovery/scripts/source_preflight.py",
+        "--dual-pass"
+      ],
+      "dependsOn": "Setup Python env",
+      "problemMatcher": []
+    },
+    {
       "label": "Release Manager: Full Workflow",
       "type": "shell",
       "command": "bash",

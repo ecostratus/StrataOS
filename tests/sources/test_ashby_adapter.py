@@ -42,6 +42,13 @@ def test_missing_fields_are_skipped():
     assert isinstance(out, list) and all("job_id" in x for x in out)
 
 
+def test_company_falls_back_from_board_slug():
+    cfg = {"ASHBY_ENABLED": True, "ASHBY_API_URL": "x", "ASHBY_API_KEY": "y"}
+    ASHBY_MODULE.raw_jobs = [{"title": "Platform Engineer", "jobUrl": "https://jobs.ashbyhq.com/openai/123"}]  # type: ignore
+    out = fetch_ashby_jobs(cfg)
+    assert out and out[0]["company"] == "OpenAI"
+
+
 def test_multi_source_id_compatibility_with_lever():
     # Ashby job
     cfg_ash = {"ASHBY_ENABLED": True, "ASHBY_API_URL": "x", "ASHBY_API_KEY": "y"}

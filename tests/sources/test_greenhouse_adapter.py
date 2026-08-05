@@ -121,9 +121,9 @@ def test_live_fetch_uses_http_pagination(monkeypatch):
     }
 
     out = fetch_greenhouse_jobs(cfg)
-    assert calls["count"] >= 2
-    assert len(out) == 2
-    assert {x["title"] for x in out} == {"Software Engineer", "Data Engineer"}
+    assert calls["count"] == 1
+    assert len(out) == 1
+    assert {x["title"] for x in out} == {"Software Engineer"}
 
 
 def test_live_fetch_retries_then_succeeds(monkeypatch):

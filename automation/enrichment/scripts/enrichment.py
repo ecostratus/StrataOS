@@ -98,6 +98,25 @@ def _safe_ratio(numerator: int, denominator: int) -> float:
     return max(0.0, min(1.0, float(numerator) / float(denominator)))
 
 
+def _fallback_keywords_from_job_discovery(config: Optional[Dict[str, Any]]) -> tuple[List[str], List[str], List[str]]:
+    job_filters = (config or {}).get("job_discovery", {}).get("filters", {})
+    profile_tracks = job_filters.get("profile_tracks", [])
+    role_keywords: List[str] = []
+    stack_keywords: List[str] = []
+    remote_aliases: List[str] = []
+
+    if isinstance(profile_tracks, list):
+        for track in profile_tracks:
+            if not isinstance(track, dict):
+                continue
+            role_keywords.extend(track.get("title_terms", []) or [])
+            role_keywords.extend(track.get("title_required_terms", []) or [])
+            stack_keywords.extend(track.get("signals", []) or [])
+
+    remote_aliases.extend(["remote", "hybrid", "work from home", "wfh"])
+    return normalize_terms(role_keywords), normalize_terms(stack_keywords), normalize_terms(remote_aliases)
+
+
 def extract_features(job: Dict[str, Any], config: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     """
     Extract deterministic enrichment features from a canonical job record.
@@ -117,10 +136,12 @@ def extract_features(job: Dict[str, Any], config: Optional[Dict[str, Any]] = Non
     remote_aliases_raw = cfg.get("remote_aliases", [])
     seniority_patterns_raw = cfg.get("seniority_patterns", {})
 
+    fallback_role_keywords, fallback_stack_keywords, fallback_remote_aliases = _fallback_keywords_from_job_discovery(config)
+
     # Normalize lists once at boundary
-    role_keywords = normalize_terms(role_keywords_raw)
-    stack_keywords = normalize_terms(stack_keywords_raw)
-    remote_aliases = normalize_terms(remote_aliases_raw)
+    role_keywords = normalize_terms(role_keywords_raw) or fallback_role_keywords
+    stack_keywords = normalize_terms(stack_keywords_raw) or fallback_stack_keywords
+    remote_aliases = normalize_terms(remote_aliases_raw) or fallback_remote_aliases
 
     # Sanitize seniority patterns keys/labels without changing semantics
     seniority_patterns: Dict[str, str] = {}

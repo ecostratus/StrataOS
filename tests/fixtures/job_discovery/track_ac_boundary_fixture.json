@@ -1,0 +1,34 @@
+[
+  {
+    "title": "Senior Product Manager, GRC Platform",
+    "company": "",
+    "source": "ashby",
+    "url": "https://jobs.ashbyhq.com/vanta/7816b5fe-e916-43b8-9200-d0d45298ba9f",
+    "search_text": "governance compliance audit",
+    "expected_profile_track": "A - Risk & AI Governance"
+  },
+  {
+    "title": "GRC Program Manager, Product and Customer Trust",
+    "company": "",
+    "source": "ashby",
+    "url": "https://jobs.ashbyhq.com/openai/cf1e5c80-f42e-45ab-a937-2a4024b961e1",
+    "search_text": "risk compliance trust",
+    "expected_profile_track": "A - Risk & AI Governance"
+  },
+  {
+    "title": "Principal Group Product Manager, B2B (Auth0)",
+    "company": "Okta",
+    "source": "greenhouse",
+    "url": "https://www.okta.com/company/careers/opportunity/8047795?gh_jid=8047795",
+    "search_text": "product strategy roadmap launch",
+    "expected_profile_track": "C - AI Product/CPO Conversion"
+  },
+  {
+    "title": "Senior Product Manager - Serverless",
+    "company": "Datadog",
+    "source": "greenhouse",
+    "url": "https://careers.datadoghq.com/detail/7905006/?gh_jid=7905006",
+    "search_text": "product strategy roadmap launch",
+    "expected_profile_track": "C - AI Product/CPO Conversion"
+  }
+]

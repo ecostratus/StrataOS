@@ -58,16 +58,39 @@ def test_extract_features_config_driven():
     assert 0.0 <= enriched["title_relevance"] <= 1.0
 
 
+def test_extract_features_falls_back_to_job_discovery_taxonomy():
+    config = {
+        "job_discovery": {
+            "filters": {
+                "profile_tracks": [
+                    {
+                        "title_terms": ["principal product manager"],
+                        "title_required_terms": ["product manager"],
+                        "signals": ["roadmap", "launch"],
+                    }
+                ]
+            }
+        }
+    }
+    job = {"title": "Principal Product Manager, AI Platform", "description": "Own roadmap and launch"}
+    enriched = extract_features(job, config)
+    assert enriched["role_tags"]
+    assert enriched["stack_tags"]
+    scored = score_job(enriched, {"role_fit": 0.35, "stack": 0.35, "remote": 0.15, "title_relevance": 0.15}, {"exceptional": 0.85, "strong": 0.7, "moderate": 0.5})
+    assert scored["bucket"] != "Weak"
+
+
 def test_scoring_basic():
     enriched = {
         "role_tags": ["engineer"],
         "stack_tags": ["python", "aws"],
         "remote_friendly": True,
+        "profile_signal_hits": "2",
         "role_match_ratio": 1.0,
         "stack_match_ratio": 1.0,
         "title_relevance": 1.0,
     }
-    weights = {"role_fit": 0.35, "stack": 0.35, "remote": 0.15, "title_relevance": 0.15}
+    weights = {"profile_signal_hits": 0.7, "role_fit": 0.1, "stack": 0.02, "remote": 0.03, "title_relevance": 0.15}
     thresholds = {"exceptional": 0.85, "strong": 0.7, "moderate": 0.5}
     s = score_job(enriched, weights, thresholds)
     assert 0.0 <= s["score"] <= 1.0
@@ -75,13 +98,14 @@ def test_scoring_basic():
 
 
 def test_scoring_uses_graded_ratios():
-    weights = {"role_fit": 0.35, "stack": 0.35, "remote": 0.15, "title_relevance": 0.15}
+    weights = {"profile_signal_hits": 0.7, "role_fit": 0.1, "stack": 0.02, "remote": 0.03, "title_relevance": 0.15}
     thresholds = {"exceptional": 0.85, "strong": 0.7, "moderate": 0.5}
 
     lower = {
         "role_tags": ["engineer"],
         "stack_tags": ["python"],
         "remote_friendly": True,
+        "profile_signal_hits": "1",
         "role_match_ratio": 0.5,
         "stack_match_ratio": 0.5,
         "title_relevance": 0.5,
@@ -90,6 +114,7 @@ def test_scoring_uses_graded_ratios():
         "role_tags": ["engineer"],
         "stack_tags": ["python", "aws"],
         "remote_friendly": True,
+        "profile_signal_hits": "2",
         "role_match_ratio": 1.0,
         "stack_match_ratio": 1.0,
         "title_relevance": 1.0,

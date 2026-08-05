@@ -32,6 +32,17 @@ def _feature_value(enriched: Dict[str, Any], key: str) -> float:
     - Fallback: 0.0
     """
     # Prefer explicit ratio features when available for graded scoring.
+    if key == "profile_signal_hits":
+        raw = enriched.get(key)
+        try:
+            hits = int(float(raw)) if raw not in (None, "") else 0
+        except Exception:
+            hits = 0
+        if hits <= 0:
+            return 0.0
+        if hits == 1:
+            return 0.75
+        return 1.0
     if key == "role_tags" and isinstance(enriched.get("role_match_ratio"), (int, float)):
         return max(0.0, min(1.0, float(enriched.get("role_match_ratio", 0.0))))
     if key == "stack_tags" and isinstance(enriched.get("stack_match_ratio"), (int, float)):

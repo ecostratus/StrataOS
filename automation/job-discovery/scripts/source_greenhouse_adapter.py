@@ -42,6 +42,28 @@ def _fetch_live_greenhouse_jobs(config: Dict[str, Any], api_url: str) -> List[Di
     max_retries = int(config.get("GREENHOUSE_MAX_RETRIES", 3) or 3)
     backoff_base = float(config.get("GREENHOUSE_BACKOFF_BASE_SECONDS", 0.5) or 0.5)
 
+    if "boards-api.greenhouse.io" in api_url and "/boards/" in api_url:
+        payload = None
+        for attempt in range(1, max_retries + 1):
+            try:
+                payload = _http_get_json(
+                    api_url,
+                    params={"content": "true"},
+                    timeout_seconds=timeout_seconds,
+                )
+                break
+            except Exception:
+                if attempt >= max_retries:
+                    raise
+                time.sleep(backoff_base * (2 ** (attempt - 1)))
+        if isinstance(payload, dict):
+            raw_list = payload.get("jobs")
+            if isinstance(raw_list, list):
+                return raw_list
+        if isinstance(payload, list):
+            return payload
+        return []
+
     out: List[Dict[str, Any]] = []
     for page in range(1, max_pages + 1):
         payload = None
@@ -90,6 +112,25 @@ def _fetch_live_greenhouse_jobs(config: Dict[str, Any], api_url: str) -> List[Di
     return out
 
 
+def _source_urls(config: Dict[str, Any]) -> List[str]:
+    urls: List[str] = []
+    raw_boards = config.get("GREENHOUSE_BOARDS")
+    if isinstance(raw_boards, list):
+        for board in raw_boards:
+            board_slug = ensure_str(board).strip()
+            if not board_slug:
+                continue
+            urls.append(f"https://boards-api.greenhouse.io/v1/boards/{board_slug}/jobs")
+    raw_urls = config.get("GREENHOUSE_API_URLS")
+    if isinstance(raw_urls, list):
+        urls.extend(ensure_str(x) for x in raw_urls)
+    api_url = ensure_str(config.get("GREENHOUSE_API_URL"))
+    if api_url:
+        urls.append(api_url)
+    seen = set()
+    return [url for url in urls if url and not (url in seen or seen.add(url))]
+
+
 def fetch_greenhouse_jobs(config: Dict[str, Any]) -> List[Dict[str, Any]]:
     """Adapter for Greenhouse JSON feed.
     Pure, deterministic; gated by GREENHOUSE_ENABLED and GREENHOUSE_API_URL.
@@ -99,29 +140,44 @@ def fetch_greenhouse_jobs(config: Dict[str, Any]) -> List[Dict[str, Any]]:
         logger.debug("pipeline.ingest.greenhouse.disabled")
         return []
 
-    api_url = ensure_str(config.get("GREENHOUSE_API_URL"))
     # Keep raw_jobs injection for deterministic tests; otherwise fetch live.
     injected = globals().get("raw_jobs")  # type: ignore
     if isinstance(injected, list):
         raw_jobs = injected
-    elif api_url:
-        raw_jobs = _fetch_live_greenhouse_jobs(config, api_url)
     else:
-        logger.warning("pipeline.ingest.greenhouse.misconfigured", extra={"reason": "missing GREENHOUSE_API_URL"})
         raw_jobs = []
-
-    logger.debug("pipeline.ingest.greenhouse.fetch.start", extra={"api_url": api_url})
+        source_urls = _source_urls(config)
+        if not source_urls:
+            logger.warning("pipeline.ingest.greenhouse.misconfigured", extra={"reason": "missing GREENHOUSE_API_URL"})
+        for api_url in source_urls:
+            logger.debug("pipeline.ingest.greenhouse.fetch.start", extra={"api_url": api_url})
+            try:
+                raw_jobs.extend(_fetch_live_greenhouse_jobs(config, api_url))
+            except Exception:
+                logger.warning("pipeline.ingest.greenhouse.fetch.failed", extra={"api_url": api_url}, exc_info=True)
+                continue
 
     normalized: List[Dict[str, Any]] = []
     for job in raw_jobs or []:
         # Canonical fields typically seen in Greenhouse feeds
         title = ensure_str(job.get("title"))
-        company = ensure_str(job.get("company"))  # often absent; defaults to empty string
+        company = ensure_str(job.get("company")) or ensure_str(job.get("company_name"))
         # location can be object { name: "Remote" } or string
         loc_obj = job.get("location")
         location = ensure_str(loc_obj.get("name")) if isinstance(loc_obj, dict) else ensure_str(loc_obj)
         job_url = ensure_str(job.get("absolute_url")) or ensure_str(job.get("url"))
         posted = ensure_str(job.get("updated_at")) or ensure_str(job.get("created_at"))
+        description = ensure_str(job.get("content")) or ensure_str(job.get("description"))
+        departments = job.get("departments")
+        department_text = ""
+        if isinstance(departments, list):
+            names = []
+            for dept in departments:
+                if isinstance(dept, dict):
+                    name = ensure_str(dept.get("name"))
+                    if name:
+                        names.append(name)
+            department_text = " ".join(names)
 
         if not title or not job_url:
             # Skip malformed entries deterministically
@@ -137,6 +193,8 @@ def fetch_greenhouse_jobs(config: Dict[str, Any]) -> List[Dict[str, Any]]:
             "url": job_url.strip(),
             "source": "greenhouse",
             "posted_at": (posted.strip() if posted else datetime.now(UTC).strftime("%Y-%m-%d")),
+            "description": description,
+            "department": department_text,
         })
 
     # Deterministic ordering and de-duplication

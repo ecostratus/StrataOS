@@ -1,0 +1,66 @@
+[
+  {
+    "title": "Principal Product Manager, Agentic AI Platform",
+    "company": "",
+    "source": "ashby",
+    "url": "https://jobs.ashbyhq.com/drata/cf5e1a06-8720-4e5c-93c6-5494c39c862c",
+    "search_text": "product strategy roadmap launch",
+    "expected_profile_track": "C - AI Product/CPO Conversion"
+  },
+  {
+    "title": "Sr. Staff Technical Program Manager - Reliability",
+    "company": "Databricks",
+    "source": "greenhouse",
+    "url": "https://databricks.com/company/careers/open-positions/job?gh_jid=8445423002",
+    "search_text": "reliability incident response uptime",
+    "expected_profile_track": "B - Platform Stabilization"
+  },
+  {
+    "title": "Sr. Staff Technical Program Manager - Reliability",
+    "company": "Databricks",
+    "source": "greenhouse",
+    "url": "https://databricks.com/company/careers/open-positions/job?gh_jid=8445428002",
+    "search_text": "reliability incident response uptime",
+    "expected_profile_track": "B - Platform Stabilization"
+  },
+  {
+    "title": "Director, Product Management - Okta Identity Threat Detection and Response Products",
+    "company": "Okta",
+    "source": "greenhouse",
+    "url": "https://www.okta.com/company/careers/opportunity/7648611?gh_jid=7648611",
+    "search_text": "product strategy roadmap launch",
+    "expected_profile_track": "C - AI Product/CPO Conversion"
+  },
+  {
+    "title": "Director, Technical Program Management - Technical Solutions Operations",
+    "company": "Datadog",
+    "source": "greenhouse",
+    "url": "https://careers.datadoghq.com/detail/8010585/?gh_jid=8010585",
+    "search_text": "technical solutions operations incident response",
+    "expected_profile_track": "B - Platform Stabilization"
+  },
+  {
+    "title": "Principal Product Manager, AI Software Factory",
+    "company": "GitLab",
+    "source": "greenhouse",
+    "url": "https://job-boards.greenhouse.io/gitlab/jobs/8658878002",
+    "search_text": "product strategy roadmap launch",
+    "expected_profile_track": "C - AI Product/CPO Conversion"
+  },
+  {
+    "title": "Principal Product Manager, AI Custom Models",
+    "company": "GitLab",
+    "source": "greenhouse",
+    "url": "https://job-boards.greenhouse.io/gitlab/jobs/8564957002",
+    "search_text": "product strategy roadmap launch",
+    "expected_profile_track": "C - AI Product/CPO Conversion"
+  },
+  {
+    "title": "Principal Product Manager, IAM Security & Agentic Identity",
+    "company": "Okta",
+    "source": "greenhouse",
+    "url": "https://www.okta.com/company/careers/opportunity/8009100?gh_jid=8009100",
+    "search_text": "product strategy roadmap launch",
+    "expected_profile_track": "C - AI Product/CPO Conversion"
+  }
+]

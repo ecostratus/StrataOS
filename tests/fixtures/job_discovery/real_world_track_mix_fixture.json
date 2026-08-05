@@ -1,0 +1,128 @@
+[
+  {
+    "title": "Director, Technical Program Management - Technical Solutions Operations",
+    "company": "Datadog",
+    "source": "greenhouse",
+    "url": "https://careers.datadoghq.com/detail/8010585/?gh_jid=8010585",
+    "search_text": "technical solutions operations incident response",
+    "expected_profile_track": "B - Platform Stabilization",
+    "expected_should_match": true
+  },
+  {
+    "title": "Principal Technical Program Manager, Engineering",
+    "company": "Okta",
+    "source": "greenhouse",
+    "url": "https://www.okta.com/company/careers/opportunity/8069537?gh_jid=8069537",
+    "search_text": "platform health reliability program management",
+    "expected_profile_track": "B - Platform Stabilization",
+    "expected_should_match": true
+  },
+  {
+    "title": "Principal Program Manager, TDI",
+    "company": "Okta",
+    "source": "greenhouse",
+    "url": "https://www.okta.com/company/careers/opportunity/8076030?gh_jid=8076030",
+    "search_text": "identity incident reduction platform operations",
+    "expected_profile_track": "B - Platform Stabilization",
+    "expected_should_match": true
+  },
+  {
+    "title": "Token-as-a-Service Technical Program Manager",
+    "company": "OpenAI",
+    "source": "ashby",
+    "url": "https://jobs.ashbyhq.com/openai/e8558280-69dc-438a-b905-623f75ae6d62",
+    "search_text": "risk compliance policy enforcement",
+    "expected_profile_track": "A - Risk & AI Governance",
+    "expected_should_match": true
+  },
+  {
+    "title": "Technical Program Manager, Safety Systems Engineering",
+    "company": "OpenAI",
+    "source": "ashby",
+    "url": "https://jobs.ashbyhq.com/openai/9685eb6d-8276-4111-be8c-fd1277ad4555",
+    "search_text": "safety audit responsible ai",
+    "expected_profile_track": "A - Risk & AI Governance",
+    "expected_should_match": true
+  },
+  {
+    "title": "GRC Program Manager, Product and Customer Trust",
+    "company": "OpenAI",
+    "source": "ashby",
+    "url": "https://jobs.ashbyhq.com/openai/cf1e5c80-f42e-45ab-a937-2a4024b961e1",
+    "search_text": "governance compliance trust",
+    "expected_profile_track": "A - Risk & AI Governance",
+    "expected_should_match": true
+  },
+  {
+    "title": "Principal Product Manager, AI Software Factory",
+    "company": "GitLab",
+    "source": "greenhouse",
+    "url": "https://job-boards.greenhouse.io/gitlab/jobs/8658878002",
+    "search_text": "product strategy roadmap launch",
+    "expected_profile_track": "C - AI Product/CPO Conversion",
+    "expected_should_match": true
+  },
+  {
+    "title": "Principal Product Manager, AI Custom Models",
+    "company": "GitLab",
+    "source": "greenhouse",
+    "url": "https://job-boards.greenhouse.io/gitlab/jobs/8564957002",
+    "search_text": "productization monetization ecosystem",
+    "expected_profile_track": "C - AI Product/CPO Conversion",
+    "expected_should_match": true
+  },
+  {
+    "title": "Senior Product Manager, Tenant Scale",
+    "company": "GitLab",
+    "source": "greenhouse",
+    "url": "https://job-boards.greenhouse.io/gitlab/jobs/8512220002",
+    "search_text": "product roadmap user personas",
+    "expected_profile_track": "C - AI Product/CPO Conversion",
+    "expected_should_match": true
+  },
+  {
+    "title": "Director, Product Management - Okta Identity Threat Detection and Response Products",
+    "company": "Okta",
+    "source": "greenhouse",
+    "url": "https://www.okta.com/company/careers/opportunity/7648611?gh_jid=7648611",
+    "search_text": "product strategy roadmap launch",
+    "expected_profile_track": "C - AI Product/CPO Conversion",
+    "expected_should_match": true
+  },
+  {
+    "title": "Associate Technical Services Engineer II",
+    "company": "MongoDB",
+    "source": "greenhouse",
+    "url": "https://www.mongodb.com/careers/job/?gh_jid=8044218",
+    "search_text": "support engineering role",
+    "expected_profile_track": "",
+    "expected_should_match": false
+  },
+  {
+    "title": "Cloud Operations Engineer",
+    "company": "MongoDB",
+    "source": "greenhouse",
+    "url": "https://www.mongodb.com/careers/job/?gh_jid=8025827",
+    "search_text": "operations engineering role",
+    "expected_profile_track": "",
+    "expected_should_match": false
+  },
+  {
+    "title": "Director, Engineering - Okta Integration Network",
+    "company": "Okta",
+    "source": "greenhouse",
+    "url": "https://www.okta.com/company/careers/opportunity/8013137?gh_jid=8013137",
+    "search_text": "engineering leadership role",
+    "expected_profile_track": "",
+    "expected_should_match": false
+  },
+  {
+    "title": "Engineering Manager, Performance & Resilience (Auth0)",
+    "company": "Okta",
+    "source": "greenhouse",
+    "url": "https://www.okta.com/company/careers/opportunity/7991116?gh_jid=7991116",
+    "search_text": "engineering management role",
+    "expected_profile_track": "",
+    "expected_should_match": false
+  }
+]
