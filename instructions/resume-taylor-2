@@ -1,0 +1,138 @@
+---
+references:
+  - "File: /automation/resume-tailoring/scripts/resume_tailor_v1.py"
+  - "File: /automation/resume-tailoring/scripts/verify_resume_output.py"
+generationTime: 2026-08-05T23:05:46.143Z
+---
+classDiagram
+    direction LR
+
+    class AbstractCliScript {
+        <<abstract>>
+        +String app_name$
+        +main() void$
+        +run() void*
+    }
+
+    class ResumeTailorV1 {
+        +Map TRACK_TEMPLATE_POLICY$
+        +Map TRACK_TITLE_FAMILY_TERMS$
+        +Map TRACK_BASE_RESUME_FIELD$
+        +String DEFAULT_GAP_FORMAT$
+        +_generateFinalArtifact(String promptText, String artifactKind) GenerationResult$
+        +_normalizeTrackName(String value) String$
+        +_inferTrackFromTitle(String title) TrackResolution$
+        +_normalizeUserContext(ResumeContext userCtx) ResumeContext$
+        +_resolveTrack(JobRecord job, ResumeContext userCtx, String explicitTrack) TrackResolution$
+        +_buildInventoryBlock(ResumeContext userCtx) String$
+        +_countGapLines(String text) int$
+        +main() void$
+    }
+
+    class VerifyResumeOutput {
+        +Pattern GAP_LINE_PATTERN$
+        +looksLikePlaceholderText(String value) boolean$
+        +findNonCanonicalGapLines(String text) List$
+        +extractEducationSection(String text) String$
+        +extractInstitutionNames(String text) Set$
+        +extractDegrees(String text) Set$
+        +extractYearsNearInstitutions(String text) List$
+        +loadSourceText(String contextPath) String$
+        +main() void$
+    }
+
+    class JobRecord {
+        +String job_id
+        +String title
+        +String company
+        +String location
+        +String url
+        +String source
+        +String posted_at
+        +String profile_track
+        +List domain_tags
+        +List stack
+        +List skills
+        +String seniority
+    }
+
+    class ResumeContext {
+        +String company_name
+        +String job_title
+        +String selected_track_label
+        +String selected_base_template
+        +String selected_headline_positioning
+        +String selected_base_resume
+        +String ground_truth_inventory
+        +String policy_gap_format
+        +String master_resume
+    }
+
+    class TrackResolution {
+        +String track_name
+        +String reason
+        +boolean selector_available
+    }
+
+    class GenerationResult {
+        +boolean ok
+        +String content
+        +String error_code
+        +String error_message
+    }
+
+    class TrackPolicy {
+        <<enumeration>>
+        TRACK_A_RISK_GOVERNANCE
+        TRACK_B_PLATFORM_STABILIZATION
+        TRACK_C_AI_PRODUCT_CPO
+    }
+
+    class ValidationRule {
+        <<enumeration>>
+        CANONICAL_GAP_LINE
+        SOURCE_INSTITUTION
+        SOURCE_DEGREE
+        NEARBY_YEAR
+    }
+
+    class IConfigFacade {
+        <<interface>>
+        +initialize() void
+        +get(String key, String defaultValue) String
+        +getBool(String key, boolean defaultValue) boolean
+        +getDict(String key, Map defaultValue) Map
+    }
+
+    class IPromptRenderer {
+        <<interface>>
+        +renderPrompt(String templateStr, ResumeContext context) String
+    }
+
+    class IArtifactGenerator {
+        <<interface>>
+        +generateArtifact(String promptText, String artifactKind) GenerationResult
+    }
+
+    class IImportResolver {
+        <<interface>>
+        +loadModuleFromPath(String path, String moduleName) Module
+    }
+
+    note "Procedural scripts are modeled as UML classes for visualization; the source does not define concrete domain classes."
+
+    AbstractCliScript <|-- ResumeTailorV1 : CLI entry point
+    AbstractCliScript <|-- VerifyResumeOutput : CLI entry point
+
+    ResumeTailorV1 *-- ResumeContext : builds prompt context
+    ResumeTailorV1 o-- JobRecord : consumes job data
+    ResumeTailorV1 --> IConfigFacade : reads config
+    ResumeTailorV1 --> IPromptRenderer : renders template
+    ResumeTailorV1 --> IImportResolver : fallback imports
+    ResumeTailorV1 --> IArtifactGenerator : optional artifact generation
+    ResumeTailorV1 ..> TrackPolicy : selects track policy
+    ResumeTailorV1 ..> GenerationResult : returns generation status
+
+    VerifyResumeOutput *-- ValidationRule : enforces checks
+    VerifyResumeOutput --> ResumeContext : loads source text
+    VerifyResumeOutput ..> TrackPolicy : compares source policy terms
