@@ -2,5 +2,13 @@
   "company_name": "Example Corp",
   "job_title": "Lead Data Engineer",
   "job_description": "Design and build data platforms on AWS; Kafka, Spark, Terraform",
-  "master_resume": "[Paste master resume content here]"
+  "profile_track": "track_b_platform_stabilization",
+  "master_resume": "[Paste legacy master resume content here]",
+  "base_resume_a": "[Paste Resume A - Risk & AI Governance content here]",
+  "base_resume_b": "[Paste Resume B - Platform Stabilization content here]",
+  "base_resume_c": "[Paste Resume C - AI Product/CPO Conversion content here]",
+  "linkedin_profile": "[Paste full LinkedIn history here]",
+  "operator_brief_a": "[Paste Track A operator brief here]",
+  "operator_brief_b": "[Paste Track B operator brief here]",
+  "operator_brief_c": "[Paste Track C operator brief here]"
 }

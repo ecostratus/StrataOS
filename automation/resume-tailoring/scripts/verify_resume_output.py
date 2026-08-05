@@ -13,6 +13,36 @@ import re
 import sys
 
 
+GAP_LINE_PATTERN = re.compile(
+    r"^GAP: JD requires \[[^\]]+\]\. Not found in source materials\. Resume generated without this claim\.$"
+)
+
+
+def looks_like_placeholder_text(value: str) -> bool:
+    txt = str(value or "").strip().lower()
+    if not txt:
+        return False
+    markers = (
+        "placeholder",
+        "not repeated",
+        "pull from",
+        "earlier document",
+        "in this conversation",
+        "not included",
+        "full text pulled",
+    )
+    return any(marker in txt for marker in markers)
+
+
+def find_non_canonical_gap_lines(text: str) -> list[str]:
+    violations: list[str] = []
+    for line in text.splitlines():
+        candidate = line.strip()
+        if candidate.startswith("GAP:") and not GAP_LINE_PATTERN.match(candidate):
+            violations.append(candidate)
+    return violations
+
+
 def extract_education_section(text: str) -> str:
     """Return only the Education section of the output, or empty string if absent."""
     m = re.search(r"(?:^|\n)#+\s*Education.*?(?=\n#+\s|\Z)", text, re.IGNORECASE | re.DOTALL)
@@ -53,7 +83,7 @@ def extract_years_near_institutions(text: str) -> list[str]:
     for kw in institution_keywords:
         for m in re.finditer(kw, text, re.IGNORECASE):
             window = text[max(0, m.start() - 120): m.end() + 120]
-            years = re.findall(r"\b(19|20)\d{2}\b", window)
+            years = re.findall(r"\b(?:19|20)\d{2}\b", window)
             for y in years:
                 findings.append(f"Year '{y}' found near '{kw}' - possible hallucinated date")
     return findings
@@ -62,7 +92,45 @@ def extract_years_near_institutions(text: str) -> list[str]:
 def load_source_text(context_path: str) -> str:
     with open(context_path, encoding="utf-8") as f:
         ctx = json.load(f)
-    return ctx.get("master_resume", "")
+    if not isinstance(ctx, dict):
+        return ""
+    source_fields = [
+        "master_resume",
+        "base_resume_a",
+        "base_resume_b",
+        "base_resume_c",
+        "linkedin_profile",
+        "operator_brief_a",
+        "operator_brief_b",
+        "operator_brief_c",
+    ]
+    parts = [str(ctx.get(field, "") or "").strip() for field in source_fields]
+
+    tracks = ctx.get("tracks")
+    if isinstance(tracks, dict):
+        for key in ("A", "B", "C"):
+            payload = tracks.get(key)
+            if isinstance(payload, dict):
+                track_text = str(payload.get("resume_text", "") or "").strip()
+                if track_text:
+                    parts.append(track_text)
+
+    linkedin_payload = ctx.get("linkedin_history")
+    if isinstance(linkedin_payload, dict):
+        linkedin_text = ""
+        for candidate_key in ("text", "full_text", "note"):
+            candidate = str(linkedin_payload.get(candidate_key, "") or "").strip()
+            if not candidate:
+                continue
+            if candidate_key == "note" and looks_like_placeholder_text(candidate):
+                candidate = ""
+            if candidate:
+                linkedin_text = candidate
+                break
+        if linkedin_text:
+            parts.append(linkedin_text)
+
+    return "\n\n".join(part for part in parts if part)
 
 
 def main() -> None:
@@ -76,6 +144,11 @@ def main() -> None:
         output_text = f.read()
 
     findings: list[str] = []
+
+    # Check: GAP lines must use canonical policy format
+    gap_violations = find_non_canonical_gap_lines(output_text)
+    if gap_violations:
+        findings.append("Non-canonical GAP line format detected; use exact required policy text")
 
     # Check: institution names in Education section of output not present in source
     edu_section = extract_education_section(output_text)

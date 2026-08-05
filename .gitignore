@@ -25,6 +25,12 @@ __pycache__/
 backups/
 output/
 
+# Local sensitive resume context and runtime logs
+config/resume_context_jnaphen.json
+logs/events.jsonl
+logs/greenhouse_week1_telemetry.jsonl
+logs/metrics.json
+
 # Control center artifacts
 webapp/frontend/node_modules/
 webapp/frontend/dist/

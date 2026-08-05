@@ -11,20 +11,24 @@ Define the prompt structure and guidelines for AI-assisted resume tailoring to s
 - Match job description keywords naturally
 - Preserve authentic voice and style
 - Optimize for ATS (Applicant Tracking Systems)
+- Enforce source-traceable claims only (no inferred or plausible additions)
+- Surface unmet JD requirements as explicit GAP notes
 
 ## Prompt Structure
 
 ### Input Requirements
-1. **Base Resume**: Master resume with all experience
+1. **Selected Base Resume**: Track-aligned base resume (A/B/C)
 2. **Job Posting**: Target job description and requirements
 3. **Company Context**: Company information and culture
 4. **Tailoring Focus**: Specific areas to emphasize
+5. **Ground-Truth Inventory**: Resume A, Resume B, Resume C, LinkedIn history, operator briefs
 
 ### Output Requirements
 1. **Tailored Resume Sections**: Modified content for each section
 2. **Justification**: Explanation of changes made
 3. **Keyword Coverage**: List of keywords incorporated
 4. **ATS Score**: Estimated ATS compatibility
+5. **Gap Notes**: Required JD items missing from source inventory
 
 ## Prompt Template
 
@@ -47,6 +51,8 @@ Instructions:
 4. Maintain truthfulness - do not add false information
 5. Keep the authentic voice and style
 6. Optimize for ATS scanning
+7. If JD requirement is not in source inventory, output:
+	GAP: JD requires [X]. Not found in source materials. Resume generated without this claim.
 
 Provide:
 - Tailored resume content for each section
@@ -62,6 +68,7 @@ Provide:
 - Adjust language to match job description terminology
 - Emphasize relevant skills and achievements
 - Modify summary/objective to align with role
+- Pull true items from broader inventory when omitted from selected template
 
 ### What NOT to Modify
 - Dates of employment
@@ -69,12 +76,23 @@ Provide:
 - Company names
 - Degrees and certifications
 - Factual achievements and metrics
+- Scope facts (team size, budget, reporting level)
+- Years of experience for specific tools/platforms
 
 ### Quality Standards
 - All statements must be truthful
 - Metrics must be accurate
 - Skills claimed must be genuine
 - Experience must be authentic
+- Every claim must be traceable to inventory text
+
+## Track-Template Selection Policy
+
+- Track A - Risk & AI Governance -> Resume A
+- Track B - Platform Stabilization -> Resume B
+- Track C - AI Product/CPO Conversion -> Resume C
+
+If classification is close at A/C or B/C boundary, use title-family/headline match as tie-breaker rather than body-text overlap.
 
 ## Keyword Integration
 
