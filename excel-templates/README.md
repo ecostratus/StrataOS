@@ -19,7 +19,17 @@ The excel-templates folder provides:
 - Financial planning worksheets
 - Data analysis templates
 - Dashboard source files
+- SoR protection and connector strategy guide
+- Live write connector validation checklist
+- Office Script and VBA implementations for audit-sheet append protection
 
 ## Usage
 
 These templates provide structured formats for data entry, analysis, and reporting within the 60-day operating system framework, ensuring consistency and efficiency.
+
+## SoR Hardening Assets
+
+- [Protection and connector strategy](protection-and-connector-strategy.md)
+- [Live write connector test checklist](live-write-connector-test-checklist.md)
+- [Office Script: protect audit sheets with append buffer](office-scripts/protect-audit-sheets-append-buffer.ts)
+- [VBA macro: protect audit sheets with append buffer](vba/ProtectAuditSheetsAppendBuffer.bas)
