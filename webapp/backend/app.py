@@ -309,47 +309,47 @@ def _extract_saved_prompt_path(stdout: str) -> str | None:
 	m = re.search(r"Saved:\s*(.+)", stdout)
 	if not m:
 		return None
-
-
-	def _validate_resume_source_map(artifact_text: str) -> tuple[bool, str]:
-		text = str(artifact_text or "")
-		if not text.strip():
-			return False, "resume artifact is empty"
-
-		lines = text.splitlines()
-		source_map_start = None
-		section1_start = None
-		section2_start = None
-
-		for idx, line in enumerate(lines):
-			line_l = line.strip().lower()
-			if source_map_start is None and "0.5. source map" in line_l:
-				source_map_start = idx
-			if section1_start is None and line_l.startswith("### 1."):
-				section1_start = idx
-			if section2_start is None and line_l.startswith("### 2."):
-				section2_start = idx
-
-		if source_map_start is None:
-			return False, "missing Source Map section"
-		if section1_start is None:
-			return False, "missing Section 1 tailored content"
-
-		mapping_lines = 0
-		for line in lines[source_map_start:section1_start]:
-			if "-> sourced from" in line.lower():
-				mapping_lines += 1
-
-		if mapping_lines == 0:
-			return False, "source map contains no mapping lines"
-
-		section1_end = section2_start if section2_start is not None else len(lines)
-		bullet_lines = [line for line in lines[section1_start:section1_end] if line.strip().startswith("-")]
-		if bullet_lines and mapping_lines < len(bullet_lines):
-			return False, f"source map coverage mismatch (mappings={mapping_lines}, bullets={len(bullet_lines)})"
-
-		return True, ""
 	return m.group(1).strip()
+
+
+def _validate_resume_source_map(artifact_text: str) -> tuple[bool, str]:
+	text = str(artifact_text or "")
+	if not text.strip():
+		return False, "resume artifact is empty"
+
+	lines = text.splitlines()
+	source_map_start = None
+	section1_start = None
+	section2_start = None
+
+	for idx, line in enumerate(lines):
+		line_l = line.strip().lower()
+		if source_map_start is None and "0.5. source map" in line_l:
+			source_map_start = idx
+		if section1_start is None and line_l.startswith("### 1."):
+			section1_start = idx
+		if section2_start is None and line_l.startswith("### 2."):
+			section2_start = idx
+
+	if source_map_start is None:
+		return False, "missing Source Map section"
+	if section1_start is None:
+		return False, "missing Section 1 tailored content"
+
+	mapping_lines = 0
+	for line in lines[source_map_start:section1_start]:
+		if "-> sourced from" in line.lower():
+			mapping_lines += 1
+
+	if mapping_lines == 0:
+		return False, "source map contains no mapping lines"
+
+	section1_end = section2_start if section2_start is not None else len(lines)
+	bullet_lines = [line for line in lines[section1_start:section1_end] if line.strip().startswith("-")]
+	if bullet_lines and mapping_lines < len(bullet_lines):
+		return False, f"source map coverage mismatch (mappings={mapping_lines}, bullets={len(bullet_lines)})"
+
+	return True, ""
 
 
 def _read_json(path: Path) -> Any:

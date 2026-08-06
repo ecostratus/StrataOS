@@ -61,6 +61,21 @@ class _FakeAuthError(Exception):
     pass
 
 
+def _valid_resume_artifact() -> str:
+    return """### 0. Policy Compliance Report
+- Input validation status: pass
+
+### 0.5. Source Map (required)
+- [Professional Experience] - Led platform modernization roadmap. -> sourced from [base_resume_b: Company Alpha line 1]
+
+### 1. Tailored Resume Content
+- Led platform modernization roadmap.
+
+### 2. Keyword Analysis
+- platform modernization
+""".strip()
+
+
 def test_control_center_api_smoke(monkeypatch, tmp_path: Path):
     output_dir = tmp_path / "output"
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -136,7 +151,13 @@ def test_control_center_api_smoke(monkeypatch, tmp_path: Path):
         return CompletedProcess(command, 1, stdout="", stderr="unexpected command")
 
     monkeypatch.setattr(app_module, "_run_subprocess", fake_run)
-    monkeypatch.setattr(app_module, "generate_artifact", lambda prompt_text, kind: generation.ArtifactResult(ok=True, content=f"Finished {kind} body"))
+
+    def fake_generate(prompt_text: str, kind: str):
+        if kind == "resume":
+            return generation.ArtifactResult(ok=True, content=_valid_resume_artifact())
+        return generation.ArtifactResult(ok=True, content=f"Finished {kind} body")
+
+    monkeypatch.setattr(app_module, "generate_artifact", fake_generate)
 
     with TestClient(app_module.app) as client:
         health = client.get("/api/health")
@@ -159,7 +180,7 @@ def test_control_center_api_smoke(monkeypatch, tmp_path: Path):
         resume_payload = resume.json()
         assert resume_payload["status"] == "ok"
         assert resume_payload["artifact"]["type"] == "resume"
-        assert resume_payload["artifact"]["content"] == "Finished resume body"
+        assert "### 0.5. Source Map" in resume_payload["artifact"]["content"]
         assert "Prompt body" in resume_payload["prompt_text"]
 
         outreach = client.post("/api/prompts/outreach", json={"job_id": job_id, "no_sources": True})
