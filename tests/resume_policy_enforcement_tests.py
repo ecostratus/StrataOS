@@ -112,6 +112,25 @@ def test_input_validation_fails_when_jd_is_placeholder_even_with_sources():
     assert "Missing Target Job Description content" in result["message"]
 
 
+def test_input_validation_flags_placeholder_identity_tokens():
+    context = {
+        "selected_base_resume": "Candidate Name\nProfessional Summary\nReal experience here",
+        "job_description": "Real JD content",
+    }
+    user_ctx = {
+        "base_resume_b": "Candidate Name\nProfessional Summary\nReal experience here",
+        "linkedin_profile": "Company Alpha partner work summary",
+        "master_resume": "Example University alumni note",
+    }
+
+    result = resume_tailor._validate_resume_inputs(context, user_ctx)
+
+    assert result["status"] == "partial"
+    assert result["reason"] == "placeholder_identity_tokens"
+    assert "placeholder identity tokens" in result["note"]
+    assert "candidate name" in result["note"].lower()
+
+
 def test_gap_line_format_accepts_canonical_policy_line():
     text = "GAP: JD requires [Splunk ITSI]. Not found in source materials. Resume generated without this claim."
     assert verify_output.find_non_canonical_gap_lines(text) == []
@@ -165,3 +184,27 @@ def test_load_source_text_skips_placeholder_linkedin_note(tmp_path):
 
         assert "Resume A evidence" in source_text
         assert "not repeated here" not in source_text
+
+
+def test_find_resume_prose_claim_violations_flags_prompt_phrase_not_in_source():
+    source_text = """
+    Technical program leader focused on platform reliability and service operations.
+    Led platform modernization roadmap across infrastructure and operations teams.
+    """
+    prompt_text = """
+**Company**: Stripe
+**Role**: Technical Program Manager, Enterprise Commerce
+**Job Description**:
+Lead platform modernization, improve reliability metrics, and coordinate cross-functional technical programs.
+"""
+    output_text = """
+### 1. Tailored Resume Content
+- Led platform modernization roadmap across infrastructure and operations teams, aligning with enterprise commerce needs.
+- Improved service reliability through an incident reduction program and standardized runbooks.
+- Served as Technical Program Manager for the program.
+"""
+
+    violations = verify_output.find_resume_prose_claim_violations(source_text, output_text, prompt_text)
+
+    assert any("enterprise commerce" in item.lower() for item in violations)
+    assert any("technical program manager" in item.lower() for item in violations)

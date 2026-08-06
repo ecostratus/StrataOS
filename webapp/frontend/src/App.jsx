@@ -124,8 +124,17 @@ export default function App() {
   };
 
   const generatePrompt = async (kind) => {
-    if (!selectedJobId) return;
-    const label = kind === "resume" ? "resume" : "outreach message";
+    const kindLabels = {
+      resume: "resume",
+      outreach: "outreach message",
+      consulting: "contract",
+      interview: "interview prep",
+      "weekly-review": "weekly review",
+    };
+    const requiresJob = kind === "resume" || kind === "outreach" || kind === "interview";
+    if (requiresJob && !selectedJobId) return;
+
+    const label = kindLabels[kind] || "artifact";
     setGenerationState({
       kind,
       loading: true,
@@ -136,7 +145,8 @@ export default function App() {
     setShowPromptText(false);
     setStatus(`Generating your ${label}...`);
     try {
-      const result = await api.post(`/api/prompts/${kind}`, { job_id: selectedJobId, no_sources: true });
+      const body = requiresJob ? { job_id: selectedJobId, no_sources: true } : { no_sources: true };
+      const result = await api.post(`/api/prompts/${kind}`, body);
       if (result.status === "error") {
         const errorMessage = result.error?.message || "The content could not be generated right now. Please try again.";
         const errorCode = result.error?.code || "generation_failed";
@@ -159,7 +169,14 @@ export default function App() {
         error: null,
         promptText: result.prompt_text || "",
       });
-      setStatus(`${kind === "resume" ? "Resume" : "Outreach message"} ready`);
+      const readyLabel = {
+        resume: "Resume",
+        outreach: "Outreach message",
+        consulting: "Contract",
+        interview: "Interview prep",
+        "weekly-review": "Weekly review",
+      };
+      setStatus(`${readyLabel[kind] || "Output"} ready`);
       await loadAll();
     } catch (err) {
       const message = `Could not generate your ${label} right now. Please try again.`;
@@ -220,10 +237,23 @@ export default function App() {
     setStatus("Setup skipped. Job discovery and browsing still work.");
   };
 
-  const generationPanelTitle = generationState.kind === "outreach" ? "Your Outreach Message" : "Your Resume";
-  const generationEmptyText = generationState.kind === "outreach"
-    ? "Select a job, then click Create Outreach Message."
-    : "Select a job, then click Create Resume.";
+  const generationTitles = {
+    resume: "Your Resume",
+    outreach: "Your Outreach Message",
+    consulting: "Your Contract",
+    interview: "Your Interview Prep",
+    "weekly-review": "Your Weekly Review",
+  };
+  const generationPanelTitle = generationTitles[generationState.kind] || "Generated Output";
+
+  const generationEmptyByKind = {
+    outreach: "Select a job, then click Create Outreach Message.",
+    consulting: "Click Create Contract to generate your consulting funnel prompt.",
+    interview: "Select a job, then click Interview Preparation.",
+    "weekly-review": "Click Weekly Review & Governance to generate the weekly review prompt.",
+    resume: "Select a job, then click Create Resume.",
+  };
+  const generationEmptyText = generationEmptyByKind[generationState.kind] || "Select an action to generate content.";
   const hasArtifact = Boolean(generationState.artifact?.content);
 
   const bucketBadge = (bucket) => ({
@@ -331,8 +361,29 @@ export default function App() {
             >
               {generationState.loading && generationState.kind === "outreach" ? "Creating your outreach message..." : "Create Outreach Message"}
             </button>
+            <button
+              onClick={() => generatePrompt("consulting")}
+              disabled={generationState.loading}
+              className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-60"
+            >
+              {generationState.loading && generationState.kind === "consulting" ? "Creating your contract..." : "Create Contract"}
+            </button>
+            <button
+              onClick={() => generatePrompt("interview")}
+              disabled={!selectedJobId || generationState.loading}
+              className="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-600 disabled:opacity-60"
+            >
+              {generationState.loading && generationState.kind === "interview" ? "Creating interview prep..." : "Interview Preparation"}
+            </button>
+            <button
+              onClick={() => generatePrompt("weekly-review")}
+              disabled={generationState.loading}
+              className="rounded-lg bg-violet-700 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-600 disabled:opacity-60"
+            >
+              {generationState.loading && generationState.kind === "weekly-review" ? "Creating weekly review..." : "Weekly Review & Governance"}
+            </button>
           </div>
-          <p className="mt-3 text-sm text-slate-700">{status || "Pick a job, then create a resume or outreach message."}</p>
+          <p className="mt-3 text-sm text-slate-700">{status || "Pick a job, then create a resume, outreach message, contract, interview prep, or weekly review."}</p>
 
           <div className="mt-4 rounded border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
             <div className="font-semibold text-slate-900">How this works</div>
@@ -476,7 +527,17 @@ export default function App() {
             {generationState.loading ? (
               <div className="mt-3 rounded border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
                 <div className="font-semibold text-slate-800">Creating it now...</div>
-                <p className="mt-1">The app is preparing your {generationState.kind === "outreach" ? "outreach message" : "resume"}.</p>
+                <p className="mt-1">The app is preparing your {
+                  generationState.kind === "outreach"
+                    ? "outreach message"
+                    : generationState.kind === "consulting"
+                    ? "contract"
+                    : generationState.kind === "interview"
+                    ? "interview prep"
+                    : generationState.kind === "weekly-review"
+                    ? "weekly review"
+                    : "resume"
+                }.</p>
               </div>
             ) : null}
 

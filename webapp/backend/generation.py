@@ -36,8 +36,10 @@ except Exception:  # pragma: no cover - allows tests to run without the dependen
 	APIConnectionError = APIError = APITimeoutError = AuthenticationError = BadRequestError = RateLimitError = _OpenAIPlaceholderError
 
 
-def _normalize_kind(kind: Literal["resume", "outreach"]) -> str:
-	return "resume" if kind == "resume" else "outreach"
+def _normalize_kind(kind: Literal["resume", "outreach", "consulting", "interview", "weekly_review"]) -> str:
+	if kind in {"resume", "outreach", "consulting", "interview", "weekly_review"}:
+		return kind
+	return "artifact"
 
 
 def _stringify(value: object | None, default: str = "") -> str:
@@ -88,7 +90,7 @@ def _map_exception(exc: Exception) -> ArtifactResult:
 	return ArtifactResult(ok=False, error_message="The content could not be generated right now. Please try again.", error_code="generation_failed")
 
 
-def generate_artifact(prompt_text: str, kind: Literal["resume", "outreach"]) -> ArtifactResult:
+def generate_artifact(prompt_text: str, kind: Literal["resume", "outreach", "consulting", "interview", "weekly_review"]) -> ArtifactResult:
 	provider, api_key, model, temperature, max_tokens = _get_settings()
 	if provider != "openai":
 		return _missing_configuration("AI_PROVIDER must be set to openai before generating finished content.")

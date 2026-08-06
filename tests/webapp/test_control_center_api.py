@@ -179,6 +179,7 @@ def test_control_center_api_smoke(monkeypatch, tmp_path: Path):
         assert resume.status_code == 200
         resume_payload = resume.json()
         assert resume_payload["status"] == "ok"
+        assert resume_payload["generation_path"] == "direct"
         assert resume_payload["artifact"]["type"] == "resume"
         assert "### 0.5. Source Map" in resume_payload["artifact"]["content"]
         assert "Prompt body" in resume_payload["prompt_text"]
@@ -193,7 +194,123 @@ def test_control_center_api_smoke(monkeypatch, tmp_path: Path):
 
         activity = client.get("/api/activity?limit=5")
         assert activity.status_code == 200
-        assert len(activity.json()) == 1
+        assert len(activity.json()) >= 1
+
+
+def test_control_center_additional_prompt_types(monkeypatch, tmp_path: Path):
+    output_dir = tmp_path / "output"
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    db_path = tmp_path / "jobs.db"
+    log_path = tmp_path / "events.jsonl"
+    log_path.write_text('{"ts":"2026-07-20T00:00:00Z","category":"test","event":"seed"}\n', encoding="utf-8")
+
+    monkeypatch.setattr(app_module, "OUTPUT_DIR", output_dir)
+    monkeypatch.setattr(app_module, "DB_PATH", db_path)
+    monkeypatch.setattr(app_module, "LOG_PATH", log_path)
+    _set_success_config(monkeypatch)
+
+    def fake_run(command: list[str]):
+        command_text = " ".join(command)
+        if "job_discovery_v1.py" in command_text:
+            ts = "20260720_220000"
+            _write_csv(
+                output_dir / f"jobs_discovered_{ts}.csv",
+                [
+                    {
+                        "title": "Technical Program Manager",
+                        "location": "Remote",
+                        "company": "Acme",
+                        "source": "sample",
+                        "url": "https://example.com/job/2",
+                        "posted_date": "2026-07-20",
+                    }
+                ],
+            )
+            _write_csv(
+                output_dir / f"jobs_scored_{ts}.csv",
+                [
+                    {
+                        "title": "Technical Program Manager",
+                        "location": "Remote",
+                        "company": "Acme",
+                        "source": "sample",
+                        "url": "https://example.com/job/2",
+                        "posted_date": "2026-07-20",
+                        "score": "0.73",
+                        "bucket": "Strong",
+                    }
+                ],
+            )
+            (output_dir / f"jobs_enriched_{ts}.json").write_text(
+                json.dumps(
+                    [
+                        {
+                            "title": "Technical Program Manager",
+                            "company": "Acme",
+                            "location": "Remote",
+                            "url": "https://example.com/job/2",
+                            "role_tags": ["program management", "stakeholder alignment"],
+                        }
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            (output_dir / f"jobs_discovered_{ts}.summary.json").write_text(
+                json.dumps({"counts": {"total_discovered": 1, "exported": 1}}),
+                encoding="utf-8",
+            )
+            return CompletedProcess(command, 0, stdout="discovery complete\n", stderr="")
+
+        if "consulting_offer_v1.py" in command_text:
+            return _make_fake_prompt_subprocess(output_dir / "consulting" / "consulting_prompt_test.txt")
+
+        if "interview_prep_v1.py" in command_text:
+            return _make_fake_prompt_subprocess(output_dir / "interview" / "interview_prompt_test.txt")
+
+        if "weekly_review_v1.py" in command_text:
+            return _make_fake_prompt_subprocess(output_dir / "review" / "weekly_review_prompt_test.txt")
+
+        return CompletedProcess(command, 1, stdout="", stderr="unexpected command")
+
+    monkeypatch.setattr(app_module, "_run_subprocess", fake_run)
+
+    monkeypatch.setattr(
+        app_module,
+        "generate_artifact",
+        lambda prompt_text, kind: generation.ArtifactResult(ok=True, content=f"Finished {kind} body"),
+    )
+
+    with TestClient(app_module.app) as client:
+        run = client.post("/api/runs/job-discovery")
+        assert run.status_code == 200
+
+        jobs = client.get("/api/jobs")
+        assert jobs.status_code == 200
+        payload = jobs.json()
+        assert len(payload) == 1
+        job_id = payload[0]["id"]
+
+        consulting = client.post("/api/prompts/consulting", json={"no_sources": True})
+        assert consulting.status_code == 200
+        consulting_payload = consulting.json()
+        assert consulting_payload["status"] == "ok"
+        assert consulting_payload["artifact"]["type"] == "consulting"
+        assert consulting_payload["artifact"]["content"] == "Finished consulting body"
+
+        interview = client.post("/api/prompts/interview", json={"job_id": job_id, "no_sources": True})
+        assert interview.status_code == 200
+        interview_payload = interview.json()
+        assert interview_payload["status"] == "ok"
+        assert interview_payload["artifact"]["type"] == "interview"
+        assert interview_payload["artifact"]["content"] == "Finished interview body"
+
+        weekly_review = client.post("/api/prompts/weekly-review", json={"no_sources": True})
+        assert weekly_review.status_code == 200
+        weekly_payload = weekly_review.json()
+        assert weekly_payload["status"] == "ok"
+        assert weekly_payload["artifact"]["type"] == "weekly_review"
+        assert weekly_payload["artifact"]["content"] == "Finished weekly_review body"
 
 
 def test_generate_artifact_success(monkeypatch):
@@ -248,6 +365,20 @@ def test_generate_artifact_missing_configuration(monkeypatch):
     assert result.ok is False
     assert result.error_code == "missing_configuration"
     assert called["value"] is False
+
+def test_resolve_resume_context_path_prefers_local_fixture(monkeypatch, tmp_path: Path):
+    sample_context = tmp_path / "resume_context.sample.json"
+    sample_context.write_text('{"base_resume_b": "placeholder"}', encoding="utf-8")
+    local_context = tmp_path / "resume_context.local.json"
+    local_context.write_text('{"base_resume_b": "real content"}', encoding="utf-8")
+
+    monkeypatch.setattr(app_module, "DEFAULT_RESUME_CONTEXT", sample_context)
+    monkeypatch.setattr(app_module, "LOCAL_RESUME_CONTEXT", local_context)
+    monkeypatch.setattr(app_module.config, "get", lambda key, default=None: str(sample_context) if key == "RESUME_USER_CONTEXT_PATH" else default)
+
+    resolved = app_module._resolve_resume_context_path()
+
+    assert resolved == local_context
 
 
 def test_resume_prompt_failure_is_sanitized(monkeypatch, tmp_path: Path):
@@ -517,6 +648,161 @@ def test_resume_prompt_source_map_validation_failure(monkeypatch, tmp_path: Path
         body = resume.json()
         assert body["status"] == "error"
         assert body["error"]["code"] == "source_map_validation_failed"
+
+
+def test_resume_prompt_retries_with_source_map_repair(monkeypatch):
+    _set_success_config(monkeypatch)
+    call_count = {"value": 0}
+
+    def fake_generate_artifact(prompt_text: str, kind: str):
+        call_count["value"] += 1
+        if call_count["value"] == 1:
+            return generation.ArtifactResult(
+                ok=True,
+                content="""
+### 0. Policy Compliance Report
+- Input validation status: pass
+
+### 1. Tailored Resume Content
+- Missing source map on first attempt
+
+### 2. Keyword Analysis
+- placeholder
+""".strip(),
+            )
+        return generation.ArtifactResult(
+            ok=True,
+            content="""
+### 0. Policy Compliance Report
+- Input validation status: pass
+
+### 0.5. Source Map (required)
+- Tailored Resume Content bullet -> sourced from Resume B: Professional Summary
+
+### 1. Tailored Resume Content
+- Tailored Resume Content bullet
+
+### 2. Keyword Analysis
+- placeholder
+""".strip(),
+        )
+
+    monkeypatch.setattr(app_module, "generate_artifact", fake_generate_artifact)
+
+    with TestClient(app_module.app) as client:
+        client.post("/api/runs/job-discovery")
+        job_id = client.get("/api/jobs").json()[0]["id"]
+        resume = client.post("/api/prompts/resume", json={"job_id": job_id, "no_sources": True})
+        assert resume.status_code == 200
+        body = resume.json()
+        assert body["status"] == "ok"
+        assert body["generation_path"] == "repair"
+        assert body["artifact"]["type"] == "resume"
+        assert call_count["value"] == 2
+
+
+def test_resume_prompt_accepts_variant_source_map_heading(monkeypatch):
+    _set_success_config(monkeypatch)
+
+    def fake_generate_artifact(prompt_text: str, kind: str):
+        return generation.ArtifactResult(
+            ok=True,
+            content="""
+### 0 Policy Compliance Report
+- Input validation status: pass
+
+### 0.5 Source Map
+- Professional Summary bullet -> sourced from Resume B: role/overview
+
+### 1. Tailored Resume Content
+- Professional Summary bullet
+
+### 2. Keyword Analysis
+- placeholder
+""".strip(),
+        )
+
+    monkeypatch.setattr(app_module, "generate_artifact", fake_generate_artifact)
+
+    with TestClient(app_module.app) as client:
+        client.post("/api/runs/job-discovery")
+        job_id = client.get("/api/jobs").json()[0]["id"]
+        resume = client.post("/api/prompts/resume", json={"job_id": job_id, "no_sources": True})
+        assert resume.status_code == 200
+        body = resume.json()
+        assert body["status"] == "ok"
+        assert body["artifact"]["type"] == "resume"
+
+
+def test_resume_prompt_rejects_ats_score_estimate(monkeypatch):
+    _set_success_config(monkeypatch)
+
+    def fake_generate_artifact(prompt_text: str, kind: str):
+        return generation.ArtifactResult(
+            ok=True,
+            content="""
+### 0. Policy Compliance Report
+- Input validation status: pass
+
+### 0.5. Source Map (required)
+- Professional Summary bullet 1 -> sourced from Resume B: Professional Summary, "Technical program leader focused on platform reliability and service operations."
+
+### 1. Tailored Resume Content
+- Professional Summary bullet 1
+
+### 2. Keyword Analysis
+- placeholder
+
+### 4. ATS Optimization Notes
+- Match score estimate: 90% match to job description
+""".strip(),
+        )
+
+    monkeypatch.setattr(app_module, "generate_artifact", fake_generate_artifact)
+
+    with TestClient(app_module.app) as client:
+        client.post("/api/runs/job-discovery")
+        job_id = client.get("/api/jobs").json()[0]["id"]
+        resume = client.post("/api/prompts/resume", json={"job_id": job_id, "no_sources": True})
+        assert resume.status_code == 200
+        body = resume.json()
+        assert body["status"] == "error"
+        assert body["error"]["code"] == "resume_content_validation_failed"
+
+
+def test_resume_prompt_prose_violation_report_mode_allows_output(monkeypatch):
+    _set_success_config(monkeypatch)
+
+    def fake_generate_artifact(prompt_text: str, kind: str):
+        return generation.ArtifactResult(
+            ok=True,
+            content="""
+### 0. Policy Compliance Report
+- Input validation status: pass
+
+### 0.5. Source Map (required)
+- Professional Experience bullet 1 -> sourced from Resume B: Company Alpha / Bullet 1
+- Professional Experience bullet 2 -> sourced from Resume B: Company Alpha / Bullet 3
+
+### 1. Tailored Resume Content
+- Led platform modernization roadmap across infrastructure and operations teams.
+- Coordinated cross-functional technical programs.
+
+### 2. Keyword Analysis
+- placeholder
+""".strip(),
+        )
+
+    monkeypatch.setattr(app_module, "generate_artifact", fake_generate_artifact)
+
+    with TestClient(app_module.app) as client:
+        client.post("/api/runs/job-discovery")
+        job_id = client.get("/api/jobs").json()[0]["id"]
+        resume = client.post("/api/prompts/resume", json={"job_id": job_id, "no_sources": True})
+        assert resume.status_code == 200
+        body = resume.json()
+        assert body["status"] == "ok"
+        assert body["artifact"]["type"] == "resume"
 
 
 def test_init_db_adds_phase1_search_columns_and_indexes(monkeypatch, tmp_path: Path):

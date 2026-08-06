@@ -29,11 +29,12 @@ Missing Target Job Description content. Tailoring requires the actual JD text.
 Please paste the job description and re-run.
 ```
 
-If validation status is partial (thin source inventory), proceed but explicitly note this in Policy Compliance Report section 0.
+If validation status is partial (thin source inventory or placeholder identity tokens), proceed but explicitly note this in Policy Compliance Report section 0.
 
 ## Non-Negotiable Policy
 
 Every claim in the generated resume must be traceable to ground-truth source material. Tailoring is allowed only as reordering, emphasis, and terminology alignment of true experience.
+Do not add synthetic business framing, outcome claims, or score estimates unless that exact wording appears in the source inventory.
 
 ### Allowed
 1. Reordering bullets to prioritize relevance
@@ -168,7 +169,15 @@ If a posting is near an A/C or B/C boundary, prioritize title-family/headline fi
 For every bullet that appears in Section 1, include a mapping line:
 `[Resume section] bullet -> sourced from [document name: role/line]`
 
+Use the exact heading `### 0.5. Source Map (required)` and place it immediately before Section 1.
+Include one mapping line for every bullet in Section 1, with no exceptions.
 If a bullet cannot be mapped to specific source material, remove it from Section 1 and disclose as GAP when relevant.
+Do not use the JD to invent new business context in a bullet if the source does not already say it.
+Do not add words like `enterprise commerce`, `improved reliability metrics`, or `90% match` unless they appear verbatim in the source inventory.
+If a source map line would require inference, shorten or remove the bullet instead.
+Each mapping line must cite a concrete source fragment or line reference; generic labels like `Resume B: Company Alpha` are not sufficient.
+Example mapping line:
+`Professional Summary bullet 1 -> sourced from Resume B: Professional Summary, "Technical program leader focused on platform reliability and service operations."`
 
 ### 1. Tailored Resume Content
 
@@ -179,6 +188,7 @@ Provide complete tailored resume with these sections:
 - Include key skills from job description
 - Mention years of experience
 - State value proposition
+- Keep the wording source-faithful; do not add new business context, outcomes, or adjectives that are not in the source inventory.
 
 **Professional Experience**
 For each role:
@@ -187,6 +197,7 @@ For each role:
 - Lead with most relevant achievements
 - Include metrics where available
 - Use action verbs
+- Prefer shorter, exact-source paraphrases over embellished bullets.
 
 **Skills**
 - Technical skills (prioritize job requirements only when source-backed)
@@ -207,6 +218,7 @@ List keywords incorporated:
 - Industry terminology: [list]
 - Soft skills mentioned: [list]
  - Enriched context used: [seniority/domain_tags/stack/skills elements referenced]
+Do not introduce any keyword that is not directly supported by the source inventory.
 
 ### 3. Change Summary
 
@@ -220,8 +232,8 @@ Explain major changes:
 
 - Format: [simple/clean formatting notes]
 - Keywords: [keyword density assessment]
-- Match score estimate: [X% match to job description]
 - Recommendations: [any additional suggestions]
+Do not invent a numeric match score or percentage estimate. If no safe recommendation exists, omit the section content rather than guessing.
 
 ## Quality Checklist
 
@@ -238,6 +250,7 @@ Before providing output, verify:
 - [ ] Metrics and achievements are specific
 - [ ] Every new/edited claim is traceable to source inventory
 - [ ] Every unmet required JD item is disclosed with a GAP line
+- [ ] No synthetic business framing, outcome claims, or score estimates were introduced
 
 ## Examples
 

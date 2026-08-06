@@ -133,6 +133,97 @@ def load_source_text(context_path: str) -> str:
     return "\n\n".join(part for part in parts if part)
 
 
+def _extract_section(text: str, section_name: str) -> str:
+    patterns = [
+        rf"(?:^|\n)\s*#+\s*{re.escape(section_name)}\s*.*?(?=\n\s*#+\s|\Z)",
+        rf"(?:^|\n)\s*\*\*\s*{re.escape(section_name)}\s*\*\*.*?(?=\n\s*\*\*|\Z)",
+    ]
+    for pattern in patterns:
+        match = re.search(pattern, text, re.IGNORECASE | re.DOTALL)
+        if match:
+            return match.group(0)
+    return ""
+
+
+def _extract_prompt_field(prompt_text: str, field_name: str) -> str:
+    pattern = rf"\*\*{re.escape(field_name)}\*\*:\s*(.*?)(?=\n\*\*|\n###|\Z)"
+    match = re.search(pattern, prompt_text, re.IGNORECASE | re.DOTALL)
+    if not match:
+        return ""
+    return match.group(1).strip()
+
+
+_STOPWORDS = {
+    "a", "an", "and", "the", "of", "to", "for", "with", "on", "in", "by", "from", "or", "as",
+    "at", "into", "through", "across", "over", "under", "within", "while", "using", "used", "use",
+    "job", "role", "company", "target", "description", "requirements", "responsibilities", "responsibility",
+}
+
+
+def _tokenize_phrase_source(text: str) -> list[str]:
+    return re.findall(r"[A-Za-z][A-Za-z\-']+", text.lower())
+
+
+def _collect_prompt_phrases(prompt_text: str) -> list[str]:
+    fields = [
+        _extract_prompt_field(prompt_text, "Company"),
+        _extract_prompt_field(prompt_text, "Role"),
+        _extract_prompt_field(prompt_text, "Job Description"),
+    ]
+    tokens: list[str] = []
+    for field in fields:
+        tokens.extend(_tokenize_phrase_source(field))
+
+    phrases: list[str] = []
+    seen: set[str] = set()
+    for window_size in range(2, 6):
+        for idx in range(0, max(0, len(tokens) - window_size + 1)):
+            window = tokens[idx : idx + window_size]
+            content_words = [word for word in window if word not in _STOPWORDS]
+            if len(content_words) < 2:
+                continue
+            phrase = " ".join(window).strip()
+            if len(phrase) < 8:
+                continue
+            key = phrase.lower()
+            if key in seen:
+                continue
+            seen.add(key)
+            phrases.append(phrase)
+    return phrases
+
+
+def find_resume_prose_claim_violations(source_text: str, output_text: str, prompt_text: str = "") -> list[str]:
+    source = str(source_text or "").lower()
+    prose_sections = "\n\n".join(
+        section for section in (
+            _extract_section(output_text, "Professional Summary"),
+            _extract_section(output_text, "Professional Experience"),
+        )
+        if section
+    ) or str(output_text or "")
+    if not prose_sections.strip() or not prompt_text.strip():
+        return []
+
+    violations: list[str] = []
+    prose_lower = prose_sections.lower()
+    for phrase in _collect_prompt_phrases(prompt_text):
+        phrase_l = phrase.lower()
+        if phrase_l in source:
+            continue
+        if phrase_l in prose_lower:
+            violations.append(f"unsupported prose phrase: {phrase}")
+
+    deduped: list[str] = []
+    seen: set[str] = set()
+    for item in violations:
+        key = item.lower()
+        if key not in seen:
+            seen.add(key)
+            deduped.append(item)
+    return deduped
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--source", required=True, help="Path to resume context JSON")

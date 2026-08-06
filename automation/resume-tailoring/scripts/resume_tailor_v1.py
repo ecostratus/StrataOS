@@ -311,7 +311,7 @@ def _validate_source_map_structure(resume_text: str) -> tuple[bool, str]:
     section2_start = None
     for idx, line in enumerate(lines):
         line_l = line.strip().lower()
-        if source_map_start is None and ("0.5. source map" in line_l):
+        if source_map_start is None and re.search(r"(^|\s)0\.5\.?\s+source map\b", line_l):
             source_map_start = idx
         if section1_start is None and line_l.startswith("### 1."):
             section1_start = idx
@@ -377,6 +377,36 @@ def _is_empty_or_placeholder(value: str | None) -> bool:
         "full text pulled",
     )
     return any(marker in txt_l for marker in markers)
+
+
+def _collect_placeholder_identity_tokens(user_ctx: dict[str, Any]) -> list[str]:
+    tokens: list[str] = []
+    fields = (
+        "base_resume_a",
+        "base_resume_b",
+        "base_resume_c",
+        "linkedin_profile",
+        "operator_brief_a",
+        "operator_brief_b",
+        "operator_brief_c",
+        "master_resume",
+    )
+    identity_markers = (
+        "candidate name",
+        "company alpha",
+        "company beta",
+        "example university",
+        "example corp",
+    )
+    for field_name in fields:
+        raw_value = str(user_ctx.get(field_name, "") or "").strip()
+        if not raw_value:
+            continue
+        lower_value = raw_value.lower()
+        for marker in identity_markers:
+            if marker in lower_value and marker not in tokens:
+                tokens.append(marker)
+    return tokens
 
 
 def _validation_failure_message(missing_fields: list[str], reason: str) -> str:
@@ -447,6 +477,21 @@ def _validate_resume_inputs(context: dict[str, Any], user_ctx: dict[str, Any]) -
 
     # Partial warning: inventory exists but is thin.
     note = ""
+    placeholder_identity_tokens = _collect_placeholder_identity_tokens(user_ctx)
+    if placeholder_identity_tokens:
+        note = (
+            "Source material contains placeholder identity tokens: "
+            f"{', '.join(placeholder_identity_tokens)}. "
+            "Treat them as sanitized fixtures, not real-world identity fields."
+        )
+        if len(populated_inventory_fields) > 1:
+            return {
+                "status": "partial",
+                "reason": "placeholder_identity_tokens",
+                "missing_fields": [],
+                "message": "",
+                "note": note,
+            }
     if len(populated_inventory_fields) <= 1:
         note = (
             "Source inventory is minimally populated (<=1 source section with content); "
