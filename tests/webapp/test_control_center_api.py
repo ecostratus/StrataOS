@@ -310,6 +310,194 @@ def test_resume_prompt_failure_is_sanitized(monkeypatch, tmp_path: Path):
         assert "raw stderr leak" not in json.dumps(body)
 
 
+def test_resume_prompt_input_validation_failure(monkeypatch, tmp_path: Path):
+    output_dir = tmp_path / "output"
+    output_dir.mkdir(parents=True, exist_ok=True)
+    db_path = tmp_path / "jobs.db"
+    log_path = tmp_path / "events.jsonl"
+    log_path.write_text('', encoding="utf-8")
+
+    monkeypatch.setattr(app_module, "OUTPUT_DIR", output_dir)
+    monkeypatch.setattr(app_module, "DB_PATH", db_path)
+    monkeypatch.setattr(app_module, "LOG_PATH", log_path)
+    _set_success_config(monkeypatch)
+
+    def fake_run(command: list[str]):
+        command_text = " ".join(command)
+        if "job_discovery_v1.py" in command_text:
+            ts = "20260720_210000"
+            _write_csv(
+                output_dir / f"jobs_discovered_{ts}.csv",
+                [
+                    {
+                        "title": "Senior Platform Engineer",
+                        "location": "Remote",
+                        "company": "Acme",
+                        "source": "sample",
+                        "url": "https://example.com/job/1",
+                        "posted_date": "2026-07-20",
+                    },
+                ],
+            )
+            _write_csv(
+                output_dir / f"jobs_scored_{ts}.csv",
+                [
+                    {
+                        "title": "Senior Platform Engineer",
+                        "location": "Remote",
+                        "company": "Acme",
+                        "source": "sample",
+                        "url": "https://example.com/job/1",
+                        "posted_date": "2026-07-20",
+                        "score": "0.85",
+                        "bucket": "Exceptional",
+                    },
+                ],
+            )
+            (output_dir / f"jobs_enriched_{ts}.json").write_text(
+                json.dumps(
+                    [
+                        {
+                            "title": "Senior Platform Engineer",
+                            "company": "Acme",
+                            "location": "Remote",
+                            "url": "https://example.com/job/1",
+                            "role_tags": ["engineer"],
+                        }
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            (output_dir / f"jobs_discovered_{ts}.summary.json").write_text(json.dumps({"counts": {"total_discovered": 1, "exported": 1}}), encoding="utf-8")
+            return CompletedProcess(command, 0, stdout="discovery complete\n", stderr="")
+
+        if "resume_tailor_v1.py" in command_text:
+            prompt_path = output_dir / "resume" / "resume_prompt_validation_failed.txt"
+            prompt_path.parent.mkdir(parents=True, exist_ok=True)
+            prompt_path.write_text(
+                "INPUT VALIDATION FAILED\nMissing/placeholder inputs: Selected Base Resume, Ground-Truth Inventory\n",
+                encoding="utf-8",
+            )
+            stdout = f"Saved: {prompt_path}\n"
+            return CompletedProcess(command, 4, stdout=stdout, stderr="")
+
+        return CompletedProcess(command, 1, stdout="", stderr="unexpected command")
+
+    generation_called = {"value": False}
+
+    def fake_generate_artifact(prompt_text: str, kind: str):
+        generation_called["value"] = True
+        return generation.ArtifactResult(ok=True, content="Should not run")
+
+    monkeypatch.setattr(app_module, "_run_subprocess", fake_run)
+    monkeypatch.setattr(app_module, "generate_artifact", fake_generate_artifact)
+
+    with TestClient(app_module.app) as client:
+        assert client.post("/api/runs/job-discovery").status_code == 200
+        job_id = client.get("/api/jobs").json()[0]["id"]
+        resume = client.post("/api/prompts/resume", json={"job_id": job_id, "no_sources": True})
+        assert resume.status_code == 200
+        body = resume.json()
+        assert body["status"] == "error"
+        assert body["error"]["code"] == "input_validation_failed"
+        assert "INPUT VALIDATION FAILED" in body["prompt_text"]
+        assert generation_called["value"] is False
+
+
+def test_resume_prompt_source_map_validation_failure(monkeypatch, tmp_path: Path):
+    output_dir = tmp_path / "output"
+    output_dir.mkdir(parents=True, exist_ok=True)
+    db_path = tmp_path / "jobs.db"
+    log_path = tmp_path / "events.jsonl"
+    log_path.write_text('', encoding="utf-8")
+
+    monkeypatch.setattr(app_module, "OUTPUT_DIR", output_dir)
+    monkeypatch.setattr(app_module, "DB_PATH", db_path)
+    monkeypatch.setattr(app_module, "LOG_PATH", log_path)
+    _set_success_config(monkeypatch)
+
+    def fake_run(command: list[str]):
+        command_text = " ".join(command)
+        if "job_discovery_v1.py" in command_text:
+            ts = "20260720_210000"
+            _write_csv(
+                output_dir / f"jobs_discovered_{ts}.csv",
+                [
+                    {
+                        "title": "Senior Platform Engineer",
+                        "location": "Remote",
+                        "company": "Acme",
+                        "source": "sample",
+                        "url": "https://example.com/job/1",
+                        "posted_date": "2026-07-20",
+                    },
+                ],
+            )
+            _write_csv(
+                output_dir / f"jobs_scored_{ts}.csv",
+                [
+                    {
+                        "title": "Senior Platform Engineer",
+                        "location": "Remote",
+                        "company": "Acme",
+                        "source": "sample",
+                        "url": "https://example.com/job/1",
+                        "posted_date": "2026-07-20",
+                        "score": "0.85",
+                        "bucket": "Exceptional",
+                    },
+                ],
+            )
+            (output_dir / f"jobs_enriched_{ts}.json").write_text(
+                json.dumps(
+                    [
+                        {
+                            "title": "Senior Platform Engineer",
+                            "company": "Acme",
+                            "location": "Remote",
+                            "url": "https://example.com/job/1",
+                            "role_tags": ["engineer"],
+                        }
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            (output_dir / f"jobs_discovered_{ts}.summary.json").write_text(json.dumps({"counts": {"total_discovered": 1, "exported": 1}}), encoding="utf-8")
+            return CompletedProcess(command, 0, stdout="discovery complete\n", stderr="")
+
+        if "resume_tailor_v1.py" in command_text:
+            return _make_fake_prompt_subprocess(output_dir / "resume" / "resume_prompt_test.txt")
+
+        return CompletedProcess(command, 1, stdout="", stderr="unexpected command")
+
+    def fake_generate_artifact(prompt_text: str, kind: str):
+        return generation.ArtifactResult(
+            ok=True,
+            content="""
+### 0. Policy Compliance Report
+- Input validation status: pass
+
+### 1. Tailored Resume Content
+- Invented bullet without any source map coverage
+
+### 2. Keyword Analysis
+- placeholder
+""".strip(),
+        )
+
+    monkeypatch.setattr(app_module, "_run_subprocess", fake_run)
+    monkeypatch.setattr(app_module, "generate_artifact", fake_generate_artifact)
+
+    with TestClient(app_module.app) as client:
+        assert client.post("/api/runs/job-discovery").status_code == 200
+        job_id = client.get("/api/jobs").json()[0]["id"]
+        resume = client.post("/api/prompts/resume", json={"job_id": job_id, "no_sources": True})
+        assert resume.status_code == 200
+        body = resume.json()
+        assert body["status"] == "error"
+        assert body["error"]["code"] == "source_map_validation_failed"
+
+
 def test_init_db_adds_phase1_search_columns_and_indexes(monkeypatch, tmp_path: Path):
     db_path = tmp_path / "jobs.db"
     monkeypatch.setattr(app_module, "DB_PATH", db_path)

@@ -17,6 +17,7 @@ import json
 import argparse
 import time
 import logging
+import re
 from datetime import datetime
 from typing import Any
 
@@ -297,6 +298,176 @@ def _build_inventory_block(user_ctx: dict) -> str:
 def _count_gap_lines(text: str) -> int:
     return sum(1 for line in str(text or "").splitlines() if line.strip().startswith("GAP:"))
 
+
+def _validate_source_map_structure(resume_text: str) -> tuple[bool, str]:
+    text = str(resume_text or "")
+    if not text.strip():
+        return False, "resume artifact is empty"
+
+    lines = text.splitlines()
+
+    source_map_start = None
+    section1_start = None
+    section2_start = None
+    for idx, line in enumerate(lines):
+        line_l = line.strip().lower()
+        if source_map_start is None and ("0.5. source map" in line_l):
+            source_map_start = idx
+        if section1_start is None and line_l.startswith("### 1."):
+            section1_start = idx
+        if section2_start is None and line_l.startswith("### 2."):
+            section2_start = idx
+
+    if source_map_start is None:
+        return False, "missing required Source Map section"
+    if section1_start is None:
+        return False, "missing required Section 1 tailored resume content"
+
+    source_map_end = section1_start
+    mapping_lines = 0
+    for line in lines[source_map_start:source_map_end]:
+        if "-> sourced from" in line.lower():
+            mapping_lines += 1
+
+    if mapping_lines == 0:
+        return False, "source map contains no mapping lines"
+
+    section1_end = section2_start if section2_start is not None else len(lines)
+    section1_lines = lines[section1_start:section1_end]
+    bullet_lines = [line for line in section1_lines if line.strip().startswith("-")]
+    if bullet_lines and mapping_lines < len(bullet_lines):
+        return False, (
+            f"source map coverage mismatch: mappings={mapping_lines}, section1_bullets={len(bullet_lines)}"
+        )
+
+    return True, ""
+
+
+def _extract_job_description(job: dict[str, Any], user_ctx: dict[str, Any]) -> str:
+    candidates = (
+        job.get("job_description"),
+        job.get("description"),
+        job.get("summary"),
+        job.get("content"),
+        user_ctx.get("job_description"),
+    )
+    for candidate in candidates:
+        value = str(candidate or "").strip()
+        if value:
+            return value
+    return ""
+
+
+def _is_empty_or_placeholder(value: str | None) -> bool:
+    txt = str(value or "").strip()
+    if not txt:
+        return True
+    # Common placeholder formats used in context files and docs.
+    if re.fullmatch(r"\[[^\]]+\]", txt):
+        return True
+    txt_l = txt.lower()
+    markers = (
+        "paste ",
+        "placeholder",
+        "not repeated",
+        "pull from",
+        "earlier document",
+        "in this conversation",
+        "not included",
+        "full text pulled",
+    )
+    return any(marker in txt_l for marker in markers)
+
+
+def _validation_failure_message(missing_fields: list[str], reason: str) -> str:
+    joined = ", ".join(missing_fields) if missing_fields else "unknown"
+    if reason == "missing_jd":
+        return (
+            "INPUT VALIDATION FAILED\n"
+            f"Missing/placeholder inputs: {joined}\n"
+            "Missing Target Job Description content. Tailoring requires the actual JD text.\n"
+            "Please paste the job description and re-run."
+        )
+    return (
+        "INPUT VALIDATION FAILED\n"
+        f"Missing/placeholder inputs: {joined}\n"
+        "No resume can be generated without real source material. Please populate the\n"
+        "Selected Base Resume and/or Ground-Truth Inventory fields with actual candidate\n"
+        "history before re-running this prompt."
+    )
+
+
+def _validate_resume_inputs(context: dict[str, Any], user_ctx: dict[str, Any]) -> dict[str, Any]:
+    selected_base = str(context.get("selected_base_resume", "") or "")
+    job_description = str(context.get("job_description", "") or "")
+
+    inventory_fields = [
+        "base_resume_a",
+        "base_resume_b",
+        "base_resume_c",
+        "linkedin_profile",
+        "operator_brief_a",
+        "operator_brief_b",
+        "operator_brief_c",
+        "master_resume",
+    ]
+    populated_inventory_fields = [
+        field for field in inventory_fields if not _is_empty_or_placeholder(str(user_ctx.get(field, "") or ""))
+    ]
+
+    selected_base_missing = _is_empty_or_placeholder(selected_base)
+    inventory_missing = len(populated_inventory_fields) == 0
+    jd_missing = _is_empty_or_placeholder(job_description)
+
+    missing_fields: list[str] = []
+    if selected_base_missing:
+        missing_fields.append("Selected Base Resume")
+    if inventory_missing:
+        missing_fields.append("Ground-Truth Inventory")
+    if jd_missing:
+        missing_fields.append("Target Job Description")
+
+    if selected_base_missing or inventory_missing:
+        return {
+            "status": "fail",
+            "reason": "missing_sources",
+            "missing_fields": missing_fields,
+            "message": _validation_failure_message(missing_fields, "missing_sources"),
+            "note": "",
+        }
+
+    if jd_missing:
+        return {
+            "status": "fail",
+            "reason": "missing_jd",
+            "missing_fields": missing_fields,
+            "message": _validation_failure_message(missing_fields, "missing_jd"),
+            "note": "",
+        }
+
+    # Partial warning: inventory exists but is thin.
+    note = ""
+    if len(populated_inventory_fields) <= 1:
+        note = (
+            "Source inventory is minimally populated (<=1 source section with content); "
+            "resume depth may be limited and no missing evidence will be inferred."
+        )
+        return {
+            "status": "partial",
+            "reason": "thin_inventory",
+            "missing_fields": [],
+            "message": "",
+            "note": note,
+        }
+
+    return {
+        "status": "pass",
+        "reason": "ok",
+        "missing_fields": [],
+        "message": "",
+        "note": "",
+    }
+
 def main():
     """Main entry point for resume tailoring."""
     config.initialize()
@@ -411,7 +582,7 @@ def main():
         return {
             "company_name": job.get("company"),
             "job_title": job.get("title"),
-            "job_description": "",
+            "job_description": _extract_job_description(job, user_ctx),
             # Enriched context
             "seniority": job.get("seniority"),
             "domain_tags": job.get("domain_tags", []),
@@ -444,6 +615,11 @@ def main():
 
     context = {**user_ctx, **build_resume_context(job, user_ctx)}
 
+    validation = _validate_resume_inputs(context, user_ctx)
+    context["input_validation_status"] = validation.get("status", "pass")
+    context["input_validation_note"] = validation.get("note", "")
+    context["input_validation_missing_fields"] = ", ".join(validation.get("missing_fields", []))
+
     prompt_path = args.prompt_path_override or os.path.join(_ROOT, "prompts", "resume", "resume_tailor_prompt_v1.md")
     try:
         with open(prompt_path, "r", encoding="utf-8") as f:
@@ -452,7 +628,11 @@ def main():
         template_str = "Tailor resume for {{ job_title }} at {{ company_name }} focusing on {{ tailoring_focus }}."
 
     t0 = time.perf_counter()
-    prompt = render_prompt(template_str, context)
+    invalid_input = validation.get("status") == "fail"
+    if invalid_input:
+        prompt = str(validation.get("message", "INPUT VALIDATION FAILED")).strip()
+    else:
+        prompt = render_prompt(template_str, context)
     t1 = time.perf_counter()
     render_ms = int((t1 - t0) * 1000)
     gap_count = _count_gap_lines(prompt)
@@ -476,6 +656,8 @@ def main():
                 "selected_track": context.get("profile_track"),
                 "selected_track_label": context.get("selected_track_label"),
                 "selected_base_template": context.get("selected_base_template"),
+                "input_validation_status": context.get("input_validation_status"),
+                "input_validation_note": context.get("input_validation_note"),
                 "gap_count": gap_count,
                 "output_path": out_path,
             },
@@ -493,9 +675,40 @@ def main():
         )
         inc("resume", "errors")
 
+    if invalid_input:
+        log_event(
+            "resume",
+            {
+                "event": "input_validation_failed",
+                "reason": validation.get("reason", "invalid_input"),
+                "missing_fields": validation.get("missing_fields", []),
+            },
+        )
+        inc("resume", "errors")
+        # Signal callers that this is a hard stop; prompt text is still saved above.
+        sys.exit(4)
+
     if args.generate_artifact:
         generation = _generate_final_artifact(prompt, "resume")
         if generation.get("ok") and generation.get("content"):
+            source_map_ok, source_map_error = _validate_source_map_structure(str(generation.get("content", "")))
+            if not source_map_ok:
+                err_code = "source_map_validation_failed"
+                err_message = f"Generated content failed source-map validation: {source_map_error}"
+                print(f"Artifact Generation Failed [{err_code}]: {err_message}")
+                log_event(
+                    "resume",
+                    {
+                        "event": "generation_error",
+                        "error_code": err_code,
+                        "error_message": err_message,
+                    },
+                )
+                inc("resume", "errors")
+                if args.require_artifact:
+                    sys.exit(5)
+                return
+
             artifact_path = os.path.join(args.output_dir, f"resume_artifact_{ts}.txt")
             try:
                 with open(artifact_path, "w", encoding="utf-8") as f:

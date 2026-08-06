@@ -69,6 +69,49 @@ def test_context_normalization_skips_placeholder_linkedin_note():
     assert "linkedin_profile" not in normalized
 
 
+def test_input_validation_fails_when_sources_are_placeholders():
+    context = {
+        "selected_base_resume": "[Paste Resume B - Platform Stabilization content here]",
+        "job_description": "Real JD content",
+    }
+    user_ctx = {
+        "base_resume_a": "[Paste Resume A - Risk & AI Governance content here]",
+        "base_resume_b": "[Paste Resume B - Platform Stabilization content here]",
+        "base_resume_c": "[Paste Resume C - AI Product/CPO Conversion content here]",
+        "linkedin_profile": "[Paste full LinkedIn history here]",
+        "operator_brief_a": "[Paste Track A operator brief here]",
+        "operator_brief_b": "[Paste Track B operator brief here]",
+        "operator_brief_c": "[Paste Track C operator brief here]",
+        "master_resume": "[Paste legacy master resume content here]",
+    }
+
+    result = resume_tailor._validate_resume_inputs(context, user_ctx)
+
+    assert result["status"] == "fail"
+    assert result["reason"] == "missing_sources"
+    assert "Selected Base Resume" in result["missing_fields"]
+    assert "Ground-Truth Inventory" in result["missing_fields"]
+    assert "INPUT VALIDATION FAILED" in result["message"]
+
+
+def test_input_validation_fails_when_jd_is_placeholder_even_with_sources():
+    context = {
+        "selected_base_resume": "Real base resume content",
+        "job_description": "[Paste JD text here]",
+    }
+    user_ctx = {
+        "base_resume_b": "Real base resume content",
+        "linkedin_profile": "Real LinkedIn history",
+    }
+
+    result = resume_tailor._validate_resume_inputs(context, user_ctx)
+
+    assert result["status"] == "fail"
+    assert result["reason"] == "missing_jd"
+    assert "Target Job Description" in result["missing_fields"]
+    assert "Missing Target Job Description content" in result["message"]
+
+
 def test_gap_line_format_accepts_canonical_policy_line():
     text = "GAP: JD requires [Splunk ITSI]. Not found in source materials. Resume generated without this claim."
     assert verify_output.find_non_canonical_gap_lines(text) == []
