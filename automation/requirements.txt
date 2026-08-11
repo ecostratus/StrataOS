@@ -22,4 +22,4 @@ python-dotenv>=1.0.0
 openai>=2.52.0
 
 # Scheduling
-schedule>=1.2.0
+schedule>=1.2.2
