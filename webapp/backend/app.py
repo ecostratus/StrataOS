@@ -3,6 +3,7 @@ from __future__ import annotations
 import csv
 import glob
 import json
+import logging
 import os
 import re
 import sqlite3
@@ -10,6 +11,7 @@ import subprocess
 import sys
 import tempfile
 import time
+from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -29,6 +31,7 @@ from .generation import generate_artifact
 from .schemas import (
 	ArtifactResult,
 	JobStatusUpdateRequest,
+	PromptDebugInfo,
 	PromptArtifact,
 	PromptError,
 	PromptGenerationResponse,
@@ -69,12 +72,6 @@ VERIFY_RESUME_OUTPUT = load_module_from_path(
 
 PYTHON_BIN = os.environ.get("STRATAOS_PYTHON", sys.executable)
 
-SCORING_THRESHOLDS = {
-	"exceptional": 0.8,
-	"strong": 0.6,
-	"moderate": 0.4,
-}
-
 BUCKET_COLORS = {
 	"Exceptional": "#15803d",
 	"Strong": "#0ea5e9",
@@ -110,9 +107,46 @@ JOBS_INDEXES: dict[str, str] = {
 	"idx_jobs_title_normalized": "CREATE INDEX IF NOT EXISTS idx_jobs_title_normalized ON jobs(title_normalized)",
 }
 
+logger = logging.getLogger(__name__)
+
+
+def _runtime_config_json_path() -> Path:
+	return ENV_JSON_PATH if ENV_JSON_PATH.exists() else ENV_SAMPLE_PATH
+
+
+def _initialize_runtime_configs() -> None:
+	json_path = _runtime_config_json_path()
+	config.initialize(env_path=str(ROOT / ".env"), json_path=str(json_path))
+	generation_module.config.initialize(env_path=str(ROOT / ".env"), json_path=str(json_path))
+
+
+_initialize_runtime_configs()
+
 
 def utc_now() -> str:
 	return datetime.now(timezone.utc).isoformat()
+
+
+def _load_scoring_thresholds() -> dict[str, float]:
+	defaults = {
+		"exceptional": 0.8,
+		"strong": 0.6,
+		"moderate": 0.4,
+	}
+	raw_thresholds = config.get_json("scoring.thresholds", {})
+	if not isinstance(raw_thresholds, dict):
+		return defaults
+
+	thresholds: dict[str, float] = {}
+	for key, fallback in defaults.items():
+		try:
+			thresholds[key] = float(raw_thresholds.get(key, fallback))
+		except Exception:
+			thresholds[key] = fallback
+	return thresholds
+
+
+SCORING_THRESHOLDS = _load_scoring_thresholds()
 
 
 def connect_db() -> sqlite3.Connection:
@@ -152,13 +186,42 @@ def _normalize_value(value: Any) -> str:
 	return " ".join(str(value).strip().lower().split())
 
 
+def _is_fixture_resume_context(path: Path) -> bool:
+	"""Return True when a resume context file looks like synthetic fixture content."""
+	try:
+		payload = json.loads(path.read_text(encoding="utf-8"))
+	except Exception:
+		return False
+	if not isinstance(payload, dict):
+		return False
+
+	fields = [
+		str(payload.get("base_resume_a", "") or ""),
+		str(payload.get("base_resume_b", "") or ""),
+		str(payload.get("base_resume_c", "") or ""),
+		str(payload.get("master_resume", "") or ""),
+	]
+	text = "\n".join(fields).lower()
+	markers = (
+		"company alpha",
+		"company beta",
+		"example university",
+		"candidate name",
+	)
+	hits = sum(1 for marker in markers if marker in text)
+	return hits >= 2
+
+
 def _resolve_resume_context_path() -> Path:
 	configured = Path(str(config.get("RESUME_USER_CONTEXT_PATH", str(DEFAULT_RESUME_CONTEXT))) or str(DEFAULT_RESUME_CONTEXT))
 	if configured.exists() and configured != DEFAULT_RESUME_CONTEXT:
 		return configured
 
 	if LOCAL_RESUME_CONTEXT.exists():
-		return LOCAL_RESUME_CONTEXT
+		if _is_fixture_resume_context(LOCAL_RESUME_CONTEXT):
+			logger.warning("Skipping fixture-style local resume context file: %s", LOCAL_RESUME_CONTEXT)
+		else:
+			return LOCAL_RESUME_CONTEXT
 
 	if configured.exists():
 		return configured
@@ -340,6 +403,66 @@ def _extract_saved_prompt_path(stdout: str) -> str | None:
 	return m.group(1).strip()
 
 
+def _extract_resume_prompt_debug(prompt_text: str) -> dict[str, str | None]:
+	text = str(prompt_text or "")
+	selected_track = None
+	track_selection_reason = None
+	selected_base_template = None
+
+	for raw_line in text.splitlines():
+		line = raw_line.strip()
+		if line.startswith("- Selected Track:"):
+			selected_track = line.split(":", 1)[1].strip()
+		elif line.startswith("- Base Template:"):
+			selected_base_template = line.split(":", 1)[1].strip()
+		elif line.startswith("- Selection Reason:"):
+			track_selection_reason = line.split(":", 1)[1].strip()
+
+	return {
+		"selected_track": selected_track,
+		"selected_base_template": selected_base_template,
+		"track_selection_reason": track_selection_reason,
+	}
+
+
+def _build_prompt_debug_info(
+	*,
+	prompt_type: str,
+	prompt_path: str | None,
+	raw_response_path: str | None,
+	resolved_context_path: str | None,
+	prompt_text: str,
+	reason_codes: list[str] | None = None,
+	validation_mode: str | None = None,
+	validation_status: str | None = None,
+	validation_reason: str | None = None,
+) -> PromptDebugInfo | None:
+	if prompt_type != "resume":
+		return PromptDebugInfo(
+			prompt_path=prompt_path,
+			raw_response_path=raw_response_path,
+			resolved_context_path=resolved_context_path,
+			reason_codes=reason_codes or [],
+			validation_mode=validation_mode,
+			validation_status=validation_status,
+			validation_reason=validation_reason,
+		)
+
+	prompt_debug = _extract_resume_prompt_debug(prompt_text)
+	return PromptDebugInfo(
+		prompt_path=prompt_path,
+		raw_response_path=raw_response_path,
+		resolved_context_path=resolved_context_path,
+		selected_track=prompt_debug.get("selected_track"),
+		selected_base_template=prompt_debug.get("selected_base_template"),
+		track_selection_reason=prompt_debug.get("track_selection_reason"),
+		reason_codes=reason_codes or [],
+		validation_mode=validation_mode,
+		validation_status=validation_status,
+		validation_reason=validation_reason,
+	)
+
+
 def _validate_resume_source_map(artifact_text: str) -> tuple[bool, str]:
 	text = str(artifact_text or "")
 	if not text.strip():
@@ -347,35 +470,68 @@ def _validate_resume_source_map(artifact_text: str) -> tuple[bool, str]:
 
 	lines = text.splitlines()
 	source_map_start = None
-	section1_start = None
-	section2_start = None
-
+	resume_section_found = False
 	for idx, line in enumerate(lines):
 		line_l = line.strip().lower()
-		if source_map_start is None and re.search(r"(^|\s)0\.5\.?\s+source map\b", line_l):
+		if source_map_start is None and re.search(r"(^|\s)(?:#+\s*)?(?:0\.5\.?\s+)?source map\b", line_l):
 			source_map_start = idx
-		if section1_start is None and line_l.startswith("### 1."):
-			section1_start = idx
-		if section2_start is None and line_l.startswith("### 2."):
-			section2_start = idx
+		if line_l in {
+			"**professional summary**",
+			"professional summary",
+			"## professional summary",
+			"**professional experience**",
+			"professional experience",
+			"## professional experience",
+			"**skills**",
+			"skills",
+			"## skills",
+			"**education**",
+			"education",
+			"## education",
+		} or line_l.startswith("### 1."):
+			resume_section_found = True
 
 	if source_map_start is None:
 		return False, "missing Source Map section"
-	if section1_start is None:
-		return False, "missing Section 1 tailored content"
+	if not resume_section_found:
+		return False, "missing recognizable resume content sections"
 
 	mapping_lines = 0
-	for line in lines[source_map_start:section1_start]:
+	mapping_start = source_map_start
+	for line in lines[source_map_start:]:
 		if "-> sourced from" in line.lower():
 			mapping_lines += 1
 
 	if mapping_lines == 0:
 		return False, "source map contains no mapping lines"
 
-	section1_end = section2_start if section2_start is not None else len(lines)
-	bullet_lines = [line for line in lines[section1_start:section1_end] if line.strip().startswith("-")]
-	if bullet_lines and mapping_lines < len(bullet_lines):
-		return False, f"source map coverage mismatch (mappings={mapping_lines}, bullets={len(bullet_lines)})"
+	resume_section_labels = {
+		"professional summary",
+		"professional experience",
+		"selected enterprise experience",
+		"skills",
+		"education",
+	}
+	resume_bullets = 0
+	in_resume_section = False
+	for idx, raw in enumerate(lines):
+		if idx >= mapping_start:
+			break
+		line = raw.strip()
+		line_l = line.lower().strip("*# ")
+		if line_l in resume_section_labels:
+			in_resume_section = True
+			continue
+		if line_l.startswith("gap:"):
+			continue
+		if line_l.startswith("## ") or line_l.startswith("### "):
+			in_resume_section = False
+			continue
+		if in_resume_section and line.startswith("-"):
+			resume_bullets += 1
+
+	if resume_bullets > 0 and mapping_lines < resume_bullets:
+		return False, f"source map coverage mismatch (mappings={mapping_lines}, resume_bullets={resume_bullets})"
 
 	return True, ""
 
@@ -394,6 +550,68 @@ def _validate_resume_output_guardrails(artifact_text: str) -> tuple[bool, str]:
 			return False, "contains unsupported ATS scoring"
 
 	return True, ""
+
+
+def _extract_resume_display_text(artifact_text: str) -> str:
+	text = str(artifact_text or "")
+	if not text.strip():
+		return ""
+
+	lines = text.splitlines()
+	display_lines: list[str] = []
+	started = False
+	in_education = False
+	for line in lines:
+		line_l = line.strip().lower()
+		line_core = line_l.strip("*# ")
+		is_resume_start = line_l in {
+			"# candidate name",
+			"**candidate name**",
+			"**professional summary**",
+			"professional summary",
+			"## professional summary",
+			"**professional experience**",
+			"professional experience",
+			"## professional experience",
+			"**skills**",
+			"skills",
+			"## skills",
+			"**education**",
+			"education",
+			"## education",
+		} or line_l.startswith("### 1.")
+		is_diagnostic = bool(re.match(r"^(#{2,3}\s*)?(0\.5\.?\s+source map|[234]\.)", line_core)) or line_l.startswith("## quality checklist") or line_l in {
+			"# gap analysis",
+			"**gap**",
+			"gap analysis",
+			"### 0. policy compliance report",
+		}
+		if line_core in {"education", "## education", "**education**"}:
+			in_education = True
+		elif line_core in {"professional summary", "professional experience", "skills", "selected enterprise experience"}:
+			in_education = False
+		if not started:
+			if is_resume_start:
+				started = True
+				if not line_l.startswith("### 1."):
+					display_lines.append(line)
+			continue
+		if is_diagnostic:
+			break
+		if line_core.startswith("gap:"):
+			continue
+		if in_education and (
+			"[name of degree]" in line_l
+			or "[name of institution]" in line_l
+			or "[content from base resume or omit]" in line_l
+			or "details are not available" in line_l
+			or "unspecified" in line_l
+		):
+			continue
+		display_lines.append(line)
+
+	display_text = "\n".join(display_lines).strip()
+	return display_text or text.strip()
 
 
 def _validate_resume_prose_claims(prompt_text: str, context_path: Path, artifact_text: str) -> tuple[bool, str]:
@@ -430,6 +648,19 @@ def _resume_prose_validation_mode() -> str:
 	return "report"
 
 
+def _resume_source_map_validation_mode() -> str:
+	"""Return runtime mode for source-map validation.
+
+	Modes:
+	- enforce: retry/fail on source-map mismatch
+	- report: log mismatch but continue (default runtime path)
+	"""
+	raw = str(config.get_json("resume.source_map_validation_mode", "enforce") or "enforce").strip().lower()
+	if raw in {"enforce", "report"}:
+		return raw
+	return "enforce"
+
+
 def _build_resume_source_map_repair_prompt(prompt_text: str, source_map_reason: str) -> str:
 	return (
 		"The previous resume draft failed source-map validation because: "
@@ -437,6 +668,22 @@ def _build_resume_source_map_repair_prompt(prompt_text: str, source_map_reason: 
 		"### 0.5. Source Map (required)" " section before Section 1. "
 		"Every bullet in Section 1 must have exactly one mapping line in the Source Map. "
 		"Do not omit the Source Map section, do not rename it, and do not return notes about the failure.\n\n"
+		f"{prompt_text}"
+	)
+
+
+def _looks_like_input_validation_failure_output(text: str) -> bool:
+	normalized = str(text or "").strip().lower()
+	if not normalized:
+		return False
+	return "input validation failed" in normalized and "missing target job description" in normalized
+
+
+def _build_resume_input_validation_repair_prompt(prompt_text: str) -> str:
+	return (
+		"SYSTEM OVERRIDE INSTRUCTION:\n"
+		"Input validation already passed on the backend with non-empty target job description and source inventory. "
+		"Do NOT output INPUT VALIDATION FAILED. Produce the full tailored resume now and comply with source-map requirements.\n\n"
 		f"{prompt_text}"
 	)
 
@@ -872,7 +1119,16 @@ def _decode_jobs_rows(rows: list[sqlite3.Row]) -> list[dict[str, object]]:
 			item["raw_json"] = {}
 		items.append(item)
 	return items
-app = FastAPI(title="StrataOS Control Center API", version="1.0.0")
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+	_initialize_runtime_configs()
+	init_db()
+	yield
+
+
+app = FastAPI(title="StrataOS Control Center API", version="1.0.0", lifespan=lifespan)
 
 app.add_middleware(
 	CORSMiddleware,
@@ -881,12 +1137,6 @@ app.add_middleware(
 	allow_methods=["*"],
 	allow_headers=["*"],
 )
-
-
-@app.on_event("startup")
-def on_startup() -> None:
-	init_db()
-
 
 @app.get("/api/health")
 def health() -> dict[str, Any]:
@@ -1119,12 +1369,52 @@ def _create_prompt(prompt_type: str, request: PromptRequest) -> PromptGeneration
 	job_payload: dict[str, Any] | None = request.job_json
 	if prompt_type not in context_only_prompt_types:
 		if request.job_id is not None:
-			job_payload = _get_job(request.job_id).get("raw_json") or {}
+			full_job = _get_job(request.job_id)
+			raw_job = full_job.get("raw_json") or {}
+			if not isinstance(raw_job, dict):
+				raw_job = {}
+			job_payload = {
+				**raw_job,
+				"title": full_job.get("title") or raw_job.get("title"),
+				"company": full_job.get("company") or raw_job.get("company"),
+				"job_description": raw_job.get("job_description") or raw_job.get("search_text") or full_job.get("search_document") or "",
+				"search_text": raw_job.get("search_text") or full_job.get("search_document") or "",
+				"summary": raw_job.get("summary") or raw_job.get("search_text") or full_job.get("search_document") or "",
+				"description": raw_job.get("description") or raw_job.get("search_text") or full_job.get("search_document") or "",
+			}
 		if not job_payload:
 			raise HTTPException(status_code=400, detail="Provide job_id or job_json")
 
 	output_dir.mkdir(parents=True, exist_ok=True)
 	context_path = Path(request.context_path) if request.context_path else default_context
+	resolved_context_path = str(context_path)
+
+	if prompt_type == "resume" and context_path.exists() and _is_fixture_resume_context(context_path):
+		debug_info = _build_prompt_debug_info(
+			prompt_type=prompt_type,
+			prompt_path=None,
+			raw_response_path=None,
+			resolved_context_path=resolved_context_path,
+			prompt_text="",
+			reason_codes=["fixture_context_blocked"],
+			validation_mode=_resume_prose_validation_mode(),
+			validation_status="input_validation_failed",
+			validation_reason="fixture_context_blocked",
+		)
+		return PromptGenerationResponse(
+			status="error",
+			prompt_run_id=0,
+			prompt_type=prompt_type,
+			generation_path=None,
+			artifact=None,
+			prompt_text="",
+			output_path=None,
+			debug=debug_info,
+			error=PromptError(
+				message="Resume context is blocked because it matches known fixture/sample markers. Provide a real source-grounded context file.",
+				code="fixture_context_blocked",
+			),
+		)
 
 	# Context-only prompts use context_path only; other prompts also pass a job JSON file.
 	if prompt_type in context_only_prompt_types:
@@ -1166,6 +1456,41 @@ def _create_prompt(prompt_type: str, request: PromptRequest) -> PromptGeneration
 	if saved_path and Path(saved_path).exists():
 		prompt_text = Path(saved_path).read_text(encoding="utf-8")
 
+	if prompt_type == "resume" and prompt_text.strip().startswith("INPUT VALIDATION FAILED"):
+		return PromptGenerationResponse(
+			status="error",
+			prompt_run_id=0,
+			prompt_type=prompt_type,
+			generation_path=None,
+			artifact=None,
+			prompt_text=prompt_text,
+			output_path=saved_path,
+			debug=_build_prompt_debug_info(
+				prompt_type=prompt_type,
+				prompt_path=saved_path,
+				raw_response_path=None,
+				resolved_context_path=str(context_path),
+				prompt_text=prompt_text,
+				reason_codes=["input_validation_failed"],
+				validation_mode=_resume_prose_validation_mode(),
+				validation_status="input_validation_failed",
+				validation_reason="invalid_input",
+			),
+			error=PromptError(
+				message="Resume input validation failed. Populate source inventory and job description, then retry.",
+				code="input_validation_failed",
+			),
+		)
+
+	debug_info = _build_prompt_debug_info(
+		prompt_type=prompt_type,
+		prompt_path=saved_path,
+		raw_response_path=None,
+		resolved_context_path=resolved_context_path,
+		prompt_text=prompt_text,
+		reason_codes=[],
+	)
+
 	conn = connect_db()
 	try:
 		cur = conn.execute(
@@ -1186,6 +1511,11 @@ def _create_prompt(prompt_type: str, request: PromptRequest) -> PromptGeneration
 
 	if proc.returncode != 0:
 		if prompt_type == "resume" and proc.returncode == 4:
+			if debug_info is not None:
+				debug_info.validation_mode = _resume_prose_validation_mode()
+				debug_info.validation_status = "input_validation_failed"
+				debug_info.validation_reason = "invalid_input"
+				debug_info.reason_codes = ["input_validation_failed"]
 			_emit_resume_generation_event(
 				"input_validation_failed",
 				prompt_run_id,
@@ -1199,6 +1529,7 @@ def _create_prompt(prompt_type: str, request: PromptRequest) -> PromptGeneration
 				artifact=None,
 				prompt_text=prompt_text,
 				output_path=saved_path,
+				debug=debug_info,
 				error=PromptError(
 					message="Resume input validation failed. Populate source inventory and job description, then retry.",
 					code="input_validation_failed",
@@ -1211,6 +1542,7 @@ def _create_prompt(prompt_type: str, request: PromptRequest) -> PromptGeneration
 			artifact=None,
 			prompt_text=prompt_text,
 			output_path=saved_path,
+			debug=debug_info,
 			error=PromptError(
 				message="The prompt preparation step failed. Please try again.",
 				code="prompt_build_failed",
@@ -1219,7 +1551,21 @@ def _create_prompt(prompt_type: str, request: PromptRequest) -> PromptGeneration
 
 	generation_path = "direct"
 	artifact_result: ArtifactResult = generate_artifact(prompt_text, prompt_type)
+	raw_response_path: str | None = None
+	if prompt_type == "resume" and saved_path and artifact_result.raw_response:
+		try:
+			raw_response_path = saved_path.replace("_prompt_", "_llm_raw_")
+			Path(raw_response_path).write_text(artifact_result.raw_response, encoding="utf-8")
+		except Exception:
+			raw_response_path = None
+	if debug_info is not None:
+		debug_info.raw_response_path = raw_response_path
+		debug_info.validation_status = "llm_generated"
 	if not artifact_result.ok:
+		if debug_info is not None:
+			debug_info.validation_status = "llm_generation_failed"
+			debug_info.validation_reason = artifact_result.error_code or "generation_failed"
+			debug_info.reason_codes = [artifact_result.error_code or "generation_failed"]
 		_emit_resume_generation_event(
 			"generation_failed",
 			prompt_run_id,
@@ -1234,78 +1580,136 @@ def _create_prompt(prompt_type: str, request: PromptRequest) -> PromptGeneration
 			artifact=None,
 			prompt_text=prompt_text,
 			output_path=saved_path,
+			debug=debug_info,
 			error=PromptError(
 				message=artifact_result.error_message or "The content could not be generated right now. Please try again.",
 				code=artifact_result.error_code or "generation_failed",
 			),
 		)
 
-	if prompt_type == "resume":
-		source_map_ok, source_map_reason = _validate_resume_source_map(artifact_result.content or "")
-		if not source_map_ok:
-			repair_prompt_text = _build_resume_source_map_repair_prompt(prompt_text, source_map_reason)
-			_emit_resume_generation_event(
-				"generation_retry_requested",
-				prompt_run_id,
-				generation_path="direct",
-				reason=source_map_reason,
-			)
-			repair_result: ArtifactResult = generate_artifact(repair_prompt_text, prompt_type)
-			if not repair_result.ok:
-				_emit_resume_generation_event(
-					"generation_failed",
-					prompt_run_id,
-					generation_path="repair",
-					error_code=repair_result.error_code or "generation_failed",
-				)
-				return PromptGenerationResponse(
-					status="error",
-					prompt_run_id=prompt_run_id,
-					prompt_type=prompt_type,
-					generation_path="repair",
-					artifact=None,
-					prompt_text=prompt_text,
-					output_path=saved_path,
-					error=PromptError(
-						message=repair_result.error_message or "The content could not be generated right now. Please try again.",
-						code=repair_result.error_code or "generation_failed",
-					),
-				)
-
-			repair_ok, repair_reason = _validate_resume_source_map(repair_result.content or "")
-			if not repair_ok:
-				_emit_resume_generation_event(
-					"generation_failed",
-					prompt_run_id,
-					generation_path="repair",
-					reason=repair_reason,
-				)
-				return PromptGenerationResponse(
-					status="error",
-					prompt_run_id=prompt_run_id,
-					prompt_type=prompt_type,
-					generation_path="repair",
-					artifact=None,
-					prompt_text=prompt_text,
-					output_path=saved_path,
-					error=PromptError(
-						message=f"Resume traceability validation failed: {repair_reason}",
-						code="source_map_validation_failed",
-					),
-				)
+	if prompt_type == "resume" and _looks_like_input_validation_failure_output(artifact_result.content or ""):
+		repair_prompt_text = _build_resume_input_validation_repair_prompt(prompt_text)
+		_emit_resume_generation_event(
+			"generation_retry_requested",
+			prompt_run_id,
+			generation_path="direct",
+			reason="llm_misclassified_input_validation",
+		)
+		repair_result: ArtifactResult = generate_artifact(repair_prompt_text, prompt_type)
+		if repair_result.ok and not _looks_like_input_validation_failure_output(repair_result.content or ""):
 			artifact_result = repair_result
 			generation_path = "repair"
+			if prompt_type == "resume" and saved_path and repair_result.raw_response:
+				try:
+					raw_response_path = saved_path.replace("_prompt_", "_llm_raw_repair_")
+					Path(raw_response_path).write_text(repair_result.raw_response, encoding="utf-8")
+				except Exception:
+					raw_response_path = raw_response_path
+			if debug_info is not None:
+				debug_info.validation_status = "llm_repaired"
+				debug_info.reason_codes = []
+				debug_info.raw_response_path = raw_response_path
 			_emit_resume_generation_event(
 				"generation_repaired",
 				prompt_run_id,
 				generation_path="repair",
-				reason=source_map_reason,
+				reason="llm_misclassified_input_validation",
 			)
+
+	if prompt_type == "resume":
+		source_map_mode = _resume_source_map_validation_mode()
+		source_map_ok, source_map_reason = _validate_resume_source_map(artifact_result.content or "")
+		if not source_map_ok:
+			if source_map_mode == "enforce":
+				if debug_info is not None:
+					debug_info.validation_mode = _resume_prose_validation_mode()
+					debug_info.validation_status = "source_map_failed"
+					debug_info.validation_reason = source_map_reason
+					debug_info.reason_codes = ["source_map_coverage_mismatch"]
+				repair_prompt_text = _build_resume_source_map_repair_prompt(prompt_text, source_map_reason)
+				_emit_resume_generation_event(
+					"generation_retry_requested",
+					prompt_run_id,
+					generation_path="direct",
+					reason=source_map_reason,
+				)
+				repair_result: ArtifactResult = generate_artifact(repair_prompt_text, prompt_type)
+				if not repair_result.ok:
+					_emit_resume_generation_event(
+						"generation_failed",
+						prompt_run_id,
+						generation_path="repair",
+						error_code=repair_result.error_code or "generation_failed",
+					)
+					return PromptGenerationResponse(
+						status="error",
+						prompt_run_id=prompt_run_id,
+						prompt_type=prompt_type,
+						generation_path="repair",
+						artifact=None,
+						prompt_text=prompt_text,
+						output_path=saved_path,
+						debug=debug_info,
+						error=PromptError(
+							message=repair_result.error_message or "The content could not be generated right now. Please try again.",
+							code=repair_result.error_code or "generation_failed",
+						),
+					)
+
+				repair_ok, repair_reason = _validate_resume_source_map(repair_result.content or "")
+				if not repair_ok:
+					_emit_resume_generation_event(
+						"generation_failed",
+						prompt_run_id,
+						generation_path="repair",
+						reason=repair_reason,
+					)
+					return PromptGenerationResponse(
+						status="error",
+						prompt_run_id=prompt_run_id,
+						prompt_type=prompt_type,
+						generation_path="repair",
+						artifact=None,
+						prompt_text=prompt_text,
+						output_path=saved_path,
+						debug=debug_info,
+						error=PromptError(
+							message=f"Resume traceability validation failed: {repair_reason}",
+							code="source_map_validation_failed",
+						),
+					)
+				artifact_result = repair_result
+				generation_path = "repair"
+				if debug_info is not None:
+					debug_info.validation_status = "source_map_repaired"
+					debug_info.reason_codes = []
+				_emit_resume_generation_event(
+					"generation_repaired",
+					prompt_run_id,
+					generation_path="repair",
+					reason=source_map_reason,
+				)
+			else:
+				_emit_resume_generation_event(
+					"generation_warning",
+					prompt_run_id,
+					generation_path=generation_path,
+					reason=f"source_map_report_only: {source_map_reason}",
+				)
+				if debug_info is not None:
+					debug_info.validation_status = "source_map_report_only"
+					debug_info.validation_reason = source_map_reason
+					debug_info.reason_codes = ["source_map_report_only"]
 		prose_mode = _resume_prose_validation_mode()
 		if prose_mode != "off":
 			prose_ok, prose_reason = _validate_resume_prose_claims(prompt_text, context_path, artifact_result.content or "")
 			if not prose_ok:
 				if prose_mode == "enforce":
+					if debug_info is not None:
+						debug_info.validation_mode = prose_mode
+						debug_info.validation_status = "resume_claim_validation_failed"
+						debug_info.validation_reason = prose_reason
+						debug_info.reason_codes = ["resume_claim_validation_failed"]
 					_emit_resume_generation_event(
 						"generation_failed",
 						prompt_run_id,
@@ -1320,6 +1724,7 @@ def _create_prompt(prompt_type: str, request: PromptRequest) -> PromptGeneration
 						artifact=None,
 						prompt_text=prompt_text,
 						output_path=saved_path,
+						debug=debug_info,
 						error=PromptError(
 							message=f"Resume claim validation failed: {prose_reason}",
 							code="resume_claim_validation_failed",
@@ -1331,8 +1736,18 @@ def _create_prompt(prompt_type: str, request: PromptRequest) -> PromptGeneration
 					generation_path=generation_path,
 					reason=f"resume_claim_validation_report_only: {prose_reason}",
 				)
+				if debug_info is not None:
+					debug_info.validation_mode = prose_mode
+					debug_info.validation_status = "resume_claim_validation_report_only"
+					debug_info.validation_reason = prose_reason
+					debug_info.reason_codes = ["resume_claim_validation_report_only"]
 		content_ok, content_reason = _validate_resume_output_guardrails(artifact_result.content or "")
 		if not content_ok:
+			if debug_info is not None:
+				debug_info.validation_mode = prose_mode
+				debug_info.validation_status = "resume_content_validation_failed"
+				debug_info.validation_reason = content_reason
+				debug_info.reason_codes = ["resume_content_validation_failed"]
 			_emit_resume_generation_event(
 				"generation_failed",
 				prompt_run_id,
@@ -1347,18 +1762,26 @@ def _create_prompt(prompt_type: str, request: PromptRequest) -> PromptGeneration
 				artifact=None,
 				prompt_text=prompt_text,
 				output_path=saved_path,
+				debug=debug_info,
 				error=PromptError(
 					message=f"Resume output validation failed: {content_reason}",
 					code="resume_content_validation_failed",
 				),
 			)
 		else:
+			if debug_info is not None:
+				debug_info.validation_mode = prose_mode
+				debug_info.validation_status = "resume_validated"
+				debug_info.reason_codes = []
 			_emit_resume_generation_event(
 				"generation_complete",
 				prompt_run_id,
 				generation_path=generation_path,
 			)
 	else:
+		if debug_info is not None:
+			debug_info.validation_status = "generation_complete"
+			debug_info.reason_codes = []
 		_emit_resume_generation_event(
 			"generation_complete",
 			prompt_run_id,
@@ -1367,10 +1790,11 @@ def _create_prompt(prompt_type: str, request: PromptRequest) -> PromptGeneration
 
 	# Save generated artifact alongside the prompt so post-generation checks have a target
 	artifact_path: str | None = None
-	if saved_path and artifact_result.content:
+	display_content = _extract_resume_display_text(artifact_result.content or "")
+	if saved_path and display_content:
 		try:
 			artifact_path = saved_path.replace("_prompt_", "_artifact_")
-			Path(artifact_path).write_text(artifact_result.content, encoding="utf-8")
+			Path(artifact_path).write_text(display_content, encoding="utf-8")
 		except Exception:
 			artifact_path = None
 
@@ -1379,9 +1803,10 @@ def _create_prompt(prompt_type: str, request: PromptRequest) -> PromptGeneration
 		prompt_run_id=prompt_run_id,
 		prompt_type=prompt_type,
 		generation_path=generation_path,
-		artifact=PromptArtifact(type=prompt_type, content=artifact_result.content or ""),
+		artifact=PromptArtifact(type=prompt_type, content=display_content or artifact_result.content or ""),
 		prompt_text=prompt_text,
 		output_path=artifact_path or saved_path,
+		debug=debug_info,
 		error=None,
 	)
 

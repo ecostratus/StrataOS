@@ -31,13 +31,35 @@ def _make_fake_prompt_subprocess(prompt_path: Path, prompt_text: str = "Prompt b
 
 
 def _set_success_config(monkeypatch):
-    monkeypatch.setattr(generation.config, "get", lambda key, default=None: {
+    values = {
         "AI_PROVIDER": "openai",
         "OPENAI_API_KEY": "real-key",
         "OPENAI_MODEL": "gpt-4",
         "OPENAI_TEMPERATURE": "0.2",
         "OPENAI_MAX_TOKENS": "256",
-    }.get(key, default))
+        "RESUME_USER_CONTEXT_PATH": str(app_module.ROOT / "config" / "resume_context_jnaphen.json"),
+    }
+    getter = lambda key, default=None: values.get(key, default)
+    monkeypatch.setattr(generation.config, "get", getter)
+    monkeypatch.setattr(app_module.config, "get", getter)
+    monkeypatch.setattr(
+        app_module.config,
+        "get_json",
+        lambda path, default=None: "enforce" if path == "resume.source_map_validation_mode" else default,
+    )
+
+
+def _patch_resume_prompt_subprocess(monkeypatch) -> None:
+    prompt_path = app_module.OUTPUT_DIR / "resume" / "resume_prompt_test.txt"
+    original_run = app_module._run_subprocess
+
+    def fake_run(command: list[str]):
+        command_text = " ".join(command)
+        if "resume_tailor_v1.py" in command_text:
+            return _make_fake_prompt_subprocess(prompt_path)
+        return original_run(command)
+
+    monkeypatch.setattr(app_module, "_run_subprocess", fake_run)
 
 
 class _FakeCompletionResponse:
@@ -181,7 +203,8 @@ def test_control_center_api_smoke(monkeypatch, tmp_path: Path):
         assert resume_payload["status"] == "ok"
         assert resume_payload["generation_path"] == "direct"
         assert resume_payload["artifact"]["type"] == "resume"
-        assert "### 0.5. Source Map" in resume_payload["artifact"]["content"]
+        assert resume_payload["artifact"]["content"] == "- Led platform modernization roadmap."
+        assert "Source Map" not in resume_payload["artifact"]["content"]
         assert "Prompt body" in resume_payload["prompt_text"]
 
         outreach = client.post("/api/prompts/outreach", json={"job_id": job_id, "no_sources": True})
@@ -652,6 +675,7 @@ def test_resume_prompt_source_map_validation_failure(monkeypatch, tmp_path: Path
 
 def test_resume_prompt_retries_with_source_map_repair(monkeypatch):
     _set_success_config(monkeypatch)
+    _patch_resume_prompt_subprocess(monkeypatch)
     call_count = {"value": 0}
 
     def fake_generate_artifact(prompt_text: str, kind: str):
@@ -703,6 +727,7 @@ def test_resume_prompt_retries_with_source_map_repair(monkeypatch):
 
 def test_resume_prompt_accepts_variant_source_map_heading(monkeypatch):
     _set_success_config(monkeypatch)
+    _patch_resume_prompt_subprocess(monkeypatch)
 
     def fake_generate_artifact(prompt_text: str, kind: str):
         return generation.ArtifactResult(
@@ -736,6 +761,7 @@ def test_resume_prompt_accepts_variant_source_map_heading(monkeypatch):
 
 def test_resume_prompt_rejects_ats_score_estimate(monkeypatch):
     _set_success_config(monkeypatch)
+    _patch_resume_prompt_subprocess(monkeypatch)
 
     def fake_generate_artifact(prompt_text: str, kind: str):
         return generation.ArtifactResult(
@@ -770,8 +796,41 @@ def test_resume_prompt_rejects_ats_score_estimate(monkeypatch):
         assert body["error"]["code"] == "resume_content_validation_failed"
 
 
+def test_resume_prompt_rejects_under_mapped_resume_bullets(monkeypatch):
+    _set_success_config(monkeypatch)
+    _patch_resume_prompt_subprocess(monkeypatch)
+
+    def fake_generate_artifact(prompt_text: str, kind: str):
+        return generation.ArtifactResult(
+            ok=True,
+            content="""
+# James Naphen
+
+## Professional Summary
+- Bullet one
+- Bullet two
+- Bullet three
+
+### 0.5. Source Map (required)
+- Professional Summary bullet 1 -> sourced from Resume B: Professional Summary
+""".strip(),
+        )
+
+    monkeypatch.setattr(app_module, "generate_artifact", fake_generate_artifact)
+
+    with TestClient(app_module.app) as client:
+        client.post("/api/runs/job-discovery")
+        job_id = client.get("/api/jobs").json()[0]["id"]
+        resume = client.post("/api/prompts/resume", json={"job_id": job_id, "no_sources": True})
+        assert resume.status_code == 200
+        body = resume.json()
+        assert body["status"] == "error"
+        assert body["error"]["code"] == "source_map_validation_failed"
+
+
 def test_resume_prompt_prose_violation_report_mode_allows_output(monkeypatch):
     _set_success_config(monkeypatch)
+    _patch_resume_prompt_subprocess(monkeypatch)
 
     def fake_generate_artifact(prompt_text: str, kind: str):
         return generation.ArtifactResult(

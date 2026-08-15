@@ -25,6 +25,7 @@ export default function App() {
   const [runs, setRuns] = useState([]);
   const [activity, setActivity] = useState([]);
   const [bucketColors, setBucketColors] = useState({});
+  const [scoreMetadata, setScoreMetadata] = useState({ thresholds: {} });
   const [loadingRun, setLoadingRun] = useState(false);
   const [generationState, setGenerationState] = useState({
     kind: null,
@@ -32,6 +33,7 @@ export default function App() {
     artifact: null,
     error: null,
     promptText: "",
+    debug: null,
   });
   const [selectedJobId, setSelectedJobId] = useState(null);
   const [status, setStatus] = useState("");
@@ -68,6 +70,7 @@ export default function App() {
     setRuns(runsData);
     setActivity(activityData);
     setBucketColors(scoring.bucketColors || {});
+    setScoreMetadata(scoring || { thresholds: {} });
     if (!selectedJobId && jobsData.length) {
       setSelectedJobId(jobsData[0].id);
       return;
@@ -141,6 +144,7 @@ export default function App() {
       artifact: null,
       error: null,
       promptText: "",
+      debug: null,
     });
     setShowPromptText(false);
     setStatus(`Generating your ${label}...`);
@@ -157,6 +161,7 @@ export default function App() {
           artifact: null,
           error: { message: errorMessage, code: errorCode },
           promptText: result.prompt_text || "",
+          debug: result.debug || null,
         });
         setStatus(errorMessage);
         return;
@@ -168,6 +173,7 @@ export default function App() {
         artifact: result.artifact || null,
         error: null,
         promptText: result.prompt_text || "",
+        debug: result.debug || null,
       });
       const readyLabel = {
         resume: "Resume",
@@ -186,6 +192,7 @@ export default function App() {
         artifact: null,
         error: { message, code: "network_error" },
         promptText: "",
+        debug: null,
       });
       setStatus(message);
     }
@@ -198,6 +205,7 @@ export default function App() {
       artifact: null,
       error: null,
       promptText: "",
+      debug: null,
     });
     setShowPromptText(false);
     setStatus("");
@@ -260,6 +268,34 @@ export default function App() {
     backgroundColor: (bucket && bucketColors[bucket]) || "#cbd5e1",
     color: "#0b1726"
   });
+
+  const getScorePercentValue = (score) => {
+    if (score == null) {
+      return null;
+    }
+
+    const numericScore = Number(score);
+    if (Number.isNaN(numericScore)) {
+      return null;
+    }
+
+    return Math.round(numericScore * 100);
+  };
+
+  const formatScorePercent = (score) => {
+    const percentValue = getScorePercentValue(score);
+    if (percentValue == null) {
+      return "-";
+    }
+
+    return `${percentValue}%`;
+  };
+
+  const thresholdPercent = (value, fallback) => {
+    const numericValue = Number(value);
+    const percentValue = Number.isFinite(numericValue) ? numericValue : fallback;
+    return Math.round(percentValue * 100);
+  };
 
   if (setupStatusLoading) {
     return (
@@ -453,7 +489,7 @@ export default function App() {
                     <th className="px-3 py-2">Run</th>
                     <th className="px-3 py-2">Company</th>
                     <th className="px-3 py-2">Role</th>
-                    <th className="px-3 py-2">Score</th>
+                    <th className="px-3 py-2">Score (%)</th>
                     <th className="px-3 py-2">Bucket</th>
                   </tr>
                 </thead>
@@ -467,7 +503,7 @@ export default function App() {
                       <td className="px-3 py-2 text-slate-500">#{job.run_id}</td>
                       <td className="px-3 py-2">{job.company || "-"}</td>
                       <td className="px-3 py-2">{job.title || "-"}</td>
-                      <td className="px-3 py-2">{job.score != null ? Number(job.score).toFixed(2) : "-"}</td>
+                      <td className="px-3 py-2">{formatScorePercent(job.score)}</td>
                       <td className="px-3 py-2">
                         <span className="rounded px-2 py-1 text-xs font-semibold" style={bucketBadge(job.bucket)}>
                           {job.bucket || "-"}
@@ -490,6 +526,27 @@ export default function App() {
                 <p><span className="font-semibold">Role:</span> {selectedJob.title || "-"}</p>
                 <p><span className="font-semibold">Location:</span> {selectedJob.location || "-"}</p>
                 <p><span className="font-semibold">Source:</span> {selectedJob.source || "-"}</p>
+                <div className="rounded border border-slate-200 bg-slate-50 p-3">
+                  <div className="flex items-baseline justify-between gap-3">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">Score</p>
+                    <span className="rounded px-2 py-1 text-xs font-semibold" style={bucketBadge(selectedJob.bucket)}>
+                      {selectedJob.bucket || "-"}
+                    </span>
+                  </div>
+                  <div className="mt-2 flex items-end gap-3">
+                    <div className="text-3xl font-bold text-slate-900">{formatScorePercent(selectedJob.score)}</div>
+                    <div className="pb-1 text-xs text-slate-500">Normalized weighted fit score</div>
+                  </div>
+                  <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-200">
+                    <div
+                      className="h-full rounded-full bg-teal-600"
+                      style={{ width: `${getScorePercentValue(selectedJob.score) ?? 0}%` }}
+                    />
+                  </div>
+                  <p className="mt-3 text-xs leading-5 text-slate-600">
+                    This is a normalized 0% to 100% weighted-fit value. {formatScorePercent(selectedJob.score)} means the job matched roughly that share of the configured maximum score, not a rank or count. Current bands: Moderate at {thresholdPercent(scoreMetadata.thresholds?.moderate, 0.4)}%+, Strong at {thresholdPercent(scoreMetadata.thresholds?.strong, 0.6)}%+, Exceptional at {thresholdPercent(scoreMetadata.thresholds?.exceptional, 0.8)}%+.
+                  </p>
+                </div>
                 <a className="break-all text-sky-700 underline" href={selectedJob.url || "#"} target="_blank" rel="noreferrer">
                   {selectedJob.url || "No URL"}
                 </a>
@@ -567,6 +624,36 @@ export default function App() {
                     </pre>
                   ) : null}
                 </div>
+
+                {generationState.debug ? (
+                  <div className="rounded border border-slate-200 bg-white p-3 text-sm">
+                    <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Run diagnostics</div>
+                    <div className="mt-2 grid gap-2 text-sm text-slate-700 md:grid-cols-2">
+                      <div><span className="font-semibold">Prompt path:</span> {generationState.debug.prompt_path || "-"}</div>
+                      <div><span className="font-semibold">Raw response path:</span> {generationState.debug.raw_response_path || "-"}</div>
+                      <div><span className="font-semibold">Resolved context path:</span> {generationState.debug.resolved_context_path || "-"}</div>
+                      <div><span className="font-semibold">Selected track:</span> {generationState.debug.selected_track || "-"}</div>
+                      <div><span className="font-semibold">Base template:</span> {generationState.debug.selected_base_template || "-"}</div>
+                      <div><span className="font-semibold">Validation mode:</span> {generationState.debug.validation_mode || "-"}</div>
+                      <div><span className="font-semibold">Validation status:</span> {generationState.debug.validation_status || "-"}</div>
+                    </div>
+                    {generationState.debug.track_selection_reason ? (
+                      <p className="mt-2 text-xs text-slate-600">
+                        <span className="font-semibold">Track reason:</span> {generationState.debug.track_selection_reason}
+                      </p>
+                    ) : null}
+                    {generationState.debug.validation_reason ? (
+                      <p className="mt-1 text-xs text-slate-600">
+                        <span className="font-semibold">Validation note:</span> {generationState.debug.validation_reason}
+                      </p>
+                    ) : null}
+                    {Array.isArray(generationState.debug.reason_codes) && generationState.debug.reason_codes.length > 0 ? (
+                      <p className="mt-1 text-xs text-slate-600">
+                        <span className="font-semibold">Reason codes:</span> {generationState.debug.reason_codes.join(", ")}
+                      </p>
+                    ) : null}
+                  </div>
+                ) : null}
               </div>
             ) : null}
           </div>

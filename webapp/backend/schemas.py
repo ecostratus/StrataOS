@@ -70,6 +70,19 @@ class PromptArtifact(BaseModel):
 	content: str
 
 
+class PromptDebugInfo(BaseModel):
+	prompt_path: str | None = None
+	raw_response_path: str | None = None
+	resolved_context_path: str | None = None
+	selected_track: str | None = None
+	selected_base_template: str | None = None
+	track_selection_reason: str | None = None
+	reason_codes: list[str] = Field(default_factory=list)
+	validation_mode: str | None = None
+	validation_status: str | None = None
+	validation_reason: str | None = None
+
+
 class PromptError(BaseModel):
 	message: str
 	code: str
@@ -83,6 +96,7 @@ class PromptGenerationResponse(BaseModel):
 	artifact: PromptArtifact | None = None
 	prompt_text: str = ""
 	output_path: str | None = None
+	debug: PromptDebugInfo | None = None
 	error: PromptError | None = None
 
 
@@ -90,5 +104,6 @@ class PromptGenerationResponse(BaseModel):
 class ArtifactResult:
 	ok: bool
 	content: str | None = None
+	raw_response: str | None = None
 	error_message: str | None = None
 	error_code: str | None = None

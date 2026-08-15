@@ -1,6 +1,6 @@
 import os
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
 _DEFAULT_LOG_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "logs")
@@ -23,7 +23,7 @@ def log_event(category: str, data: Dict[str, Any], log_file: Optional[str] = Non
         log_file: Optional explicit path to log file; defaults to logs/events.jsonl.
     """
     record = {
-        "ts": datetime.utcnow().isoformat() + "Z",
+        "ts": datetime.now(timezone.utc).isoformat(),
         "category": category,
         **data,
     }

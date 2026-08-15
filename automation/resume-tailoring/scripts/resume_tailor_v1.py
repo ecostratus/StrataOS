@@ -273,15 +273,17 @@ def _resolve_track(job: dict, user_ctx: dict, explicit_track: str | None) -> tup
     return _infer_track_from_title(str(job.get("title", "") or ""))
 
 
-def _build_inventory_block(user_ctx: dict) -> str:
+def _build_inventory_block(user_ctx: dict, selected_resume_field: str) -> str:
+    operator_brief_field = {
+        "base_resume_a": "operator_brief_a",
+        "base_resume_b": "operator_brief_b",
+        "base_resume_c": "operator_brief_c",
+    }.get(selected_resume_field, "operator_brief_b")
     ordered_fields = [
-        ("Resume A", "base_resume_a"),
-        ("Resume B", "base_resume_b"),
-        ("Resume C", "base_resume_c"),
+        ("Selected Base Resume", selected_resume_field),
         ("LinkedIn Profile", "linkedin_profile"),
-        ("Operator Brief A", "operator_brief_a"),
-        ("Operator Brief B", "operator_brief_b"),
-        ("Operator Brief C", "operator_brief_c"),
+        ("Selected Operator Brief", operator_brief_field),
+        ("Master Resume", "master_resume"),
     ]
     sections = []
     for label, field_name in ordered_fields:
@@ -307,34 +309,37 @@ def _validate_source_map_structure(resume_text: str) -> tuple[bool, str]:
     lines = text.splitlines()
 
     source_map_start = None
-    section1_start = None
-    section2_start = None
+    resume_section_found = False
     for idx, line in enumerate(lines):
         line_l = line.strip().lower()
-        if source_map_start is None and re.search(r"(^|\s)0\.5\.?\s+source map\b", line_l):
+        if source_map_start is None and re.search(r"(^|\s)(?:#+\s*)?(?:0\.5\.?\s+)?source map\b", line_l):
             source_map_start = idx
-        if section1_start is None and line_l.startswith("### 1."):
-            section1_start = idx
-        if section2_start is None and line_l.startswith("### 2."):
-            section2_start = idx
+        if line_l in {
+            "**professional summary**",
+            "professional summary",
+            "**professional experience**",
+            "professional experience",
+            "**skills**",
+            "skills",
+            "**education**",
+            "education",
+        }:
+            resume_section_found = True
 
     if source_map_start is None:
         return False, "missing required Source Map section"
-    if section1_start is None:
-        return False, "missing required Section 1 tailored resume content"
+    if not resume_section_found:
+        return False, "missing required resume content sections"
 
-    source_map_end = section1_start
     mapping_lines = 0
-    for line in lines[source_map_start:source_map_end]:
+    for line in lines[source_map_start:]:
         if "-> sourced from" in line.lower():
             mapping_lines += 1
 
     if mapping_lines == 0:
         return False, "source map contains no mapping lines"
 
-    section1_end = section2_start if section2_start is not None else len(lines)
-    section1_lines = lines[section1_start:section1_end]
-    bullet_lines = [line for line in section1_lines if line.strip().startswith("-")]
+    bullet_lines = [line for line in lines if line.strip().startswith("-")]
     if bullet_lines and mapping_lines < len(bullet_lines):
         return False, (
             f"source map coverage mismatch: mappings={mapping_lines}, section1_bullets={len(bullet_lines)}"
@@ -349,11 +354,14 @@ def _extract_job_description(job: dict[str, Any], user_ctx: dict[str, Any]) -> s
         job.get("description"),
         job.get("summary"),
         job.get("content"),
+        job.get("search_text"),
         user_ctx.get("job_description"),
     )
     for candidate in candidates:
         value = str(candidate or "").strip()
         if value:
+            if len(value) > 6000:
+                return value[:6000]
             return value
     return ""
 
@@ -623,7 +631,7 @@ def main():
             or user_ctx.get("master_resume")
             or ""
         ).strip()
-        ground_truth_inventory = _build_inventory_block(user_ctx)
+        ground_truth_inventory = _build_inventory_block(user_ctx, selected_resume_field)
         return {
             "company_name": job.get("company"),
             "job_title": job.get("title"),
