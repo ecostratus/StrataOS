@@ -19,8 +19,29 @@ fi
 echo "Using Python: $PYTHON_BIN"
 "$PYTHON_BIN" -m pip install -q -r "$BACKEND_REQ"
 
+port_in_use() {
+  local port="$1"
+  lsof -nP -iTCP:"$port" -sTCP:LISTEN >/dev/null 2>&1
+}
+
+print_port_owner() {
+  local port="$1"
+  lsof -nP -iTCP:"$port" -sTCP:LISTEN || true
+}
+
 if [[ "$DEV_MODE" == "true" ]]; then
   echo "Starting control center in dev mode"
+  if port_in_use 8811; then
+    echo "Port 8811 is already in use. Stop the existing process before starting dev mode."
+    print_port_owner 8811
+    exit 1
+  fi
+  if port_in_use 5173; then
+    echo "Port 5173 is already in use. Stop the existing frontend dev server before starting dev mode."
+    print_port_owner 5173
+    exit 1
+  fi
+
   if [[ ! -d "$FRONTEND_DIR/node_modules" ]]; then
     (cd "$FRONTEND_DIR" && npm install)
   fi
@@ -48,6 +69,12 @@ if [[ "$DEV_MODE" == "true" ]]; then
   wait
 else
   echo "Starting control center in single-port mode"
+  if port_in_use 8811; then
+    echo "Port 8811 is already in use. Another control-center instance may be running."
+    print_port_owner 8811
+    exit 1
+  fi
+
   if [[ ! -d "$FRONTEND_DIR/node_modules" ]]; then
     (cd "$FRONTEND_DIR" && npm install)
   fi
