@@ -27,6 +27,7 @@ output/
 
 # Local sensitive resume context and runtime logs
 config/resume_context_jnaphen.json
+config/resume_context.local.json
 logs/events.jsonl
 logs/greenhouse_week1_telemetry.jsonl
 logs/metrics.json
