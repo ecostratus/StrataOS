@@ -100,6 +100,8 @@ def test_create_issue_posts_expected_payload(monkeypatch, capsys):
             "Hygiene follow-up",
             "--body",
             "Triaged from audit",
+            "--label",
+            "triage",
         ]
     )
 
@@ -108,7 +110,7 @@ def test_create_issue_posts_expected_payload(monkeypatch, capsys):
         "endpoint": "repos/ecostratus/StrataOS/issues",
         "token": "token-from-env",
         "method": "POST",
-        "data": {"title": "Hygiene follow-up", "body": "Triaged from audit"},
+        "data": {"title": "Hygiene follow-up", "body": "Triaged from audit", "labels": ["triage"]},
         "api_url": github_auth.DEFAULT_API_URL,
     }
     assert "Created issue #42" in capsys.readouterr().out

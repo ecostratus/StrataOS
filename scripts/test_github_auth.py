@@ -56,6 +56,9 @@ def main():
         except urllib.error.HTTPError as exc:
             rate_limit = None
             print(f" API request failed: {format_http_error(exc)}")
+        except Exception as exc:
+            rate_limit = None
+            print(f" Error making API request: {exc}")
         if rate_limit:
             core = rate_limit.get("rate", {})
             remaining = core.get("remaining", 0)
