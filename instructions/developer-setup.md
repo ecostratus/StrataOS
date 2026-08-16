@@ -191,6 +191,8 @@ Add to your `config/env.json` or set as environment variable:
 export GITHUB_TOKEN="your_token_here"
 ```
 
+This token can be used directly by repository automation, including `scripts/create_github_issue.py`, even when interactive `gh auth login` is unavailable.
+
 Or add to your shell profile (~/.bashrc, ~/.zshrc, etc.):
 
 ```bash
@@ -226,7 +228,7 @@ python automation/job-discovery/scripts/job_discovery_v1.py --out-dir ./output
 
 **Problem:** `gh auth status` shows not authenticated
 
-**Solution:** Run `gh auth login` again and complete the authentication flow.
+**Solution:** Run `gh auth login` again and complete the authentication flow, or export `GH_TOKEN`/`GITHUB_TOKEN` and rerun `./scripts/setup_github_auth.sh` for non-interactive login.
 
 **Problem:** Token expired
 

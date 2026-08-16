@@ -51,8 +51,14 @@ echo "  2. Authenticate via GitHub"
 echo "  3. Choose default git protocol (HTTPS or SSH)"
 echo ""
 
-# Run gh auth login
-gh auth login
+TOKEN="${GH_TOKEN:-${GITHUB_TOKEN:-}}"
+if [[ -n "$TOKEN" ]]; then
+    echo "Using token from environment (GH_TOKEN/GITHUB_TOKEN) for non-interactive login..."
+    printf '%s' "$TOKEN" | gh auth login --with-token --git-protocol https
+else
+    # Run gh auth login
+    gh auth login
+fi
 
 # Verify authentication
 echo ""

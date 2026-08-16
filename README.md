@@ -82,6 +82,9 @@ Quick authentication:
 
 # Or manually
 gh auth login
+
+# Or validate token-backed issue creation without opening an issue
+python3 scripts/create_github_issue.py --repo ecostratus/StrataOS --title "Example issue" --body "Example body" --dry-run
 ```
 
 ### 2. Review Core Documentation
