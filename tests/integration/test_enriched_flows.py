@@ -1,4 +1,11 @@
-from automation.job-discovery.scripts.enrichment_transforms import enrich_job
+from automation.common.import_helpers import load_module_from_path
+
+_mod = load_module_from_path(
+    "automation/job-discovery/scripts/enrichment_transforms.py",
+    "job_discovery_enrichment_transforms_integration",
+)
+assert _mod is not None
+enrich_job = _mod.enrich_job
 
 
 def test_cloud_and_ml_tags_present_for_matching_roles():

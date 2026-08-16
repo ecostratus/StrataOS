@@ -26,10 +26,14 @@ from filters import normalize_terms, matches_filters  # type: ignore
 def test_config_enable_disable_and_malformed_filtered(monkeypatch):
     # Enable only LinkedIn
     class DummyConfig:
+        def to_dict(self):
+            return {}
+
         def get_bool(self, key, default=False):
             return key == "LINKEDIN_ENABLED"
 
     monkeypatch.setattr(orchestrator, "config", DummyConfig())
+    monkeypatch.setattr(sources, "get_blocked_sources_by_policy", lambda cfg, enabled: [])
 
     # Return one valid and one malformed entry from LinkedIn
     def fake_linkedin():
@@ -118,6 +122,9 @@ def test_main_filters_and_csv_export_deterministic(monkeypatch, tmp_path):
     class DummyConfig:
         def initialize(self, **kwargs):
             return None
+
+        def to_dict(self):
+            return {}
 
         def get(self, key, default=None):
             if key == "SYSTEM_ENVIRONMENT":

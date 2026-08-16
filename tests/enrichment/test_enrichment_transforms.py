@@ -1,12 +1,18 @@
 import pytest
 
-from automation.job-discovery.scripts.enrichment_transforms import (
-    infer_seniority,
-    infer_domain_tags,
-    infer_stack,
-    extract_skills,
-    enrich_job,
+from automation.common.import_helpers import load_module_from_path
+
+_mod = load_module_from_path(
+    "automation/job-discovery/scripts/enrichment_transforms.py",
+    "job_discovery_enrichment_transforms",
 )
+assert _mod is not None
+
+infer_seniority = _mod.infer_seniority
+infer_domain_tags = _mod.infer_domain_tags
+infer_stack = _mod.infer_stack
+extract_skills = _mod.extract_skills
+enrich_job = _mod.enrich_job
 
 
 def test_infer_seniority_basic():

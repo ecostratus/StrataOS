@@ -18,17 +18,21 @@ import sources  # type: ignore
 
 def test_discover_jobs_handles_source_exception(monkeypatch, caplog):
     class DummyConfig:
+        def to_dict(self):
+            return {}
+
         def get_bool(self, key, default=False):
             if key == "LINKEDIN_ENABLED":
                 return True
             if key == "INDEED_ENABLED":
                 return True
-            return default
+            return False
 
     def boom():
         raise TimeoutError("simulated timeout")
 
     monkeypatch.setattr(orchestrator, "config", DummyConfig())
+    monkeypatch.setattr(sources, "get_blocked_sources_by_policy", lambda cfg, enabled: [])
     monkeypatch.setattr(sources, "fetch_linkedin_jobs", boom)
     # The other source returns malformed and valid entries
     monkeypatch.setattr(
@@ -60,10 +64,16 @@ def test_discover_jobs_handles_source_exception(monkeypatch, caplog):
 
 def test_discover_jobs_handles_empty_results(monkeypatch, caplog):
     class DummyConfig:
+        def to_dict(self):
+            return {}
+
         def get_bool(self, key, default=False):
-            return True  # enable both
+            if key in {"LINKEDIN_ENABLED", "INDEED_ENABLED"}:
+                return True
+            return False
 
     monkeypatch.setattr(orchestrator, "config", DummyConfig())
+    monkeypatch.setattr(sources, "get_blocked_sources_by_policy", lambda cfg, enabled: [])
     monkeypatch.setattr(sources, "fetch_linkedin_jobs", lambda: [])
     monkeypatch.setattr(sources, "fetch_indeed_jobs", lambda: [])
 
@@ -75,10 +85,16 @@ def test_discover_jobs_handles_empty_results(monkeypatch, caplog):
 
 def test_discover_jobs_handles_non_list_return(monkeypatch, caplog):
     class DummyConfig:
+        def to_dict(self):
+            return {}
+
         def get_bool(self, key, default=False):
-            return True
+            if key in {"LINKEDIN_ENABLED", "INDEED_ENABLED"}:
+                return True
+            return False
 
     monkeypatch.setattr(orchestrator, "config", DummyConfig())
+    monkeypatch.setattr(sources, "get_blocked_sources_by_policy", lambda cfg, enabled: [])
     # Return a dict instead of list to simulate incorrect source output
     monkeypatch.setattr(sources, "fetch_linkedin_jobs", lambda: {"oops": True})
     # Provide one valid list from indeed

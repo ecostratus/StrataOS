@@ -87,6 +87,9 @@ def test_summary_artifact_created(monkeypatch, tmp_path):
         def initialize(self, **kwargs):
             return None
 
+        def to_dict(self):
+            return {}
+
         def get(self, key, default=None):
             if key == "SYSTEM_OUTPUT_DIRECTORY":
                 return str(tmp_path)

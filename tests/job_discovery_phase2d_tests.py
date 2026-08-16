@@ -25,6 +25,9 @@ def test_logs_emitted_to_jsonl(monkeypatch, tmp_path):
         def initialize(self, **kwargs):
             return None
 
+        def to_dict(self):
+            return {}
+
         def get(self, k, d=None):
             if k == "SYSTEM_OUTPUT_DIRECTORY":
                 return str(tmp_path)
