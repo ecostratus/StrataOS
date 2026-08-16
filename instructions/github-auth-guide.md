@@ -42,6 +42,8 @@ Run the automated setup script:
 ./scripts/setup_github_auth.sh
 ```
 
+If `GH_TOKEN` or `GITHUB_TOKEN` is already set, the setup script will use it for non-interactive login.
+
 ## Refresh Token
 
 If your token expires:
@@ -68,6 +70,29 @@ The GitHub CLI looks for authentication in this order:
 
 ```bash
 export GITHUB_TOKEN="your_token_here"
+```
+
+Once set, repository automation can use the token directly without saved `gh` state.
+
+### Creating Issues Without Interactive `gh auth login`
+
+For sandboxes or CI jobs where browser login is unavailable:
+
+```bash
+python3 scripts/create_github_issue.py \
+  --repo ecostratus/StrataOS \
+  --title "Example issue" \
+  --body "Created with token-based automation"
+```
+
+Validate the payload without creating anything:
+
+```bash
+python3 scripts/create_github_issue.py \
+  --repo ecostratus/StrataOS \
+  --title "Example issue" \
+  --body "Created with token-based automation" \
+  --dry-run
 ```
 
 Add to your shell profile for persistence:
