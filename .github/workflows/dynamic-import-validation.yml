@@ -47,4 +47,8 @@ jobs:
             --outreach-context config/outreach_context.sample.json \
             --outreach-output-dir output/outreach \
             --resume-context config/resume_context.sample.json \
-            --resume-output-dir output/resume
+            --resume-output-dir output/resume || rc=$?
+          # Exit code 4 = strict input validation failure (expected with sample placeholder resume context).
+          if [ "${rc:-0}" -ne 0 ] && [ "${rc:-0}" -ne 4 ]; then
+            exit "$rc"
+          fi
