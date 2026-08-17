@@ -1,4 +1,4 @@
-# StrataOS - Personal Operating System - 60 Day Execution Plan
+# StrataOS - Personal Operating System (POS)
 
 [![GitHub Release](https://img.shields.io/github/v/release/ecostratus/StrataOS)](https://github.com/ecostratus/StrataOS/releases)
 [![Current](https://img.shields.io/badge/release-v0.3.0--Phase3C--Normalization-blue)](https://github.com/ecostratus/StrataOS/releases/tag/v0.3.0-Phase3C-Normalization)
