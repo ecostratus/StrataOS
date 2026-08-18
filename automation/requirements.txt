@@ -6,7 +6,7 @@
 # Individual module requirements are in each module's requirements.txt.
 
 # Web scraping
-requests>=2.31.0
+requests>=2.34.2
 beautifulsoup4>=4.15.0
 
 # Data processing
