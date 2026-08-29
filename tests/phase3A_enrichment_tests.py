@@ -4,6 +4,7 @@ from automation.enrichment.scripts.enrichment import (
     infer_seniority,
     detect_stack,
     detect_role_tags,
+    detect_work_mode,
     is_remote_friendly,
     extract_features,
 )
@@ -33,9 +34,36 @@ def test_detect_stack_and_roles():
 
 
 def test_remote_friendly_detection():
-    aliases = ["remote", "hybrid"]
-    assert is_remote_friendly("Remote Senior Engineer", None, aliases) is True
-    assert is_remote_friendly("Onsite Engineer", "", aliases) is False
+    assert is_remote_friendly("Remote Senior Engineer", None, ["remote", "hybrid"]) is True
+    assert is_remote_friendly("Onsite Engineer", "", ["remote", "hybrid"]) is False
+
+
+def test_detect_work_mode_structured_field_wins_over_text():
+    job = {
+        "title": "Senior Engineer",
+        "description": "Hybrid role with 3 days onsite",
+        "work_type": "remote",
+    }
+
+    enriched = extract_features(job, {})
+    assert enriched["work_mode"] == "remote"
+    assert enriched["remote_friendly"] is True
+
+
+def test_detect_work_mode_text_fallback_prioritizes_hybrid():
+    job = {
+        "title": "Remote Senior Engineer",
+        "description": "Hybrid role, 3 days onsite and 2 days remote",
+    }
+
+    enriched = extract_features(job, {})
+    assert enriched["work_mode"] == "hybrid"
+    assert enriched["remote_friendly"] is True
+
+
+def test_detect_work_mode_unknown_for_negative_controls():
+    assert detect_work_mode("Program Manager", "We build RemoteControl software for teams", {}) is None
+    assert detect_work_mode("Program Manager", "A collaborative team focused on execution", {}) is None
 
 
 def test_extract_features_config_driven():
@@ -46,13 +74,14 @@ def test_extract_features_config_driven():
             "seniority_patterns": {r"\b(sr|senior)\b": "Senior", r"\b(jr|junior)\b": "Junior"},
         }
     }
-    job = {"title": "Senior Python Engineer", "description": "Work in remote team"}
+    job = {"title": "Senior Python Engineer", "description": "Fully remote role"}
     enriched = extract_features(job, config)
     assert enriched["normalized_title"] == "senior python engineer"
     assert enriched["seniority"] == "Senior"
     assert enriched["stack_tags"] == ["python"]
     assert enriched["role_tags"] == ["engineer"]
     assert enriched["remote_friendly"] is True
+    assert enriched["work_mode"] == "remote"
     assert 0.0 <= enriched["role_match_ratio"] <= 1.0
     assert 0.0 <= enriched["stack_match_ratio"] <= 1.0
     assert 0.0 <= enriched["title_relevance"] <= 1.0

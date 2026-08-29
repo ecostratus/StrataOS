@@ -1226,9 +1226,9 @@ def list_jobs(
 	limit: int = 100,
 	run_id: int | None = None,
 	status: str | None = None,
-	include_low_relevance: bool = False,
-	require_role_tags: bool = True,
-	min_bucket: str = Query(default="Moderate"),
+	include_low_relevance: bool = True,
+	require_role_tags: bool = False,
+	min_bucket: str = Query(default="Weak"),
 ) -> list[dict[str, Any]]:
 	status_filter = _normalize_value(status)
 	if status_filter and status_filter not in JOB_STATUS_VALUES:

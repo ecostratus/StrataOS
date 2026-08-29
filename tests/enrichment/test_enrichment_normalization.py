@@ -41,9 +41,30 @@ def test_role_tags_deterministic_and_normalized():
 
 
 def test_remote_aliases_normalization_and_detection():
-    job = {"title": "Engineer", "description": "This role is REMOTE friendly"}
+    job = {"title": "Remote Engineer", "description": "This role is fully remote"}
     cfg = {"enrichment": {"remote_aliases": ["Remote", "Work from home", "  WFH  "]}}
     features = enrichment.extract_features(job, cfg)
+    assert features["remote_friendly"] is True
+    assert features["work_mode"] == "remote"
+
+
+def test_work_mode_negative_controls_return_unknown():
+    job = {
+        "title": "Program Manager",
+        "description": "We build RemoteControl accessories and value flexibility.",
+    }
+    features = enrichment.extract_features(job, {})
+    assert features["work_mode"] is None
+    assert features["remote_friendly"] is False
+
+
+def test_work_mode_hybrid_beats_stale_remote_benefits_copy():
+    job = {
+        "title": "Senior Product Manager",
+        "description": "Remote-friendly benefits. Role requires 3 days onsite per week in office.",
+    }
+    features = enrichment.extract_features(job, {})
+    assert features["work_mode"] == "hybrid"
     assert features["remote_friendly"] is True
 
 

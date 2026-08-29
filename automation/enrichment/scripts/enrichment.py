@@ -3,6 +3,45 @@ import re
 from automation.common.normalization import normalize_terms, ensure_str
 
 
+_HYBRID_PATTERNS = (
+    r"\bhybrid\b",
+    r"\b\d+\s*days?\s*(?:a|per)?\s*week\s*(?:in(?:\s|-)?office|onsite)\b",
+    r"\b\d+\s*days?\s*(?:a|per)?\s*week\b.*\b(?:in(?:\s|-)?office|onsite)\b",
+    r"\b\d+\s*days?\s*(?:in(?:\s|-)?office|onsite)\s*(?:a|per)?\s*week\b",
+    r"\bonsite\s+\d+x\b",
+    r"\bin(?:\s|-)?office\s+\d+\s*days?\b",
+    r"\bcommuting distance\b",
+    r"\blocal to\b",
+    r"\bmust reside within\b",
+)
+
+_REMOTE_TITLE_PATTERNS = (
+    r"\bremote\b",
+    r"\bfully\s+remote\b",
+    r"\b100%\s+remote\b",
+    r"\bremote[-\s]*first\b",
+    r"\bwork from anywhere\b",
+    r"\bremote\s*\(us\)\b",
+    r"\bremote\s*\(u\.s\.\)\b",
+)
+
+_REMOTE_DESCRIPTION_PATTERNS = (
+    r"\bfully\s+remote\b",
+    r"\b100%\s+remote\b",
+    r"\bremote[-\s]*first\b",
+    r"\bwork from anywhere\b",
+    r"\bremote\s*\(us\)\b",
+    r"\bremote\s*\(u\.s\.\)\b",
+    r"\bremote role\b",
+    r"\bremote[-\s]*friendly\b",
+)
+
+_ONSITE_PATTERNS = (
+    r"\bonsite\b",
+    r"\bin(?:\s|-)?office\b",
+)
+
+
 def normalize_title(title: Optional[str]) -> str:
     """
     Normalize a job title deterministically: lowercase, collapse whitespace.
@@ -75,21 +114,57 @@ def detect_role_tags(title: Optional[str], role_keywords: Optional[List[str]] = 
     return sorted(found)
 
 
+def _normalize_work_mode_value(value: Any) -> str | None:
+    text = normalize_title(ensure_str(value, ""))
+    if not text:
+        return None
+
+    text = text.replace("/", " ").replace("-", " ")
+    if re.search(r"\bhybrid\b", text):
+        return "hybrid"
+    if re.search(r"\b(?:onsite|on site|in office)\b", text):
+        return "onsite"
+    if re.search(r"\b(?:fully remote|100% remote|remote first|remote[-\s]*first|remote|work from home|wfh)\b", text):
+        return "remote"
+    return None
+
+
+def detect_work_mode(title: Optional[str], description: Optional[str], job: Optional[Dict[str, Any]] = None) -> str | None:
+    """Detect work mode with structured fields first, then a narrow text fallback."""
+    structured_sources = ("work_mode", "remote_type", "work_type")
+    if isinstance(job, dict):
+        for key in structured_sources:
+            mode = _normalize_work_mode_value(job.get(key))
+            if mode:
+                return mode
+
+    title_norm = normalize_title(title)
+    description_norm = normalize_title(description)
+    combined = f"{title_norm} {description_norm}".strip()
+
+    for pattern in _HYBRID_PATTERNS:
+        if re.search(pattern, combined):
+            return "hybrid"
+
+    if any(re.search(pattern, title_norm) for pattern in _REMOTE_TITLE_PATTERNS):
+        return "remote"
+
+    if any(re.search(pattern, description_norm) for pattern in _REMOTE_DESCRIPTION_PATTERNS):
+        return "remote"
+
+    if any(re.search(pattern, combined) for pattern in _ONSITE_PATTERNS):
+        return "onsite"
+
+    return None
+
+
 def is_remote_friendly(
     title: Optional[str], description: Optional[str], remote_aliases: Optional[List[str]] = None
 ) -> bool:
     """
-    Determine remote friendliness using aliases matched in title/description.
+    Determine remote friendliness using the canonical work-mode detector.
     """
-    if not remote_aliases:
-        return False
-    keys = normalize_terms(remote_aliases)
-    hay = (normalize_title(title) + " " + normalize_title(description)).strip()
-    for alias in keys:
-        # alias expected pre-normalized
-        if alias and alias in hay:
-            return True
-    return False
+    return detect_work_mode(title, description) in {"remote", "hybrid"}
 
 
 def _safe_ratio(numerator: int, denominator: int) -> float:
@@ -160,7 +235,8 @@ def extract_features(job: Dict[str, Any], config: Optional[Dict[str, Any]] = Non
     stack_tags = detect_stack(title, description, stack_keywords)
     stack_title_tags = detect_stack(title, None, stack_keywords)
     role_tags = detect_role_tags(title, role_keywords)
-    remote = is_remote_friendly(title, description, remote_aliases)
+    work_mode = detect_work_mode(title, description, job)
+    remote = work_mode in {"remote", "hybrid"}
 
     role_match_ratio = _safe_ratio(len(role_tags), len(role_keywords))
     stack_match_ratio = _safe_ratio(len(stack_tags), len(stack_keywords))
@@ -181,6 +257,7 @@ def extract_features(job: Dict[str, Any], config: Optional[Dict[str, Any]] = Non
             "stack_tags": stack_tags,
             "stack_title_tags": stack_title_tags,
             "role_tags": role_tags,
+            "work_mode": work_mode,
             "remote_friendly": remote,
             "role_match_ratio": role_match_ratio,
             "stack_match_ratio": stack_match_ratio,

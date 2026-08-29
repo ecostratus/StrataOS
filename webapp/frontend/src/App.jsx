@@ -44,9 +44,9 @@ export default function App() {
   const [setupApiKey, setSetupApiKey] = useState("");
   const [setupSaving, setSetupSaving] = useState(false);
   const [setupError, setSetupError] = useState("");
-  const [showLowRelevance, setShowLowRelevance] = useState(false);
-  const [minBucket, setMinBucket] = useState("Moderate");
-  const [requireRoleTags, setRequireRoleTags] = useState(true);
+  const [showLowRelevance, setShowLowRelevance] = useState(true);
+  const [minBucket, setMinBucket] = useState("Weak");
+  const [requireRoleTags, setRequireRoleTags] = useState(false);
 
   const selectedJob = useMemo(
     () => jobs.find((job) => job.id === selectedJobId) || null,
