@@ -21425,10 +21425,10 @@
       "status": "Fail",
       "category": "privacy-hygiene",
       "location": "/Users/jmn_mbp_m5_2026/Projects/StrataOS - PoS/StrataOS/config/consulting_context_jnaphen.json; /Users/jmn_mbp_m5_2026/Projects/StrataOS - PoS/StrataOS/config/resume_context_jnaphen.json",
-      "evidence": "Classified sensitive on 2026-10-01 after value-level check (keys + length only, no value disclosure) showing real-looking client-identifying text and concrete rate-related fields in jnaphen context files.",
+      "evidence": "Sensitive pending human confirmation: value-level key+length scan flagged real-looking client/rate/contact-structure fields in jnaphen context files; sanitized sample check returned zero real-looking values.",
       "impact": "Potential confidential/client-identifying information exposure risk in public history; untracking alone does not remove historical exposure.",
-      "recommended_fix": "Action now: untrack + wildcard ignore applied. Next: human-approved decision on history rewrite workflow (separate controlled operation) based on contractual confidentiality obligations.",
-      "found_by": "Phase0 remediation follow-up (value-level sensitivity check)"
+      "recommended_fix": "Action applied: untrack + wildcard ignore. Next: human owner reviews actual values/contract obligations and decides rewrite/no-rewrite as a separate controlled operation.",
+      "found_by": "Phase0 remediation follow-up (pending human confirmation)"
     }
   ]
 }
