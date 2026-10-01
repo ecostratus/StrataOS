@@ -1,5 +1,6 @@
 import importlib.util
 import pathlib
+import types
 import pytest
 
 # Try to import a potential orchestrator module
@@ -28,43 +29,50 @@ def test_orchestrator_fetch_all_sources_presence():
     # Optional: if adapter injected jobs collide, length should reflect de-duplication
 
 
-def test_orchestrator_dedup_and_ordering():
+def test_orchestrator_dedup_and_ordering(monkeypatch):
     if MODULE is None or not hasattr(MODULE, 'fetch_all_sources'):
         pytest.skip("fetch_all_sources orchestrator not present; skipping integration test")
 
     fetch_all_sources = getattr(MODULE, 'fetch_all_sources')
 
-    # Import adapters to inject test jobs
-    import importlib.util
-    base = pathlib.Path(__file__).resolve().parents[2] / 'automation' / 'job-discovery' / 'scripts'
+    def _lever_jobs(_cfg):
+        return [{
+            "job_id": "same-id",
+            "title": "Software Engineer",
+            "company": "Acme",
+            "location": "Remote",
+            "url": "https://jobs.example/acme/1",
+            "source": "lever",
+            "posted_at": "2026-01-09",
+            "description": "",
+        }]
 
-    # Lever injection
-    lever_path = base / 'source_lever_adapter.py'
-    spec_lever = importlib.util.spec_from_file_location("source_lever_adapter", str(lever_path))
-    lever_mod = importlib.util.module_from_spec(spec_lever)
-    assert spec_lever and spec_lever.loader
-    spec_lever.loader.exec_module(lever_mod)  # type: ignore
+    def _greenhouse_jobs(_cfg):
+        return [{
+            "job_id": "same-id",
+            "title": "Software Engineer",
+            "company": "Acme",
+            "location": "Remote",
+            "url": "https://jobs.example/acme/1",
+            "source": "greenhouse",
+            "posted_at": "2026-01-10",
+            "description": "",
+        }]
 
-    # Greenhouse injection
-    gh_path = base / 'source_greenhouse_adapter.py'
-    spec_gh = importlib.util.spec_from_file_location("source_greenhouse_adapter", str(gh_path))
-    gh_mod = importlib.util.module_from_spec(spec_gh)
-    assert spec_gh and spec_gh.loader
-    spec_gh.loader.exec_module(gh_mod)  # type: ignore
+    original_import_module = MODULE.importlib.import_module
 
-    # Same canonical fields across sources -> same job_id
-    lever_mod.raw_jobs = [  # type: ignore
-        {"text": "Software Engineer", "company": "Acme", "categories": {"location": "Remote"}, "hostedUrl": "https://jobs.example/acme/1", "createdAt": "2026-01-09"}
-    ]
-    gh_mod.raw_jobs = [  # type: ignore
-        {"title": "Software Engineer", "company": "Acme", "location": {"name": "Remote"}, "absolute_url": "https://jobs.example/acme/1", "updated_at": "2026-01-10"}
-    ]
+    def _fake_import_module(name: str, package=None):
+        if name.endswith("source_lever_adapter"):
+            return types.SimpleNamespace(fetch_lever_jobs=_lever_jobs)
+        if name.endswith("source_greenhouse_adapter"):
+            return types.SimpleNamespace(fetch_greenhouse_jobs=_greenhouse_jobs)
+        return original_import_module(name, package)
+
+    monkeypatch.setattr(MODULE.importlib, "import_module", _fake_import_module)
 
     cfg = {
         "LEVER_ENABLED": True,
-        "LEVER_API_URL": "https://lever.test",
         "GREENHOUSE_ENABLED": True,
-        "GREENHOUSE_API_URL": "https://gh.test",
     }
 
     out = fetch_all_sources(cfg)

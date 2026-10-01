@@ -110,7 +110,7 @@ Do **not** create fixtures referencing prohibited sheet names.
 
 ## Test Configuration
 
-`pytest.ini` at the repository root configures test discovery. All test files matching `test_*.py` or `*_tests.py` are collected automatically.
+`pytest.ini` at the repository root configures test discovery and import path behavior. All test files matching `test_*.py` or `*_tests.py` are collected automatically, and repository-root imports (for example `automation.*`) resolve via `pythonpath = .`.
 
 ---
 

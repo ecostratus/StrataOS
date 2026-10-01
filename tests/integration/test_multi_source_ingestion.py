@@ -34,11 +34,14 @@ def test_multi_source_determinism_and_dedup():
     ]
     out_lev = mod_lev.fetch_lever_jobs(cfg)
 
+    assert len(out_new) == 1
+    assert len(out_lev) == 1
+
     combined = out_new + out_lev
     # Deterministic combined ordering by job_id when sorted
     combined_sorted = sorted(combined, key=lambda x: x["job_id"])
     assert combined_sorted == sorted(combined_sorted, key=lambda x: x["job_id"])  # idempotent sort
 
-    # De-dup across sources by job_id
-    job_ids = [x["job_id"] for x in combined_sorted]
-    assert len(job_ids) == len(set(job_ids))
+    # Cross-source deduplication is performed by the orchestrator layer.
+    deduped = {item["job_id"]: item for item in combined_sorted}
+    assert len(deduped) == 1
