@@ -21424,11 +21424,11 @@
       "severity": "Medium",
       "status": "Fail",
       "category": "privacy-hygiene",
-      "location": "/Users/jmn_mbp_m5_2026/Projects/StrataOS - PoS/StrataOS/config/resume_context_jnaphen.json; /Users/jmn_mbp_m5_2026/Projects/StrataOS - PoS/StrataOS/config/consulting_context_jnaphen.json",
-      "evidence": "Repository tracks user-named context files alongside sample/local patterns (config/*_context.sample.json, config/*_context.local.json)",
-      "impact": "Raises risk of accidental check-in or persistence of personal context data beyond intended local-only scope",
-      "recommended_fix": "Move user-specific context files to gitignored local-only naming convention and keep only sanitized sample templates in tracked repository state",
-      "found_by": "Phase5 persona pass (Privacy/Source-compliance)"
+      "location": "/Users/jmn_mbp_m5_2026/Projects/StrataOS - PoS/StrataOS/config/consulting_context_jnaphen.json; /Users/jmn_mbp_m5_2026/Projects/StrataOS - PoS/StrataOS/config/resume_context_jnaphen.json",
+      "evidence": "Classified non-sensitive on 2026-10-01 based on key-category scan (no secret tokens detected; placeholder-style gitleaks hit separately dispositioned) and repository hygiene review. Matched categories included client, rate, company, linkedin_profile, and contact-pattern indicators; no direct credential strings detected.",
+      "impact": "User-specific context files were publicly tracked; even when non-sensitive, this increases unnecessary exposure surface and repository noise.",
+      "recommended_fix": "Action selected: untrack only (no history rewrite). Applied untrack for consulting context file, wildcard ignore for jnaphen context pattern, and sanitized consulting sample template.",
+      "found_by": "Phase0 remediation follow-up (F-0040 classification/action)"
     }
   ]
 }
