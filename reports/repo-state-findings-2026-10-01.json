@@ -21421,14 +21421,14 @@
     },
     {
       "id": "F-0040",
-      "severity": "Medium",
+      "severity": "High",
       "status": "Fail",
       "category": "privacy-hygiene",
       "location": "/Users/jmn_mbp_m5_2026/Projects/StrataOS - PoS/StrataOS/config/consulting_context_jnaphen.json; /Users/jmn_mbp_m5_2026/Projects/StrataOS - PoS/StrataOS/config/resume_context_jnaphen.json",
-      "evidence": "Classified non-sensitive on 2026-10-01 based on key-category scan (no secret tokens detected; placeholder-style gitleaks hit separately dispositioned) and repository hygiene review. Matched categories included client, rate, company, linkedin_profile, and contact-pattern indicators; no direct credential strings detected.",
-      "impact": "User-specific context files were publicly tracked; even when non-sensitive, this increases unnecessary exposure surface and repository noise.",
-      "recommended_fix": "Action selected: untrack only (no history rewrite). Applied untrack for consulting context file, wildcard ignore for jnaphen context pattern, and sanitized consulting sample template.",
-      "found_by": "Phase0 remediation follow-up (F-0040 classification/action)"
+      "evidence": "Classified sensitive on 2026-10-01 after value-level check (keys + length only, no value disclosure) showing real-looking client-identifying text and concrete rate-related fields in jnaphen context files.",
+      "impact": "Potential confidential/client-identifying information exposure risk in public history; untracking alone does not remove historical exposure.",
+      "recommended_fix": "Action now: untrack + wildcard ignore applied. Next: human-approved decision on history rewrite workflow (separate controlled operation) based on contractual confidentiality obligations.",
+      "found_by": "Phase0 remediation follow-up (value-level sensitivity check)"
     }
   ]
 }
