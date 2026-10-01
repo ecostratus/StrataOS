@@ -13,3 +13,9 @@ updates:
     allow:
       - dependency-type: "direct"
     open-pull-requests-limit: 5
+
+  - package-ecosystem: "npm"
+    directory: "/webapp/frontend"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 3
