@@ -29,6 +29,9 @@ on:
         default: false
         type: boolean
 
+permissions:
+  contents: read
+
 jobs:
   run-playbook:
     if: ${{ false }}
