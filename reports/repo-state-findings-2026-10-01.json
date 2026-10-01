@@ -21223,14 +21223,14 @@
     },
     {
       "id": "F-0022",
-      "severity": "Medium",
-      "status": "Fail",
+      "severity": "Low",
+      "status": "Resolved",
       "category": "secret-history-scan",
       "location": "/Users/jmn_mbp_m5_2026/Projects/StrataOS - PoS/StrataOS/config/endpoints.md",
-      "evidence": "gitleaks history scan found 1 redacted finding (rule: curl-auth-header) tied to commit 20bd4623691df8275edd8fbc3fd14925e80a6a19",
-      "impact": "Potential secret material in git history or credential-like header patterns requiring triage",
-      "recommended_fix": "Triage finding in context, confirm revocation status if credential-like, and document disposition",
-      "found_by": "Phase4A gitleaks"
+      "evidence": "Flagged commit context shows masked placeholder auth strings in documentation examples (`******`), not live credential material. Dispositioned as false positive. Added narrow gitleaks allowlist scoped to config/endpoints.md and placeholder regexes only.",
+      "impact": "No active credential exposure confirmed from this finding pattern; scanner noise reduced with narrow scoped allowlist.",
+      "recommended_fix": "Keep allowlist narrow and monitor future secret scans for non-placeholder matches.",
+      "found_by": "Phase0 remediation follow-up (gitleaks disposition)"
     },
     {
       "id": "F-0023",
@@ -21421,14 +21421,14 @@
     },
     {
       "id": "F-0040",
-      "severity": "Medium",
-      "status": "Fail",
+      "severity": "Low",
+      "status": "Resolved (pending merge)",
       "category": "privacy-hygiene",
-      "location": "/Users/jmn_mbp_m5_2026/Projects/StrataOS - PoS/StrataOS/config/resume_context_jnaphen.json; /Users/jmn_mbp_m5_2026/Projects/StrataOS - PoS/StrataOS/config/consulting_context_jnaphen.json",
-      "evidence": "Repository tracks user-named context files alongside sample/local patterns (config/*_context.sample.json, config/*_context.local.json)",
-      "impact": "Raises risk of accidental check-in or persistence of personal context data beyond intended local-only scope",
-      "recommended_fix": "Move user-specific context files to gitignored local-only naming convention and keep only sanitized sample templates in tracked repository state",
-      "found_by": "Phase5 persona pass (Privacy/Source-compliance)"
+      "location": "/Users/jmn_mbp_m5_2026/Projects/StrataOS - PoS/StrataOS/config/consulting_context_jnaphen.json; /Users/jmn_mbp_m5_2026/Projects/StrataOS - PoS/StrataOS/config/resume_context_jnaphen.json",
+      "evidence": "Value-level scan flagged client/rate-style fields. Owner confirmed on 2026-10-01 that values are illustrative/personal with no real client or company data. Classified non-sensitive on owner attestation. Sample file scan: 0 real-looking values. Repo has 0 forks.",
+      "impact": "Residual risk minimized by untracking and ignore protections; no confirmed real client/company sensitive data per owner attestation.",
+      "recommended_fix": "Untrack + wildcard ignore + sanitized sample applied. No history rewrite (owner decision, 2026-10-01).",
+      "found_by": "Phase0 remediation follow-up (owner attested)"
     }
   ]
 }
