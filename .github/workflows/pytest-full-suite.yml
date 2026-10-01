@@ -44,5 +44,11 @@ jobs:
           python -m pip install -r automation/outreach/scripts/requirements.txt
           python -m pip install -r automation/resume-tailoring/scripts/requirements.txt
 
+      - name: Prepare test configuration
+        run: |
+          if [ ! -f config/env.json ]; then
+            cp config/env.sample.json config/env.json
+          fi
+
       - name: Run full pytest suite
         run: pytest -q
