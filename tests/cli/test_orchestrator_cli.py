@@ -21,7 +21,7 @@ class FakeConfig:
         self._retention_enabled = retention_enabled
         self._backend = backend
 
-    def initialize(self):
+    def initialize(self, *args, **kwargs):
         return None
 
     def get_bool(self, key, default=False):

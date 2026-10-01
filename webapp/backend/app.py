@@ -1226,9 +1226,9 @@ def list_jobs(
 	limit: int = 100,
 	run_id: int | None = None,
 	status: str | None = None,
-	include_low_relevance: bool = True,
-	require_role_tags: bool = False,
-	min_bucket: str = Query(default="Weak"),
+	include_low_relevance: bool = False,
+	require_role_tags: bool = True,
+	min_bucket: str = Query(default="Moderate"),
 ) -> list[dict[str, Any]]:
 	status_filter = _normalize_value(status)
 	if status_filter and status_filter not in JOB_STATUS_VALUES:
@@ -1867,5 +1867,3 @@ if frontend_dist.exists():
 		if full_path.startswith("api/"):
 			raise HTTPException(status_code=404, detail="Not found")
 		return FileResponse(str(frontend_dist / "index.html"))
-
-
