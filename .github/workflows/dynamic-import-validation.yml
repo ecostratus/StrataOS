@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ "**" ]
 
+permissions:
+  contents: read
+
 jobs:
   validate:
     runs-on: ubuntu-latest
@@ -24,13 +27,13 @@ jobs:
 
       - name: Install dependencies
         run: |
-          if [ -f dev-requirements.txt ]; then python -m pip install -r dev-requirements.txt || true; fi
-          python -m pip install -r automation/outreach/scripts/requirements.txt || true
-          python -m pip install -r automation/resume-tailoring/scripts/requirements.txt || true
-          python -m pip install -r automation/job-discovery/scripts/requirements.txt || true
+          if [ -f dev-requirements.txt ]; then python -m pip install -r dev-requirements.txt; fi
+          python -m pip install -r automation/outreach/scripts/requirements.txt
+          python -m pip install -r automation/resume-tailoring/scripts/requirements.txt
+          python -m pip install -r automation/job-discovery/scripts/requirements.txt
 
       - name: Set PYTHONPATH to workspace
-        run: echo "PYTHONPATH=$PWD" >> $GITHUB_ENV
+        run: echo "PYTHONPATH=$PWD" >> "$GITHUB_ENV"
 
       - name: Run docs CI
         run: |
@@ -39,7 +42,7 @@ jobs:
       - name: Run dynamic import tests
         run: |
           pytest tests/job_discovery_import_tests.py -q --tb=short
-          pytest tests/interview_prep_import_tests.py -q --tb=short || true
+          pytest tests/interview_prep_import_tests.py -q --tb=short
 
       - name: Run combined runner (full-sources mode)
         run: |

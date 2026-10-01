@@ -1,0 +1,48 @@
+name: Pytest Full Suite
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pytest-full-suite:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: |
+            dev-requirements.txt
+            webapp/backend/requirements.txt
+            automation/requirements.txt
+            automation/consulting-funnel/scripts/requirements.txt
+            automation/interview-prep/scripts/requirements.txt
+            automation/job-discovery/scripts/requirements.txt
+            automation/outreach/scripts/requirements.txt
+            automation/resume-tailoring/scripts/requirements.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install -U pip
+          python -m pip install -r dev-requirements.txt
+          python -m pip install -r webapp/backend/requirements.txt
+          python -m pip install -r automation/requirements.txt
+          python -m pip install -r automation/consulting-funnel/scripts/requirements.txt
+          python -m pip install -r automation/interview-prep/scripts/requirements.txt
+          python -m pip install -r automation/job-discovery/scripts/requirements.txt
+          python -m pip install -r automation/outreach/scripts/requirements.txt
+          python -m pip install -r automation/resume-tailoring/scripts/requirements.txt
+
+      - name: Run full pytest suite
+        run: pytest -q

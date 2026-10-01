@@ -35,6 +35,9 @@ on:
       - "docs/architecture/decision-engine-v1/certification-v*.json"
       - "docs/architecture/decision-engine-v1/CERTIFICATION.md"
 
+permissions:
+  contents: read
+
 jobs:
   contract-gate:
     name: Decision Model Contract Gate
