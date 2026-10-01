@@ -36,3 +36,4 @@ logs/metrics.json
 webapp/frontend/node_modules/
 webapp/frontend/dist/
 data/jobs.db
+config/*_context_jnaphen.json
