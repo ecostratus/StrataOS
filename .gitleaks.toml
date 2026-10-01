@@ -1,0 +1,11 @@
+title = "StrataOS gitleaks baseline"
+
+[allowlist]
+description = "Allow documented placeholder auth examples in endpoints reference"
+paths = [
+  '''config/endpoints\.md'''
+]
+regexes = [
+  '''Authorization:\s\*{6}''',
+  '''Authentication\*\*:\s\*{6}\s\(API key\)'''
+]
